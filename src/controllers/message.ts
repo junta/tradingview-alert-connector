@@ -1,9 +1,13 @@
-import express, { Router } from 'express'
+import express, { Router } from 'express';
+import dydxClient from '../services/client';
+import { Market } from '@dydxprotocol/v3-client';
 
-var router: Router = express.Router();
+const router: Router = express.Router();
 
-router.get('/', function(req, res) {
-    res.send({text:"hello"});
+router.get('/', async (req, res) => {
+	const markets = await dydxClient.public.getMarkets(Market.BTC_USD);
+
+	res.send(markets);
 });
 
 export default router;
