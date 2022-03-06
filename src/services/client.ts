@@ -1,24 +1,39 @@
 import { DydxClient } from '@dydxprotocol/v3-client';
-import { HTTP_HOST, HTTP_STAGING_HOST } from '../constants';
+import config = require('config');
 
-import 'dotenv/config';
+class DYDXConnector {
+	client: DydxClient;
+	_positionID: string = '0';
 
-const apiKeys = {
-	key: process.env.API_KEY,
-	passphrase: process.env.API_PASSPHRASE,
-	secret: process.env.API_SECRET
-};
+	public constructor() {
+		const apiKey: string = config.get('User.apiKey');
+		const apiPassphrase: string = config.get('User.apiPassphrase');
+		const apiSecret: string = config.get('User.apiSecret');
+		const publicKey: string = config.get('User.starkPublicKey');
+		const privateKey: string = config.get('User.starkPrivateKey');
 
-const starkKeyPair = {
-	publicKey: process.env.STARK_PUBLIC_KEY,
-	privateKey: process.env.STARK_PRIVATE_KEY
-};
+		const apiKeys = {
+			key: apiKey,
+			passphrase: apiPassphrase,
+			secret: apiSecret
+		};
 
-const dydxClient: DydxClient = new DydxClient(HTTP_HOST, {
-	apiTimeout: 3000,
-	networkId: 1, // 3
-	apiKeyCredentials: apiKeys,
-	starkPrivateKey: starkKeyPair
-});
+		const starkKeyPair = {
+			publicKey: publicKey,
+			privateKey: privateKey
+		};
 
-export default dydxClient;
+		this.client = new DydxClient(config.get('Network.host'), {
+			apiTimeout: 3000,
+			networkId: config.get('Network.chainID'),
+			apiKeyCredentials: apiKeys,
+			starkPrivateKey: starkKeyPair
+		});
+	}
+
+	public set positionID(id: string) {
+		this._positionID = id;
+	}
+}
+
+export default DYDXConnector;

@@ -1,4 +1,4 @@
-import dydxClient from './client';
+import DYDXConnector from './client';
 import {
 	Market,
 	AccountResponseObject,
@@ -11,8 +11,10 @@ import { LIMIT_FEE } from '../constants';
 
 const createOrder = async () => {
 	try {
+		const connector = new DYDXConnector();
+
 		const orderResult: { order: OrderResponseObject } =
-			await dydxClient.private.createOrder(
+			await connector.client.private.createOrder(
 				{
 					market: Market.BTC_USD,
 					side: OrderSide.BUY,
@@ -25,7 +27,8 @@ const createOrder = async () => {
 					expiration: '2022-12-21T21:30:20.200Z'
 				},
 				// TODO: should be dynamic
-				'167823' // required for creating the order signature
+				// '167823' // required for creating the order signature
+				'59250'
 			);
 
 		return orderResult;

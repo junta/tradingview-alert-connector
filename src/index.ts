@@ -1,13 +1,15 @@
-import express from 'express'
-import messageController from './controllers/message'
-const app: express.Express = express()
-const port = 3000
+import express from 'express';
+import messageController from './controllers/message';
+import config = require('config');
 
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+const app: express.Express = express();
+const port = 3000;
 
-app.use("/", messageController)
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use('/', messageController);
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+	console.log(`dYdX-tradingview-integration app listening on port ${port}`);
+});

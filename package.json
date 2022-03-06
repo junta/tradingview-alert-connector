@@ -4,8 +4,8 @@
 	"description": "",
 	"main": "index.js",
 	"scripts": {
-		"start": "tsc && ts-node dist/index.js",
-		"start:dev": "tsc-watch --onSuccess \"ts-node dist/index.js\"",
+		"start": "NODE_ENV=mainnet tsc && ts-node dist/index.js",
+		"start:dev": "NODE_ENV=testnet tsc-watch --onSuccess \"ts-node dist/index.js\"",
 		"start:ngrok": "ngrok http 3000",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
@@ -13,8 +13,11 @@
 	"license": "ISC",
 	"dependencies": {
 		"@dydxprotocol/v3-client": "^1.6.4",
+		"@types/config": "^0.0.41",
+		"config": "^3.3.7",
 		"dotenv": "^16.0.0",
 		"express": "^4.17.3",
+		"js-yaml": "^4.1.0",
 		"json2csv": "^5.0.7",
 		"ngrok": "^4.3.0"
 	},
