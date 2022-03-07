@@ -5,9 +5,11 @@ import config = require('config');
 const getAccount = async () => {
 	console.log(config.get('User.ethAddress'));
 	try {
-		const connector = new DYDXConnector();
+		const connector = await DYDXConnector.build();
 		const account: { account: AccountResponseObject } =
 			await connector.client.private.getAccount(config.get('User.ethAddress'));
+
+		console.log(connector.positionID);
 
 		return account;
 	} catch (error) {

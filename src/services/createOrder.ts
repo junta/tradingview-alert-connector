@@ -1,36 +1,49 @@
 import DYDXConnector from './client';
 import {
 	Market,
-	AccountResponseObject,
 	OrderResponseObject,
 	OrderSide,
 	OrderType,
 	TimeInForce
 } from '@dydxprotocol/v3-client';
-import { LIMIT_FEE } from '../constants';
+import config = require('config');
 
 const createOrder = async () => {
 	try {
-		const connector = new DYDXConnector();
+		const connector = await DYDXConnector.build();
+
+		// set expiration datetime. must be more than 1 minute from current datetime
+		const date = new Date();
+		date.setMinutes(date.getMinutes() + 2);
+		const dateStr = date.toJSON();
+
+		// set slippage price
+		const markets = await connector.client.public.getMarkets(Market.BTC_USD);
+		const latestPrice = parseFloat(markets.markets['BTC-USD'].oraclePrice);
+		const minPrice = String(Math.ceil(latestPrice * 0.99));
 
 		const orderResult: { order: OrderResponseObject } =
 			await connector.client.private.createOrder(
 				{
 					market: Market.BTC_USD,
-					side: OrderSide.BUY,
+					side: OrderSide.SELL,
 					type: OrderType.MARKET,
 					timeInForce: TimeInForce.FOK,
 					postOnly: false,
 					size: '0.001',
-					price: '50000',
-					limitFee: LIMIT_FEE,
-					expiration: '2022-12-21T21:30:20.200Z'
+					price: minPrice,
+					limitFee: config.get('User.limitFee'),
+					expiration: dateStr
 				},
-				// TODO: should be dynamic
-				// '167823' // required for creating the order signature
-				'59250'
+				connector.positionID
 			);
 
+		console.log(
+			'placed order market:',
+			Market.BTC_USD,
+			'side:',
+			OrderSide.SELL
+		);
 		return orderResult;
 	} catch (error) {
 		console.log(error);

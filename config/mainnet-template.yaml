@@ -3,6 +3,7 @@ Network:
   chainID: 1
 User:
   ethAddress:
+  limitFee: 0.06
   starkPublicKey:
   starkPrivateKey:
   apiKey:

@@ -1,9 +1,9 @@
-import { DydxClient } from '@dydxprotocol/v3-client';
+import { DydxClient, AccountResponseObject } from '@dydxprotocol/v3-client';
 import config = require('config');
 
 class DYDXConnector {
 	client: DydxClient;
-	_positionID: string = '0';
+	positionID = '0';
 
 	public constructor() {
 		const apiKey: string = config.get('User.apiKey');
@@ -31,8 +31,14 @@ class DYDXConnector {
 		});
 	}
 
-	public set positionID(id: string) {
-		this._positionID = id;
+	static async build() {
+		const connector = new DYDXConnector();
+		const account: { account: AccountResponseObject } =
+			await connector.client.private.getAccount(config.get('User.ethAddress'));
+
+		connector.positionID = account.account.positionId;
+
+		return connector;
 	}
 }
 
