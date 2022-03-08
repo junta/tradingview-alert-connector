@@ -1,50 +1,65 @@
 import DYDXConnector from './client';
 import {
-	Market,
 	OrderResponseObject,
 	OrderSide,
 	OrderType,
 	TimeInForce
 } from '@dydxprotocol/v3-client';
 import config = require('config');
-import { strategyObject } from '../types';
+import { alertObject } from '../types';
+import convertDydxMarket from './convertDydxMarket';
 
-const createOrder = async (strategy: strategyObject) => {
+const createOrder = async (alertMessage: alertObject) => {
+	let orderSize: string;
+	// check size is correct number
+	if (Number(alertMessage.size) > 0) {
+		orderSize = alertMessage.size;
+	} else {
+		console.error('size of this strategy is not correct');
+		return;
+	}
+
+	const orderSide =
+		alertMessage.order == 'buy' ? OrderSide.BUY : OrderSide.SELL;
+
+	// set expiration datetime. must be more than 1 minute from current datetime
+	const date = new Date();
+	date.setMinutes(date.getMinutes() + 2);
+	const dateStr = date.toJSON();
+
+	const orderMarket = convertDydxMarket(alertMessage.ticker);
+
 	try {
 		const connector = await DYDXConnector.build();
 
-		// set expiration datetime. must be more than 1 minute from current datetime
-		const date = new Date();
-		date.setMinutes(date.getMinutes() + 2);
-		const dateStr = date.toJSON();
-
 		// set slippage price
-		const markets = await connector.client.public.getMarkets(Market.BTC_USD);
-		const latestPrice = parseFloat(markets.markets['BTC-USD'].oraclePrice);
-		const minPrice = String(Math.ceil(latestPrice * 0.99));
+		const markets = await connector.client.public.getMarkets(orderMarket);
+		console.log('markets', markets);
+		const latestPrice = parseFloat(
+			markets.markets[alertMessage.ticker].oraclePrice
+		);
+		const minPrice =
+			orderSide == OrderSide.BUY
+				? latestPrice * (1 + 0.01)
+				: latestPrice * (1 - 0.01);
 
 		const orderResult: { order: OrderResponseObject } =
 			await connector.client.private.createOrder(
 				{
-					market: Market.BTC_USD,
-					side: OrderSide.SELL,
+					market: orderMarket,
+					side: orderSide,
 					type: OrderType.MARKET,
 					timeInForce: TimeInForce.FOK,
 					postOnly: false,
-					size: '0.001',
-					price: minPrice,
+					size: orderSize,
+					price: String(Math.ceil(minPrice)),
 					limitFee: config.get('User.limitFee'),
 					expiration: dateStr
 				},
 				connector.positionID
 			);
 
-		console.log(
-			'placed order market:',
-			Market.BTC_USD,
-			'side:',
-			OrderSide.SELL
-		);
+		console.log('placed order market:', orderMarket, 'side:', orderSide);
 		return orderResult;
 	} catch (error) {
 		console.log(error);

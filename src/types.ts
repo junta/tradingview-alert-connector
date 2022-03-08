@@ -1,6 +1,6 @@
-export type strategyObject = {
-	name: string;
+export type alertObject = {
+	strategy: string;
 	ticker: string;
-	active: boolean;
-	size: number;
+	size: string;
+	order: string;
 };

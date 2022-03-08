@@ -1,7 +1,6 @@
 import express, { Router } from 'express';
 import createOrder from '../services/createOrder';
 import getOrder from '../services/getOrder';
-import checkStrategy from '../services/checkStrategy';
 import config = require('config');
 
 const router: Router = express.Router();
@@ -17,12 +16,10 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
 	// console.log(req.header);
-	console.log('get post');
-	const strategy = checkStrategy(req.body);
-	let orderResult;
-	if (strategy) {
-		orderResult = await createOrder(strategy);
-	}
+	console.log('Recieve strategy alert:', req.body);
+
+	const orderResult = await createOrder(req.body);
+
 	res.send(orderResult);
 });
 
