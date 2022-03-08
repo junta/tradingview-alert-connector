@@ -7,8 +7,9 @@ import {
 	TimeInForce
 } from '@dydxprotocol/v3-client';
 import config = require('config');
+import { strategyObject } from '../types';
 
-const createOrder = async () => {
+const createOrder = async (strategy: strategyObject) => {
 	try {
 		const connector = await DYDXConnector.build();
 
