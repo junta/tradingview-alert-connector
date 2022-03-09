@@ -3,11 +3,11 @@ import {
 	OrderResponseObject,
 	OrderSide,
 	OrderType,
-	TimeInForce
+	TimeInForce,
+	Market
 } from '@dydxprotocol/v3-client';
 import config = require('config');
 import { alertObject } from '../types';
-import convertDydxMarket from './convertDydxMarket';
 
 const createOrder = async (alertMessage: alertObject) => {
 	let orderSize: string;
@@ -27,7 +27,8 @@ const createOrder = async (alertMessage: alertObject) => {
 	date.setMinutes(date.getMinutes() + 2);
 	const dateStr = date.toJSON();
 
-	const orderMarket = convertDydxMarket(alertMessage.ticker);
+	const orderMarket = Market[alertMessage.ticker as keyof typeof Market];
+	console.log('orderMarket: ', orderMarket);
 
 	try {
 		const connector = await DYDXConnector.build();
@@ -35,9 +36,7 @@ const createOrder = async (alertMessage: alertObject) => {
 		// set slippage price
 		const markets = await connector.client.public.getMarkets(orderMarket);
 		console.log('markets', markets);
-		const latestPrice = parseFloat(
-			markets.markets[alertMessage.ticker].oraclePrice
-		);
+		const latestPrice = parseFloat(markets.markets[orderMarket].oraclePrice);
 		const minPrice =
 			orderSide == OrderSide.BUY
 				? latestPrice * (1 + 0.01)
@@ -59,7 +58,14 @@ const createOrder = async (alertMessage: alertObject) => {
 				connector.positionID
 			);
 
-		console.log('placed order market:', orderMarket, 'side:', orderSide);
+		console.log(
+			'placed order market:',
+			orderMarket,
+			'side:',
+			orderSide,
+			'price:',
+			alertMessage.price
+		);
 		return orderResult;
 	} catch (error) {
 		console.log(error);

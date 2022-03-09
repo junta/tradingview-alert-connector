@@ -3,4 +3,5 @@ export type alertObject = {
 	ticker: string;
 	size: string;
 	order: string;
+	price: number;
 };

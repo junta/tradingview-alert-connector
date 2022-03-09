@@ -19,7 +19,8 @@
 		"express": "^4.17.3",
 		"js-yaml": "^4.1.0",
 		"json2csv": "^5.0.7",
-		"ngrok": "^4.3.0"
+		"ngrok": "^4.3.0",
+		"node-json-db": "^1.4.1"
 	},
 	"devDependencies": {
 		"@types/express": "^4.17.13",
