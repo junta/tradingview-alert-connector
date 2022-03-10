@@ -10,6 +10,12 @@ import config = require('config');
 import { alertObject } from '../types';
 import { JsonDB } from 'node-json-db';
 import { Config } from 'node-json-db/dist/lib/JsonDBConfig';
+import exportOrders from '../services/exportOrders';
+import getOrder from '../services/getOrder';
+import getFill from '../services/getFill';
+
+const _sleep = (ms: number) =>
+	new Promise((resolve) => setTimeout(resolve, ms));
 
 const createOrder = async (alertMessage: alertObject) => {
 	let orderSize: number;
@@ -73,6 +79,7 @@ const createOrder = async (alertMessage: alertObject) => {
 				? latestPrice * (1 + 0.01)
 				: latestPrice * (1 - 0.01);
 
+		// TODO: retry again if failed
 		const orderResult: { order: OrderResponseObject } =
 			await connector.client.private.createOrder(
 				{
@@ -88,6 +95,8 @@ const createOrder = async (alertMessage: alertObject) => {
 				},
 				connector.positionID
 			);
+
+		// console.log(orderResult.order);
 
 		console.log(
 			'placed order market:',
@@ -105,8 +114,23 @@ const createOrder = async (alertMessage: alertObject) => {
 			db.push(isFirstOrderPath, 'false');
 		}
 
-		const rootDataAfter = db.getData('/');
-		console.log('rootDataAfter', rootDataAfter);
+		// const rootDataAfter = db.getData('/');
+		// console.log('rootDataAfter', rootDataAfter);
+
+		// TODO: retry again if failed
+		_sleep(2000);
+		const result = await getOrder(orderResult.order.id);
+		// console.log('result', result);
+
+		// TODO: export price data if it is not filled
+		const fill = await getFill(orderResult.order.id);
+
+		await exportOrders(
+			alertMessage.strategy,
+			result.order,
+			Number(fill.price),
+			alertMessage.price
+		);
 
 		return orderResult;
 	} catch (error) {
