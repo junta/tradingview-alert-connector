@@ -2,7 +2,7 @@ import DYDXConnector from './client';
 import { OrderResponseObject } from '@dydxprotocol/v3-client';
 import config = require('config');
 
-const getOrder = async (order_id: string) => {
+export const getOrder = async (order_id: string) => {
 	try {
 		const connector = await DYDXConnector.build();
 		const orderResponse: { order: OrderResponseObject } =
@@ -14,5 +14,3 @@ const getOrder = async (order_id: string) => {
 		throw error;
 	}
 };
-
-export default getOrder;

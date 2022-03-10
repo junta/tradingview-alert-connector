@@ -1,7 +1,6 @@
 import express, { Router } from 'express';
-import createOrder from '../services/createOrder';
-import getOrder from '../services/getOrder';
-import getFill from '../services/getFill';
+
+import { getFill, createOrder, getAccount, checkAccount } from '../services';
 import config = require('config');
 
 const router: Router = express.Router();
@@ -11,6 +10,8 @@ router.get('/', async (req, res) => {
 	// 	'2a128d9e2bde51ecc8dab5bb5147d154260eea60524886c32a3c8e065f2acd9'
 	// );
 	// res.send(fill);
+	const orderResult = await getAccount();
+	res.send(orderResult);
 	// const orderResult = await createOrder();
 	// res.send(orderResult);
 	// const result = await getOrder(orderResult.order.id);
@@ -19,8 +20,9 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-	// console.log(req.header);
-	console.log('Recieve strategy alert:', req.body);
+	console.log('Recieve Tradingview strategy alert:', req.body);
+
+	await checkAccount();
 
 	const orderResult = await createOrder(req.body);
 

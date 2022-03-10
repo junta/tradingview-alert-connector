@@ -1,7 +1,7 @@
 import { OrderResponseObject } from '@dydxprotocol/v3-client';
 import * as fs from 'fs';
 
-const exportOrders = async (
+export const exportOrder = async (
 	strategy: string,
 	order: OrderResponseObject,
 	fillPrice: number,
@@ -24,5 +24,3 @@ const exportOrders = async (
 
 	fs.appendFileSync(csvPath, appendString);
 };
-
-export default exportOrders;

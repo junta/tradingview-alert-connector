@@ -9,8 +9,14 @@ class DYDXConnector {
 		const apiKey: string = config.get('User.apiKey');
 		const apiPassphrase: string = config.get('User.apiPassphrase');
 		const apiSecret: string = config.get('User.apiSecret');
+		if (!apiKey || !apiPassphrase || !apiSecret) {
+			throw new Error('API Key is not set in config file');
+		}
 		const publicKey: string = config.get('User.starkPublicKey');
 		const privateKey: string = config.get('User.starkPrivateKey');
+		if (!publicKey || !privateKey) {
+			throw new Error('STARK Key is not set in config file');
+		}
 
 		const apiKeys = {
 			key: apiKey,
@@ -32,11 +38,23 @@ class DYDXConnector {
 	}
 
 	static async build() {
+		const ethAddress: string = config.get('User.ethAddress');
+		if (!ethAddress) {
+			throw new Error('ethAddress is not set in config file');
+		}
+
 		const connector = new DYDXConnector();
 		const account: { account: AccountResponseObject } =
-			await connector.client.private.getAccount(config.get('User.ethAddress'));
+			await connector.client.private.getAccount(ethAddress);
 
 		connector.positionID = account.account.positionId;
+
+		// console.log(
+		// 	'initialized. ethAddress:',
+		// 	ethAddress,
+		// 	'positionID:',
+		// 	connector.positionID
+		// );
 
 		return connector;
 	}

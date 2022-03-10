@@ -10,14 +10,12 @@ import config = require('config');
 import { alertObject } from '../types';
 import { JsonDB } from 'node-json-db';
 import { Config } from 'node-json-db/dist/lib/JsonDBConfig';
-import exportOrders from '../services/exportOrders';
-import getOrder from '../services/getOrder';
-import getFill from '../services/getFill';
+import { getFill, getOrder, exportOrder } from '../services';
 
 const _sleep = (ms: number) =>
 	new Promise((resolve) => setTimeout(resolve, ms));
 
-const createOrder = async (alertMessage: alertObject) => {
+export const createOrder = async (alertMessage: alertObject) => {
 	let orderSize: number;
 	// check size is correct number
 	if (Number(alertMessage.size) > 0) {
@@ -125,7 +123,7 @@ const createOrder = async (alertMessage: alertObject) => {
 		// TODO: export price data if it is not filled
 		const fill = await getFill(orderResult.order.id);
 
-		await exportOrders(
+		await exportOrder(
 			alertMessage.strategy,
 			result.order,
 			Number(fill.price),
@@ -135,8 +133,5 @@ const createOrder = async (alertMessage: alertObject) => {
 		return orderResult;
 	} catch (error) {
 		console.log(error);
-		throw error;
 	}
 };
-
-export default createOrder;
