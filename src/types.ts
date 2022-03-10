@@ -4,4 +4,5 @@ export type alertObject = {
 	size: string;
 	order: string;
 	price: number;
+	reverse: boolean;
 };

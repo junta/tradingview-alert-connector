@@ -8,12 +8,14 @@ import {
 } from '@dydxprotocol/v3-client';
 import config = require('config');
 import { alertObject } from '../types';
+import { JsonDB } from 'node-json-db';
+import { Config } from 'node-json-db/dist/lib/JsonDBConfig';
 
 const createOrder = async (alertMessage: alertObject) => {
-	let orderSize: string;
+	let orderSize: number;
 	// check size is correct number
 	if (Number(alertMessage.size) > 0) {
-		orderSize = alertMessage.size;
+		orderSize = Number(alertMessage.size);
 	} else {
 		console.error('size of this strategy is not correct');
 		return;
@@ -29,6 +31,35 @@ const createOrder = async (alertMessage: alertObject) => {
 
 	const orderMarket = Market[alertMessage.ticker as keyof typeof Market];
 	console.log('orderMarket: ', orderMarket);
+
+	const db = new JsonDB(new Config('myStrategies', true, true, '/'));
+
+	const rootData = db.getData('/');
+	console.log('strategyData', rootData[alertMessage.strategy]);
+	let isReverseFirstOrder = false;
+	const rootPath = '/' + alertMessage.strategy;
+
+	if (!rootData[alertMessage.strategy]) {
+		const reversePath = rootPath + '/reverse';
+		db.push(reversePath, alertMessage.reverse);
+		if (alertMessage.reverse) {
+			const isFirstOrderPath = rootPath + '/isFirstOrder';
+			db.push(isFirstOrderPath, 'true');
+			isReverseFirstOrder = true;
+		}
+	}
+
+	const rootDataAfter = db.getData('/');
+
+	if (
+		alertMessage.reverse === true &&
+		rootDataAfter[alertMessage.strategy].isFirstOrder == 'false'
+	) {
+		orderSize = orderSize * 2;
+	}
+
+	const rootDataBefore = db.getData('/');
+	console.log('rootDataBefore', rootDataBefore);
 
 	try {
 		const connector = await DYDXConnector.build();
@@ -50,7 +81,7 @@ const createOrder = async (alertMessage: alertObject) => {
 					type: OrderType.MARKET,
 					timeInForce: TimeInForce.FOK,
 					postOnly: false,
-					size: orderSize,
+					size: String(orderSize),
 					price: String(Math.ceil(minPrice)),
 					limitFee: config.get('User.limitFee'),
 					expiration: dateStr
@@ -64,8 +95,19 @@ const createOrder = async (alertMessage: alertObject) => {
 			'side:',
 			orderSide,
 			'price:',
-			alertMessage.price
+			alertMessage.price,
+			'size:',
+			orderSize
 		);
+
+		if (isReverseFirstOrder) {
+			const isFirstOrderPath = rootPath + '/isFirstOrder';
+			db.push(isFirstOrderPath, 'false');
+		}
+
+		const rootDataAfter = db.getData('/');
+		console.log('rootDataAfter', rootDataAfter);
+
 		return orderResult;
 	} catch (error) {
 		console.log(error);
