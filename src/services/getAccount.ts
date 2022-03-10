@@ -8,6 +8,9 @@ export const getAccount = async () => {
 		const account: { account: AccountResponseObject } =
 			await connector.client.private.getAccount(config.get('User.ethAddress'));
 
+		if (Number(account.account.freeCollateral) == 0) {
+			throw new Error('No freeCollateral. Deposit collateral first.');
+		}
 		return account;
 	} catch (error) {
 		console.log(error);

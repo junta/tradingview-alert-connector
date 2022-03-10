@@ -1,7 +1,11 @@
 import express, { Router } from 'express';
-
-import { getFill, createOrder, getAccount, checkAccount } from '../services';
-import config = require('config');
+import {
+	getFill,
+	createOrder,
+	getAccount,
+	parseAlert,
+	exportOrder
+} from '../services';
 
 const router: Router = express.Router();
 
@@ -22,9 +26,20 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
 	console.log('Recieve Tradingview strategy alert:', req.body);
 
-	await checkAccount();
+	const orderParams = await parseAlert(req.body);
 
-	const orderResult = await createOrder(req.body);
+	let orderResult;
+	if (orderParams) {
+		orderResult = await createOrder(orderParams);
+	}
+
+	if (orderResult) {
+		await exportOrder(
+			req.body['strategy'],
+			orderResult.order,
+			req.body['price']
+		);
+	}
 
 	res.send(orderResult);
 });
