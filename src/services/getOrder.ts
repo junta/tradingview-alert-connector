@@ -1,6 +1,5 @@
 import DYDXConnector from './client';
 import { OrderResponseObject } from '@dydxprotocol/v3-client';
-import config = require('config');
 
 export const getOrder = async (order_id: string) => {
 	try {

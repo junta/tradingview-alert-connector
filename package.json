@@ -13,7 +13,7 @@
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
-		"@dydxprotocol/v3-client": "^1.6.4",
+		"@dydxprotocol/v3-client": "^1.6.7",
 		"@types/config": "^0.0.41",
 		"config": "^3.3.7",
 		"dotenv": "^16.0.0",
