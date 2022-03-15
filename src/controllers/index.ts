@@ -10,18 +10,9 @@ import {
 const router: Router = express.Router();
 
 router.get('/', async (req, res) => {
-	// const fill = await getFill(
-	// 	'2a128d9e2bde51ecc8dab5bb5147d154260eea60524886c32a3c8e065f2acd9'
-	// );
-	// res.send(fill);
 	// TODO: should change to show status
 	const orderResult = await getAccount();
 	res.send(orderResult);
-	// const orderResult = await createOrder();
-	// res.send(orderResult);
-	// const result = await getOrder(orderResult.order.id);
-	// res.send(result);
-	// console.log(req)
 });
 
 router.post('/', async (req, res) => {

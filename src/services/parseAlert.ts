@@ -12,6 +12,19 @@ import { JsonDB } from 'node-json-db';
 import { Config } from 'node-json-db/dist/lib/JsonDBConfig';
 
 export const parseAlert = async (alertMessage: AlertObject) => {
+	if (!Object.keys(alertMessage).length) {
+		console.error('tradingview alert is not JSON format.');
+		return;
+	}
+
+	if (
+		alertMessage.passphrase &&
+		alertMessage.passphrase != config.get('User.tradingviewPassphrase')
+	) {
+		console.error('passphrase from tradingview alert does not match to config');
+		return;
+	}
+
 	// set expiration datetime. must be more than 1 minute from current datetime
 	const date = new Date();
 	date.setMinutes(date.getMinutes() + 2);
@@ -34,9 +47,10 @@ export const parseAlert = async (alertMessage: AlertObject) => {
 	} else if (alertMessage.order == 'sell') {
 		orderParams.side = OrderSide.SELL;
 	} else {
-		throw new Error(
+		console.error(
 			'Side field of tradingview alert is not correct. Should be buy or sell'
 		);
+		return;
 	}
 
 	let orderSize: number;
@@ -48,7 +62,8 @@ export const parseAlert = async (alertMessage: AlertObject) => {
 		return;
 	}
 
-	const db = new JsonDB(new Config('myStrategies', true, true, '/'));
+	const dbName = config.util.getEnv('NODE_ENV') + 'MyStrategies';
+	const db = new JsonDB(new Config(dbName, true, true, '/'));
 
 	const rootData = db.getData('/');
 	console.log('strategyData', rootData[alertMessage.strategy]);
@@ -76,13 +91,11 @@ export const parseAlert = async (alertMessage: AlertObject) => {
 		orderParams.size = String(orderSize);
 	}
 
-	// const rootDataBefore = db.getData('/');
-	// console.log('rootDataBefore', rootDataBefore);
-
 	orderParams.market = Market[alertMessage.market as keyof typeof Market];
 	console.log('orderMarket: ', orderParams.market);
 	if (!orderParams.market) {
-		throw new Error('Market field of tradingview alert is not correct.');
+		console.error('Market field of tradingview alert is not correct.');
+		return;
 	}
 
 	const connector = await DYDXConnector.build();

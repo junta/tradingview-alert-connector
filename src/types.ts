@@ -12,6 +12,7 @@ export type AlertObject = {
 	order: string;
 	price: number;
 	reverse: boolean;
+	passphrase?: string;
 };
 
 export type OrderParams = {

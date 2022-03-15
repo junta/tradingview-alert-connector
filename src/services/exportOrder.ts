@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import { JsonDB } from 'node-json-db';
 import { Config } from 'node-json-db/dist/lib/JsonDBConfig';
 import { getFill, getOrder } from '../services';
+import config = require('config');
 
 const _sleep = (ms: number) =>
 	new Promise((resolve) => setTimeout(resolve, ms));
@@ -12,7 +13,8 @@ export const exportOrder = async (
 	order: OrderResponseObject,
 	tradingviewPrice: number
 ) => {
-	const db = new JsonDB(new Config('myStrategies', true, true, '/'));
+	const dbName = config.util.getEnv('NODE_ENV') + 'MyStrategies';
+	const db = new JsonDB(new Config(dbName, true, true, '/'));
 	const rootPath = '/' + strategy;
 	const isFirstOrderPath = rootPath + '/isFirstOrder';
 	db.push(isFirstOrderPath, 'false');
@@ -24,7 +26,8 @@ export const exportOrder = async (
 	// TODO: export price data if it is not filled
 	const fill = await getFill(order.id);
 
-	const csvPath = './exports/tradeHistory.csv';
+	const currentEnv = config.util.getEnv('NODE_ENV');
+	const csvPath = './exports/' + currentEnv + '/tradeHistory.csv';
 	const appendArray = [
 		result.order.createdAt,
 		strategy,
