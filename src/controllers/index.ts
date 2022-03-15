@@ -14,6 +14,7 @@ router.get('/', async (req, res) => {
 	// 	'2a128d9e2bde51ecc8dab5bb5147d154260eea60524886c32a3c8e065f2acd9'
 	// );
 	// res.send(fill);
+	// TODO: should change to show status
 	const orderResult = await getAccount();
 	res.send(orderResult);
 	// const orderResult = await createOrder();

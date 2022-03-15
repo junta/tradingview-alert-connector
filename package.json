@@ -13,6 +13,10 @@
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
+		"@types/express": "^4.17.13",
+		"@types/node": "^17.0.21",
+		"ts-node": "^10.5.0",
+		"typescript": "^4.5.5",
 		"@dydxprotocol/v3-client": "^1.6.7",
 		"@types/config": "^0.0.41",
 		"config": "^3.3.7",
@@ -23,15 +27,11 @@
 		"node-json-db": "^1.4.1"
 	},
 	"devDependencies": {
-		"@types/express": "^4.17.13",
-		"@types/node": "^17.0.21",
 		"@typescript-eslint/eslint-plugin": "^5.13.0",
 		"@typescript-eslint/parser": "^5.13.0",
 		"eslint": "^8.10.0",
 		"eslint-config-prettier": "^8.4.0",
 		"prettier": "2.5.1",
-		"ts-node": "^10.5.0",
-		"tsc-watch": "^4.6.0",
-		"typescript": "^4.5.5"
+		"tsc-watch": "^4.6.0"
 	}
 }
