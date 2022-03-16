@@ -1,6 +1,5 @@
 import DYDXConnector from './client';
 import {
-	AccountResponseObject,
 	OrderSide,
 	Market,
 	OrderType,
@@ -67,7 +66,7 @@ export const parseAlert = async (alertMessage: AlertObject) => {
 
 	const rootData = db.getData('/');
 	console.log('strategyData', rootData[alertMessage.strategy]);
-	let isReverseFirstOrder = false;
+
 	const rootPath = '/' + alertMessage.strategy;
 
 	if (!rootData[alertMessage.strategy]) {
@@ -76,7 +75,6 @@ export const parseAlert = async (alertMessage: AlertObject) => {
 		if (alertMessage.reverse) {
 			const isFirstOrderPath = rootPath + '/isFirstOrder';
 			db.push(isFirstOrderPath, 'true');
-			isReverseFirstOrder = true;
 		}
 	}
 
@@ -102,7 +100,7 @@ export const parseAlert = async (alertMessage: AlertObject) => {
 
 	// set slippage price
 	const markets = await connector.client.public.getMarkets(orderParams.market);
-	console.log('markets', markets);
+	// console.log('markets', markets);
 	const latestPrice = parseFloat(
 		markets.markets[orderParams.market].oraclePrice
 	);

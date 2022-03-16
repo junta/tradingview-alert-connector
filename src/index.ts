@@ -1,6 +1,5 @@
 import express from 'express';
 import controller from './controllers/index';
-import config = require('config');
 
 const app: express.Express = express();
 const port = process.env.PORT || 3000;

@@ -16,7 +16,7 @@ export const createOrder = async (orderParams: OrderParams) => {
 		// console.log(orderResult.order);
 
 		console.log(
-			'placed order market:',
+			new Date() + ' placed order market:',
 			orderParams.market,
 			'side:',
 			orderParams.side,
