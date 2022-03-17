@@ -62,7 +62,8 @@ export const parseAlert = async (alertMessage: AlertObject) => {
 		return;
 	}
 
-	const dbName = config.util.getEnv('NODE_ENV') + 'MyStrategies';
+	const dbName =
+		'./strategies/' + config.util.getEnv('NODE_ENV') + '/myStrategies';
 	const db = new JsonDB(new Config(dbName, true, true, '/'));
 
 	const rootData = db.getData('/');

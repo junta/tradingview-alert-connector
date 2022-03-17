@@ -2,8 +2,7 @@
 dist
 
 #strategy json file
-mainnetMyStrategies.json
-testnetMyStrategies.json
+strategies
 
 # Logs
 logs

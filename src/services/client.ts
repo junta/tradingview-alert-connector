@@ -1,7 +1,6 @@
 import { DydxClient, AccountResponseObject } from '@dydxprotocol/v3-client';
 import config = require('config');
 import 'dotenv/config';
-import { getAccount } from '../services';
 
 class DYDXConnector {
 	client: DydxClient;
@@ -44,7 +43,8 @@ class DYDXConnector {
 		}
 
 		const connector = new DYDXConnector();
-		const account: { account: AccountResponseObject } = await getAccount();
+		const account: { account: AccountResponseObject } =
+			await connector.client.private.getAccount(process.env.ETH_ADDRESS);
 
 		connector.positionID = account.account.positionId;
 
