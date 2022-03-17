@@ -78,11 +78,9 @@ export const parseAlert = async (alertMessage: AlertObject) => {
 		}
 	}
 
-	const rootDataAfter = db.getData('/');
-
 	if (
-		alertMessage.reverse === true &&
-		rootDataAfter[alertMessage.strategy].isFirstOrder == 'false'
+		alertMessage.reverse &&
+		rootData[alertMessage.strategy].isFirstOrder == 'false'
 	) {
 		orderParams.size = String(orderSize * 2);
 	} else {

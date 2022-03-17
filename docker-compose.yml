@@ -6,4 +6,4 @@ services:
     # volumes:
     #   - ./node/app:/app
     ports:
-      - '8080:3000'
+      - '80:3000'

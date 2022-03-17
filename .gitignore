@@ -1,6 +1,10 @@
 #dist directory
 dist
 
+#strategy json file
+mainnetMyStrategies.json
+testnetMyStrategies.json
+
 # Logs
 logs
 *.log
