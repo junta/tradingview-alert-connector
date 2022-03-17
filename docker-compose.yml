@@ -7,3 +7,11 @@ services:
     #   - ./node/app:/app
     ports:
       - '80:3000'
+    environment:
+      ETH_ADDRESS: ${ETH_ADDRESS}
+      STARK_PUBLIC_KEY: ${STARK_PUBLIC_KEY}
+      STARK_PRIVATE_KEY: ${STARK_PRIVATE_KEY}
+      API_KEY: ${API_KEY}
+      API_PASSPHRASE: ${API_PASSPHRASE}
+      API_SECRET: ${API_SECRET}
+      TRADINGVIEW_PASSPHRASE: ${TRADINGVIEW_PASSPHRASE}
