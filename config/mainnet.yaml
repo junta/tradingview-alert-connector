@@ -1,0 +1,5 @@
+Network:
+  host: 'https://api.dydx.exchange'
+  chainID: 1
+User:
+  limitFee: 0.06

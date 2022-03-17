@@ -9,6 +9,7 @@ import config = require('config');
 import { AlertObject, OrderParams } from '../types';
 import { JsonDB } from 'node-json-db';
 import { Config } from 'node-json-db/dist/lib/JsonDBConfig';
+import 'dotenv/config';
 
 export const parseAlert = async (alertMessage: AlertObject) => {
 	if (!Object.keys(alertMessage).length) {
@@ -18,7 +19,7 @@ export const parseAlert = async (alertMessage: AlertObject) => {
 
 	if (
 		alertMessage.passphrase &&
-		alertMessage.passphrase != config.get('User.tradingviewPassphrase')
+		alertMessage.passphrase != process.env.TRADINGVIEW_PASSPHRASE
 	) {
 		console.error('passphrase from tradingview alert does not match to config');
 		return;

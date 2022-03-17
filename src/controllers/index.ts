@@ -5,8 +5,8 @@ const router: Router = express.Router();
 
 router.get('/', async (req, res) => {
 	// TODO: should change to show status
-	const orderResult = await getAccount();
-	res.send(orderResult);
+	const accountResult = await getAccount();
+	res.send(accountResult.account.positionId);
 });
 
 router.post('/', async (req, res) => {

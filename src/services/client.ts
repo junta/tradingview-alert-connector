@@ -1,32 +1,33 @@
 import { DydxClient, AccountResponseObject } from '@dydxprotocol/v3-client';
 import config = require('config');
+import 'dotenv/config';
+import { getAccount } from '../services';
 
 class DYDXConnector {
 	client: DydxClient;
 	positionID = '0';
 
 	public constructor() {
-		const apiKey: string = config.get('User.apiKey');
-		const apiPassphrase: string = config.get('User.apiPassphrase');
-		const apiSecret: string = config.get('User.apiSecret');
-		if (!apiKey || !apiPassphrase || !apiSecret) {
+		if (
+			!process.env.API_KEY ||
+			!process.env.API_PASSPHRASE ||
+			!process.env.API_PASSPHRASE
+		) {
 			throw new Error('API Key is not set in config file');
 		}
-		const publicKey: string = config.get('User.starkPublicKey');
-		const privateKey: string = config.get('User.starkPrivateKey');
-		if (!publicKey || !privateKey) {
+		if (!process.env.STARK_PUBLIC_KEY || !process.env.STARK_PRIVATE_KEY) {
 			throw new Error('STARK Key is not set in config file');
 		}
 
 		const apiKeys = {
-			key: apiKey,
-			passphrase: apiPassphrase,
-			secret: apiSecret
+			key: process.env.API_KEY,
+			passphrase: process.env.API_PASSPHRASE,
+			secret: process.env.API_SECRET
 		};
 
 		const starkKeyPair = {
-			publicKey: publicKey,
-			privateKey: privateKey
+			publicKey: process.env.STARK_PUBLIC_KEY,
+			privateKey: process.env.STARK_PRIVATE_KEY
 		};
 
 		this.client = new DydxClient(config.get('Network.host'), {
@@ -38,14 +39,12 @@ class DYDXConnector {
 	}
 
 	static async build() {
-		const ethAddress: string = config.get('User.ethAddress');
-		if (!ethAddress) {
+		if (!process.env.ETH_ADDRESS) {
 			throw new Error('ethAddress is not set in config file');
 		}
 
 		const connector = new DYDXConnector();
-		const account: { account: AccountResponseObject } =
-			await connector.client.private.getAccount(ethAddress);
+		const account: { account: AccountResponseObject } = await getAccount();
 
 		connector.positionID = account.account.positionId;
 

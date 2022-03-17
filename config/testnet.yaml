@@ -1,0 +1,5 @@
+Network:
+  host: https://api.stage.dydx.exchange
+  chainID: 3
+User:
+  limitFee: 0.06
