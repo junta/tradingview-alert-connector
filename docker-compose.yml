@@ -3,8 +3,9 @@ services:
   webserver:
     build: ./
     tty: true
-    # volumes:
-    #   - ./node/app:/app
+    volumes:
+      - strategies:/app/strategies
+      - exports:/app/exports
     ports:
       - '80:3000'
     environment:
@@ -15,3 +16,6 @@ services:
       API_PASSPHRASE: ${API_PASSPHRASE}
       API_SECRET: ${API_SECRET}
       TRADINGVIEW_PASSPHRASE: ${TRADINGVIEW_PASSPHRASE}
+volumes:
+  strategies:
+  exports:

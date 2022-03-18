@@ -5,12 +5,14 @@ const router: Router = express.Router();
 
 router.get('/', async (req, res) => {
 	// TODO: should change to show status
+	console.log('Recieved GET request.');
+
 	const accountResult = await getAccount();
 	res.send(accountResult.account.positionId);
 });
 
 router.post('/', async (req, res) => {
-	console.log('Recieve Tradingview strategy alert:', req.body);
+	console.log('Recieved Tradingview strategy alert:', req.body);
 
 	const orderParams = await parseAlert(req.body);
 
