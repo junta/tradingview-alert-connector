@@ -59,7 +59,7 @@ export const parseAlert = async (alertMessage: AlertObject) => {
 
 	let orderSize: number;
 	// check size is correct number
-	if (alertMessage.size > minOrderSize) {
+	if (alertMessage.size >= minOrderSize) {
 		orderSize = alertMessage.size;
 	} else {
 		console.error(
