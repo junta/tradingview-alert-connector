@@ -13,19 +13,26 @@ export const exportOrder = async (
 	order: OrderResponseObject,
 	tradingviewPrice: number
 ) => {
-	const dbName =
-		'./strategies/' + config.util.getEnv('NODE_ENV') + '/myStrategies';
-	const db = new JsonDB(new Config(dbName, true, true, '/'));
-	const rootPath = '/' + strategy;
-	const isFirstOrderPath = rootPath + '/isFirstOrder';
-	db.push(isFirstOrderPath, 'false');
-
 	_sleep(2000);
 	const result = await getOrder(order.id);
 	// console.log('result', result);
 
-	// TODO: export price data if it is not filled
-	const fill = await getFill(order.id);
+	let price;
+	if (result.order.status == 'FILLED') {
+		const fill = await getFill(order.id);
+		price = fill.price;
+
+		//TODO: add filled log
+
+		const dbName =
+			'./strategies/' + config.util.getEnv('NODE_ENV') + '/myStrategies';
+		const db = new JsonDB(new Config(dbName, true, true, '/'));
+		const rootPath = '/' + strategy;
+		const isFirstOrderPath = rootPath + '/isFirstOrder';
+		db.push(isFirstOrderPath, 'false');
+	} else {
+		price = '';
+	}
 
 	const currentEnv = config.util.getEnv('NODE_ENV');
 	const csvPath = './exports/' + currentEnv + '/tradeHistory.csv';
@@ -35,7 +42,7 @@ export const exportOrder = async (
 		result.order.market,
 		result.order.side,
 		result.order.size,
-		fill.price,
+		price,
 		tradingviewPrice,
 		result.order.status,
 		result.order.id,

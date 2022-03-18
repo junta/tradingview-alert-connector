@@ -42,6 +42,33 @@ export const parseAlert = async (alertMessage: AlertObject) => {
 		expiration: dateStr
 	};
 
+	orderParams.market = Market[alertMessage.market as keyof typeof Market];
+	if (!orderParams.market) {
+		console.error('Market field of tradingview alert is not correct.');
+		return;
+	}
+
+	const connector = await DYDXConnector.build();
+
+	const markets = await connector.client.public.getMarkets(orderParams.market);
+	// console.log('markets', markets);
+
+	const minOrderSize = parseFloat(
+		markets.markets[orderParams.market].minOrderSize
+	);
+
+	let orderSize: number;
+	// check size is correct number
+	if (alertMessage.size > minOrderSize) {
+		orderSize = alertMessage.size;
+	} else {
+		console.error(
+			'Order size of this strategy should be greater than mininum order size:',
+			minOrderSize
+		);
+		return;
+	}
+
 	if (alertMessage.order == 'buy') {
 		orderParams.side = OrderSide.BUY;
 	} else if (alertMessage.order == 'sell') {
@@ -50,15 +77,6 @@ export const parseAlert = async (alertMessage: AlertObject) => {
 		console.error(
 			'Side field of tradingview alert is not correct. Should be buy or sell'
 		);
-		return;
-	}
-
-	let orderSize: number;
-	// check size is correct number
-	if (alertMessage.size > 0) {
-		orderSize = alertMessage.size;
-	} else {
-		console.error('Size of this strategy is not correct');
 		return;
 	}
 
@@ -89,29 +107,29 @@ export const parseAlert = async (alertMessage: AlertObject) => {
 		orderParams.size = String(orderSize);
 	}
 
-	orderParams.market = Market[alertMessage.market as keyof typeof Market];
-	console.log('orderMarket: ', orderParams.market);
-	if (!orderParams.market) {
-		console.error('Market field of tradingview alert is not correct.');
-		return;
-	}
-
-	const connector = await DYDXConnector.build();
-
-	// set slippage price
-	const markets = await connector.client.public.getMarkets(orderParams.market);
-	// console.log('markets', markets);
 	const latestPrice = parseFloat(
 		markets.markets[orderParams.market].oraclePrice
 	);
 
-	const slippagePercentage = 0.01;
+	const tickSize = parseFloat(markets.markets[orderParams.market].tickSize);
+
+	console.log('latestPrice', latestPrice);
+
+	const slippagePercentage = 0.05;
 	const minPrice =
 		orderParams.side == OrderSide.BUY
 			? latestPrice * (1 + slippagePercentage)
 			: latestPrice * (1 - slippagePercentage);
-	orderParams.price = String(Math.ceil(minPrice));
+
+	const decimal = getDecimalPointLength(tickSize);
+	orderParams.price = minPrice.toFixed(decimal);
 
 	console.log('orderParams', orderParams);
 	return orderParams;
+};
+
+const getDecimalPointLength = function (number: number) {
+	const numbers = String(number).split('.');
+
+	return numbers[1] ? numbers[1].length : 0;
 };
