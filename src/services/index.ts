@@ -3,4 +3,5 @@ export * from './getAccount';
 export * from './getOrder';
 export * from './createOrder';
 export * from './exportOrder';
-export * from './parseAlert';
+export * from './buildOrderParams';
+export * from './validateAlert';

@@ -11,6 +11,7 @@ export type AlertObject = {
 	size: number;
 	order: string;
 	price: number;
+	position: string;
 	reverse: boolean;
 	passphrase?: string;
 };

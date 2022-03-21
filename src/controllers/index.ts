@@ -1,5 +1,12 @@
 import express, { Router } from 'express';
-import { createOrder, getAccount, parseAlert, exportOrder } from '../services';
+import {
+	createOrder,
+	getAccount,
+	buildOrderParams,
+	exportOrder,
+	validateAlert
+} from '../services';
+import { OrderParams } from '../types';
 
 const router: Router = express.Router();
 
@@ -14,7 +21,12 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
 	console.log('Recieved Tradingview strategy alert:', req.body);
 
-	const orderParams = await parseAlert(req.body);
+	const validated = await validateAlert(req.body);
+	if (!validated) {
+		return;
+	}
+
+	const orderParams: OrderParams | undefined = await buildOrderParams(req.body);
 
 	let orderResult;
 	if (orderParams) {

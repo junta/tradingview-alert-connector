@@ -4,9 +4,7 @@ import { JsonDB } from 'node-json-db';
 import { Config } from 'node-json-db/dist/lib/JsonDBConfig';
 import { getFill, getOrder } from '../services';
 import config = require('config');
-
-const _sleep = (ms: number) =>
-	new Promise((resolve) => setTimeout(resolve, ms));
+import { _sleep } from '../helper';
 
 export const exportOrder = async (
 	strategy: string,
@@ -22,7 +20,7 @@ export const exportOrder = async (
 		const fill = await getFill(order.id);
 		price = fill.price;
 
-		//TODO: add filled log
+		console.log('order id:', order.id, 'is filled at', price);
 
 		const dbName =
 			'./strategies/' + config.util.getEnv('NODE_ENV') + '/myStrategies';
