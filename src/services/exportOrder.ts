@@ -36,6 +36,8 @@ export const exportOrder = async (
 
 	const currentEnv = config.util.getEnv('NODE_ENV');
 	const csvPath = './exports/' + currentEnv + '/tradeHistory.csv';
+	// export price gap between tradingview price and ordered price
+	const priceGap = Number(price) - tradingviewPrice;
 	const appendArray = [
 		result.order.createdAt,
 		strategy,
@@ -44,6 +46,7 @@ export const exportOrder = async (
 		result.order.size,
 		price,
 		tradingviewPrice,
+		priceGap,
 		result.order.status,
 		result.order.id,
 		result.order.accountId
