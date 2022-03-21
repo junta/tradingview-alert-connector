@@ -16,6 +16,7 @@ services:
       API_PASSPHRASE: ${API_PASSPHRASE}
       API_SECRET: ${API_SECRET}
       TRADINGVIEW_PASSPHRASE: ${TRADINGVIEW_PASSPHRASE}
+      SENTRY_DNS: ${SENTRY_DNS}
 volumes:
   strategies:
   exports:

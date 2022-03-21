@@ -7,9 +7,9 @@ import 'dotenv/config';
 const app: express.Express = express();
 const port = process.env.PORT || 3000;
 
-if (process.env.sentryDns) {
+if (process.env.SENTRY_DNS) {
 	Sentry.init({
-		dsn: process.env.sentryDns,
+		dsn: process.env.SENTRY_DNS,
 		integrations: [
 			// enable HTTP calls tracing
 			new Sentry.Integrations.Http({ tracing: true }),
@@ -34,7 +34,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/', controller);
 
-if (process.env.sentryDns) {
+if (process.env.SENTRY_DNS) {
 	app.use(Sentry.Handlers.errorHandler());
 }
 
