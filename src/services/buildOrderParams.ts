@@ -7,15 +7,11 @@ import {
 } from '@dydxprotocol/v3-client';
 import config = require('config');
 import { AlertObject, OrderParams } from '../types';
-import { JsonDB } from 'node-json-db';
-import { Config } from 'node-json-db/dist/lib/JsonDBConfig';
 import 'dotenv/config';
-import { getDecimalPointLength } from '../helper';
+import { getDecimalPointLength, getStrategiesDB } from '../helper';
 
 export const buildOrderParams = async (alertMessage: AlertObject) => {
-	const dbName =
-		'./strategies/' + config.util.getEnv('NODE_ENV') + '/myStrategies';
-	const db = new JsonDB(new Config(dbName, true, true, '/'));
+	const db = getStrategiesDB();
 
 	const rootData = db.getData('/');
 	console.log('strategyData', rootData[alertMessage.strategy]);

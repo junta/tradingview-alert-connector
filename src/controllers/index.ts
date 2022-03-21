@@ -44,4 +44,8 @@ router.post('/', async (req, res) => {
 	res.send(orderResult);
 });
 
+router.get('/debug-sentry', function mainHandler(req, res) {
+	throw new Error('My first Sentry error!');
+});
+
 export default router;

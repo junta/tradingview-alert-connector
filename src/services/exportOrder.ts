@@ -1,10 +1,8 @@
 import { OrderResponseObject } from '@dydxprotocol/v3-client';
 import * as fs from 'fs';
-import { JsonDB } from 'node-json-db';
-import { Config } from 'node-json-db/dist/lib/JsonDBConfig';
 import { getFill, getOrder } from '../services';
 import config = require('config');
-import { _sleep } from '../helper';
+import { _sleep, getStrategiesDB } from '../helper';
 
 export const exportOrder = async (
 	strategy: string,
@@ -22,9 +20,7 @@ export const exportOrder = async (
 
 		console.log('order id:', order.id, 'is filled at', price);
 
-		const dbName =
-			'./strategies/' + config.util.getEnv('NODE_ENV') + '/myStrategies';
-		const db = new JsonDB(new Config(dbName, true, true, '/'));
+		const db = getStrategiesDB();
 		const rootPath = '/' + strategy;
 		const isFirstOrderPath = rootPath + '/isFirstOrder';
 		db.push(isFirstOrderPath, 'false');
