@@ -2,6 +2,7 @@ import express from 'express';
 import controller from './controllers/index';
 import * as Sentry from '@sentry/node';
 import * as Tracing from '@sentry/tracing';
+import helmet from 'helmet';
 import 'dotenv/config';
 
 const app: express.Express = express();
@@ -28,6 +29,8 @@ if (process.env.SENTRY_DNS) {
 
 	console.log('initialized Sentry.io');
 }
+
+app.use(helmet());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
