@@ -13,7 +13,7 @@ export const getDecimalPointLength = function (number: number) {
 
 export const getStrategiesDB = () => {
 	const dbName =
-		'./strategies/' + config.util.getEnv('NODE_ENV') + '/myStrategies';
+		'./data/strategies/' + config.util.getEnv('NODE_ENV') + '/myStrategies';
 	const db = new JsonDB(new Config(dbName, true, true, '/'));
 	return db;
 };
