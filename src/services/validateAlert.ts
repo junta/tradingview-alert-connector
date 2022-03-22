@@ -28,6 +28,16 @@ export const validateAlert = async (
 		return false;
 	}
 
+	//check position
+	if (
+		alertMessage.position != 'long' &&
+		alertMessage.position != 'short' &&
+		alertMessage.position != 'flat'
+	) {
+		console.error('position field of tradingview alert is not correct.');
+		return false;
+	}
+
 	// check market
 	const market = Market[alertMessage.market as keyof typeof Market];
 	if (!market) {
