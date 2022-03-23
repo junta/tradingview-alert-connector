@@ -28,6 +28,24 @@ export const exportOrder = async (
 		price = '';
 	}
 
+	// check exports directories exist
+	const path = './data/exports/';
+	if (!fs.existsSync(path)) {
+		// create directories
+		fs.mkdirSync(path + 'mainnet', {
+			recursive: true
+		});
+		fs.mkdirSync(path + 'testnet', {
+			recursive: true
+		});
+
+		// create new CSV
+		const headerString =
+			'datetime,strategy,market,side,size,orderPrice,tradingviewPrice,priceGap,status,orderId,accountId';
+		fs.writeFileSync(path + 'mainnet/tradeHistory.csv', headerString);
+		fs.writeFileSync(path + 'testnet/tradeHistory.csv', headerString);
+	}
+
 	const currentEnv = config.util.getEnv('NODE_ENV');
 	const csvPath = './data/exports/' + currentEnv + '/tradeHistory.csv';
 	// export price gap between tradingview price and ordered price

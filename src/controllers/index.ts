@@ -11,11 +11,11 @@ import { OrderParams } from '../types';
 const router: Router = express.Router();
 
 router.get('/', async (req, res) => {
-	// TODO: should change to show status
 	console.log('Recieved GET request.');
 
 	const accountResult = await getAccount();
-	res.send(accountResult.account.positionId);
+
+	res.send('OK');
 });
 
 router.post('/', async (req, res) => {
