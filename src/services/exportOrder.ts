@@ -11,12 +11,15 @@ export const exportOrder = async (
 ) => {
 	_sleep(2000);
 	const result = await getOrder(order.id);
+	if (!result) {
+		return;
+	}
 	// console.log('result', result);
 
 	let price;
 	if (result.order.status == 'FILLED') {
 		const fill = await getFill(order.id);
-		price = fill.price;
+		price = fill ? fill.price : '';
 
 		console.log('order id:', order.id, 'is filled at', price);
 

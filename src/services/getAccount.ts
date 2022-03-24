@@ -14,7 +14,6 @@ export const getAccount = async () => {
 		}
 		return account;
 	} catch (error) {
-		console.log(error);
-		throw error;
+		console.error(error);
 	}
 };
