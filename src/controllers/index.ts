@@ -14,6 +14,7 @@ router.get('/', async (req, res) => {
 	console.log('Recieved GET request.');
 
 	const accountResult = await getAccount();
+	console.log(accountResult);
 
 	res.send('OK');
 });

@@ -46,8 +46,9 @@ export const exportOrder = async (
 		fs.writeFileSync(path + 'testnet/tradeHistory.csv', headerString);
 	}
 
-	const currentEnv = config.util.getEnv('NODE_ENV');
-	const csvPath = './data/exports/' + currentEnv + '/tradeHistory.csv';
+	const environment =
+		config.util.getEnv('NODE_ENV') == 'production' ? 'mainnet' : 'testnet';
+	const csvPath = './data/exports/' + environment + '/tradeHistory.csv';
 	// export price gap between tradingview price and ordered price
 	const priceGap = Number(price) - tradingviewPrice;
 	const appendArray = [

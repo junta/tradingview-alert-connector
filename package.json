@@ -4,9 +4,9 @@
 	"description": "",
 	"main": "index.js",
 	"scripts": {
-		"start": "tsc && NODE_ENV=mainnet ts-node dist/index.js",
-		"start:test": "tsc && NODE_ENV=testnet ts-node dist/index.js",
-		"start:dev": "NODE_ENV=testnet tsc-watch --onSuccess \"ts-node dist/index.js\"",
+		"start": "tsc && NODE_ENV=production ts-node dist/index.js",
+		"start:test": "tsc && NODE_ENV=development ts-node dist/index.js",
+		"start:dev": "NODE_ENV=development tsc-watch --onSuccess \"ts-node dist/index.js\"",
 		"ngrok": "ngrok http 3000",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},

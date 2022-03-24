@@ -12,8 +12,9 @@ export const getDecimalPointLength = function (number: number) {
 };
 
 export const getStrategiesDB = () => {
-	const dbName =
-		'./data/strategies/' + config.util.getEnv('NODE_ENV') + '/myStrategies';
+	const environment =
+		config.util.getEnv('NODE_ENV') == 'production' ? 'mainnet' : 'testnet';
+	const dbName = './data/strategies/' + environment + '/myStrategies';
 	const db = new JsonDB(new Config(dbName, true, true, '/'));
 	return db;
 };
