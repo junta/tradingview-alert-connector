@@ -4,7 +4,8 @@ import {
 	getAccount,
 	buildOrderParams,
 	exportOrder,
-	validateAlert
+	validateAlert,
+	checkAfterPosition
 } from '../services';
 import { OrderParams } from '../types';
 
@@ -15,8 +16,11 @@ router.get('/', async (req, res) => {
 
 	const accountResult = await getAccount();
 	console.log(accountResult);
-
-	res.send('OK');
+	if (accountResult) {
+		res.send('OK');
+	} else {
+		res.send('Error on getting account data');
+	}
 });
 
 router.post('/', async (req, res) => {
@@ -41,6 +45,8 @@ router.post('/', async (req, res) => {
 			req.body['price']
 		);
 	}
+
+	checkAfterPosition(req.body);
 
 	res.send(orderResult);
 });

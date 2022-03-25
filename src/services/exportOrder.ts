@@ -14,7 +14,7 @@ export const exportOrder = async (
 	if (!result) {
 		return;
 	}
-	// console.log('result', result);
+	console.log('result', result);
 
 	let price;
 	if (result.order.status == 'FILLED') {
@@ -27,6 +27,19 @@ export const exportOrder = async (
 		const rootPath = '/' + strategy;
 		const isFirstOrderPath = rootPath + '/isFirstOrder';
 		db.push(isFirstOrderPath, 'false');
+
+		// Store position data
+		const positionPath = rootPath + '/position';
+		const position: number =
+			order.side == 'BUY' ? Number(order.size) : -1 * Number(order.size);
+
+		const rootData = db.getData('/');
+
+		const storedSize = rootData[strategy].position
+			? rootData[strategy].position
+			: 0;
+
+		db.push(positionPath, storedSize + position);
 	} else {
 		price = '';
 	}

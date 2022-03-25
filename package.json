@@ -1,7 +1,8 @@
 {
 	"name": "dydx-tradingview-integration",
 	"version": "1.0.0",
-	"description": "",
+	"description": "Free and self-hosted tool for you to Integrate TradingView strategy alert and execute automated trading for dYdX.",
+	"homepage": "https://dydx-tv.gitbook.io/",
 	"main": "index.js",
 	"scripts": {
 		"start": "tsc && NODE_ENV=production ts-node dist/index.js",
@@ -10,8 +11,8 @@
 		"ngrok": "ngrok http 3000",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
-	"author": "",
-	"license": "ISC",
+	"author": "0xIbuki",
+	"license": "MIT",
 	"dependencies": {
 		"@dydxprotocol/v3-client": "^1.6.7",
 		"@sentry/integrations": "^6.19.1",

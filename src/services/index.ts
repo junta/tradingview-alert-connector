@@ -5,3 +5,4 @@ export * from './createOrder';
 export * from './exportOrder';
 export * from './buildOrderParams';
 export * from './validateAlert';
+export * from './checkAfterPosition';
