@@ -2,13 +2,13 @@
 
 dYdX Tradingview Integration is a free and noncustodial tool for you to Integrate tradingView strategy alert and execute automated trading for dYdX.
 
-# Tutorial
+# Docs
 
 https://dydx-tv.gitbook.io/
 
 # Video Tutorial
 
-TBA
+https://www.youtube.com/watch?v=I8hB2O2-xx4
 
 # Prerequisites
 
@@ -25,13 +25,13 @@ https://dydx.exchange/
 ```bash
 git clone https://github.com/junta/dydx-tradingview-integration
 cd dydx-tradingview-integration
-npm install
+yarn
 ```
 
 # Quick Start
 
 - rename .env.sample to .env
-- fill environment variables in .env (see full tutorial)
+- fill environment variables in .env (see [full tutorial](https://dydx-tv.gitbook.io/dydx-tradingview-strategy-integration/setuup/running-on-local-pc#steps))
 
 ### with Docker
 

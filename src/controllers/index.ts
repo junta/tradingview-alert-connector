@@ -48,7 +48,7 @@ router.post('/', async (req, res) => {
 
 	checkAfterPosition(req.body);
 
-	res.send(orderResult);
+	res.send('OK');
 });
 
 router.get('/debug-sentry', function mainHandler(req, res) {
