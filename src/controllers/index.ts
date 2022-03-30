@@ -28,6 +28,7 @@ router.post('/', async (req, res) => {
 
 	const validated = await validateAlert(req.body);
 	if (!validated) {
+		res.send('Error. alert message is not valid');
 		return;
 	}
 
