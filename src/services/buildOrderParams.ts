@@ -50,20 +50,22 @@ export const buildOrderParams = async (alertMessage: AlertObject) => {
 	const orderSide =
 		alertMessage.order == 'buy' ? OrderSide.BUY : OrderSide.SELL;
 
-	let orderSize;
+	let orderSize: number;
 	if (
 		alertMessage.reverse &&
 		rootData[alertMessage.strategy].isFirstOrder == 'false'
 	) {
-		orderSize = String(alertMessage.size * 2);
+		orderSize = alertMessage.size * 2;
 	} else {
-		orderSize = String(alertMessage.size);
+		orderSize = alertMessage.size;
 	}
 
+	const stepSize = parseFloat(marketsData.markets[market].stepSize);
+	const stepDecimal = getDecimalPointLength(stepSize);
+	const orderSizeStr = Number(orderSize).toFixed(stepDecimal);
+
 	const latestPrice = parseFloat(marketsData.markets[market].oraclePrice);
-
 	const tickSize = parseFloat(marketsData.markets[market].tickSize);
-
 	console.log('latestPrice', latestPrice);
 
 	const slippagePercentage = 0.05;
@@ -81,7 +83,7 @@ export const buildOrderParams = async (alertMessage: AlertObject) => {
 		type: OrderType.MARKET,
 		timeInForce: TimeInForce.FOK,
 		postOnly: false,
-		size: orderSize,
+		size: orderSizeStr,
 		price: price,
 		limitFee: config.get('User.limitFee'),
 		expiration: dateStr
