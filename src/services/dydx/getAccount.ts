@@ -1,12 +1,12 @@
 import DYDXConnector from './client';
-import { AccountResponseObject } from '@dydxprotocol/v3-client';
 import 'dotenv/config';
 
 export const dydxGetAccount = async () => {
 	try {
 		const connector = await DYDXConnector.build();
-		const account: { account: AccountResponseObject } =
-			await connector.client.private.getAccount(process.env.ETH_ADDRESS);
+		const account = await connector.client.private.getAccount(
+			process.env.ETH_ADDRESS
+		);
 		console.log('dYdX account: ', account);
 		if (Number(account.account.freeCollateral) == 0) {
 			return false;
