@@ -6,11 +6,11 @@ import {
 	TimeInForce
 } from '@dydxprotocol/v3-client';
 import config = require('config');
-import { AlertObject, OrderParams } from '../types';
+import { AlertObject, dydxOrderParams } from '../../types';
 import 'dotenv/config';
-import { getDecimalPointLength, getStrategiesDB } from '../helper';
+import { getDecimalPointLength, getStrategiesDB } from '../../helper';
 
-export const buildOrderParams = async (alertMessage: AlertObject) => {
+export const dydxBuildOrderParams = async (alertMessage: AlertObject) => {
 	const db = getStrategiesDB();
 
 	const rootData = db.getData('/');
@@ -77,7 +77,7 @@ export const buildOrderParams = async (alertMessage: AlertObject) => {
 	const decimal = getDecimalPointLength(tickSize);
 	const price = minPrice.toFixed(decimal);
 
-	const orderParams: OrderParams = {
+	const orderParams: dydxOrderParams = {
 		market: market,
 		side: orderSide,
 		type: OrderType.MARKET,
@@ -85,9 +85,9 @@ export const buildOrderParams = async (alertMessage: AlertObject) => {
 		postOnly: false,
 		size: orderSizeStr,
 		price: price,
-		limitFee: config.get('User.limitFee'),
+		limitFee: config.get('Dydx.User.limitFee'),
 		expiration: dateStr
 	};
-	console.log('orderParams', orderParams);
+	console.log('orderParams for dydx', orderParams);
 	return orderParams;
 };

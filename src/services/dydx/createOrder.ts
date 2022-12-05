@@ -1,9 +1,9 @@
 import DYDXConnector from './client';
 import { OrderResponseObject } from '@dydxprotocol/v3-client';
-import { OrderParams } from '../types';
-import { _sleep } from '../helper';
+import { dydxOrderParams } from '../../types';
+import { _sleep } from '../../helper';
 
-export const createOrder = async (orderParams: OrderParams) => {
+export const dydxCreateOrder = async (orderParams: dydxOrderParams) => {
 	let count = 0;
 	const maxTries = 3;
 	while (count <= maxTries) {
@@ -35,7 +35,7 @@ export const createOrder = async (orderParams: OrderParams) => {
 			if (count == maxTries) {
 				console.error(error);
 			}
-			_sleep(5000);
+			await _sleep(5000);
 		}
 	}
 };

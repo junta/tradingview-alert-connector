@@ -1,6 +1,6 @@
 import { AlertObject } from '../types';
 import { Market } from '@dydxprotocol/v3-client';
-import DYDXConnector from './client';
+import DYDXConnector from './dydx/client';
 
 export const validateAlert = async (
 	alertMessage: AlertObject
@@ -22,6 +22,15 @@ export const validateAlert = async (
 	) {
 		console.error('Passphrase from tradingview alert does not match to config');
 		return false;
+	}
+
+	// check exchange
+	if (alertMessage.exchange) {
+		const validExchanges = ['dydx', 'perpetual'];
+		if (!validExchanges.includes(alertMessage.exchange)) {
+			console.error('Exchange name must be dydx or perpetual');
+			return false;
+		}
 	}
 
 	// check strategy name
@@ -56,27 +65,29 @@ export const validateAlert = async (
 		return false;
 	}
 
-	// check market
-	const market = Market[alertMessage.market as keyof typeof Market];
-	if (!market) {
-		console.error('Market field of tradingview alert is not correct.');
-		return false;
-	}
+	// check market if exchange is dydx
+	if (!alertMessage.exchange || alertMessage.exchange == 'dydx') {
+		const market = Market[alertMessage.market as keyof typeof Market];
+		if (!market) {
+			console.error('Market field of tradingview alert is not correct.');
+			return false;
+		}
 
-	const connector = await DYDXConnector.build();
+		const connector = await DYDXConnector.build();
 
-	const markets = await connector.client.public.getMarkets(market);
-	// console.log('markets', markets);
+		const markets = await connector.client.public.getMarkets(market);
+		// console.log('markets', markets);
 
-	const minOrderSize = parseFloat(markets.markets[market].minOrderSize);
+		const minOrderSize = parseFloat(markets.markets[market].minOrderSize);
 
-	// check order size is greater than mininum order size
-	if (alertMessage.size < minOrderSize) {
-		console.error(
-			'Order size of this strategy must be greater than mininum order size:',
-			minOrderSize
-		);
-		return false;
+		// check order size is greater than mininum order size
+		if (alertMessage.size < minOrderSize) {
+			console.error(
+				'Order size of this strategy must be greater than mininum order size:',
+				minOrderSize
+			);
+			return false;
+		}
 	}
 
 	return true;

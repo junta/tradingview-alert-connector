@@ -29,7 +29,8 @@
 		"ngrok": "^4.3.0",
 		"node-json-db": "^1.4.1",
 		"ts-node": "^10.5.0",
-		"typescript": "^4.5.5"
+		"typescript": "^4.5.5",
+		"@perp/sdk-curie": "1.16.0"
 	},
 	"devDependencies": {
 		"@typescript-eslint/eslint-plugin": "^5.13.0",

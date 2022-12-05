@@ -4,8 +4,10 @@ import {
 	TimeInForce,
 	Market
 } from '@dydxprotocol/v3-client';
+import { PositionSide } from '@perp/sdk-curie';
 
 export type AlertObject = {
+	exchange: string;
 	strategy: string;
 	market: string;
 	size: number;
@@ -16,7 +18,7 @@ export type AlertObject = {
 	passphrase?: string;
 };
 
-export type OrderParams = {
+export type dydxOrderParams = {
 	market: Market;
 	side: OrderSide;
 	type: OrderType.MARKET;
@@ -26,4 +28,11 @@ export type OrderParams = {
 	price: string;
 	limitFee: string;
 	expiration: string;
+};
+
+export type perpOrderParams = {
+	tickerSymbol: string;
+	side: PositionSide;
+	amountInput: number;
+	isAmountInputBase: boolean;
 };
