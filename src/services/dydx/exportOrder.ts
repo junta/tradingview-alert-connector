@@ -1,10 +1,10 @@
 import { OrderResponseObject } from '@dydxprotocol/v3-client';
 import * as fs from 'fs';
-import { getFill, getOrder } from '../services';
+import { getFill, getOrder } from '..';
 import config = require('config');
-import { _sleep, getStrategiesDB } from '../helper';
+import { _sleep, getStrategiesDB } from '../../helper';
 
-export const exportOrder = async (
+export const dydxExportOrder = async (
 	strategy: string,
 	order: OrderResponseObject,
 	tradingviewPrice: number
@@ -23,7 +23,7 @@ export const exportOrder = async (
 
 		console.log('order id:', order.id, 'is filled at', price);
 
-		const db = getStrategiesDB();
+		const [db, rootData] = getStrategiesDB();
 		const rootPath = '/' + strategy;
 		const isFirstOrderPath = rootPath + '/isFirstOrder';
 		db.push(isFirstOrderPath, 'false');
@@ -32,8 +32,6 @@ export const exportOrder = async (
 		const positionPath = rootPath + '/position';
 		const position: number =
 			order.side == 'BUY' ? Number(order.size) : -1 * Number(order.size);
-
-		const rootData = db.getData('/');
 
 		const storedSize = rootData[strategy].position
 			? rootData[strategy].position
@@ -58,13 +56,13 @@ export const exportOrder = async (
 		// create new CSV
 		const headerString =
 			'datetime,strategy,market,side,size,orderPrice,tradingviewPrice,priceGap,status,orderId,accountId';
-		fs.writeFileSync(path + 'mainnet/tradeHistory.csv', headerString);
-		fs.writeFileSync(path + 'testnet/tradeHistory.csv', headerString);
+		fs.writeFileSync(path + 'mainnet/tradeHistoryDydx.csv', headerString);
+		fs.writeFileSync(path + 'testnet/tradeHistoryDydx.csv', headerString);
 	}
 
 	const environment =
 		config.util.getEnv('NODE_ENV') == 'production' ? 'mainnet' : 'testnet';
-	const csvPath = './data/exports/' + environment + '/tradeHistory.csv';
+	const csvPath = './data/exports/' + environment + '/tradeHistoryDydx.csv';
 	// export price gap between tradingview price and ordered price
 	const priceGap = Number(price) - tradingviewPrice;
 	const appendArray = [

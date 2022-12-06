@@ -3,31 +3,7 @@ import { AlertObject, perpOrderParams } from '../../types';
 import { getStrategiesDB } from '../../helper';
 
 export const perpBuildOrderParams = async (alertMessage: AlertObject) => {
-	// TODO: extract
-	const db = getStrategiesDB();
-
-	const rootData = db.getData('/');
-	console.log('strategyData', rootData[alertMessage.strategy]);
-
-	const rootPath = '/' + alertMessage.strategy;
-
-	if (!rootData[alertMessage.strategy]) {
-		const reversePath = rootPath + '/reverse';
-		db.push(reversePath, alertMessage.reverse);
-
-		const isFirstOrderPath = rootPath + '/isFirstOrder';
-		db.push(isFirstOrderPath, 'true');
-	}
-
-	if (
-		alertMessage.position == 'flat' &&
-		rootData[alertMessage.strategy].isFirstOrder == 'true'
-	) {
-		console.log(
-			'this alert is first and close order, so does not create a new order.'
-		);
-		return;
-	}
+	const [db, rootData] = getStrategiesDB();
 
 	const orderSide =
 		alertMessage.order == 'buy' ? PositionSide.LONG : PositionSide.SHORT;

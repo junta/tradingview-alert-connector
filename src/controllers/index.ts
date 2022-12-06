@@ -3,12 +3,13 @@ import {
 	dydxCreateOrder,
 	dydxGetAccount,
 	dydxBuildOrderParams,
-	exportOrder,
+	dydxExportOrder,
 	validateAlert,
 	checkAfterPosition,
 	perpCreateOrder,
 	perpBuildOrderParams,
-	perpGetAccount
+	perpGetAccount,
+	perpExportOrder
 } from '../services';
 
 const router: Router = express.Router();
@@ -47,15 +48,20 @@ router.post('/', async (req, res) => {
 			const orderParams = await perpBuildOrderParams(req.body);
 			if (!orderParams) return;
 			orderResult = await perpCreateOrder(orderParams);
+			await perpExportOrder(
+				req.body['strategy'],
+				orderResult,
+				req.body['price'],
+				req.body['market']
+			);
 			break;
-			// TODO: add exportOrder
 		}
 		default: {
 			const orderParams = await dydxBuildOrderParams(req.body);
 			if (!orderParams) return;
 			orderResult = await dydxCreateOrder(orderParams);
 			if (!orderResult) return;
-			await exportOrder(
+			await dydxExportOrder(
 				req.body['strategy'],
 				orderResult.order,
 				req.body['price']

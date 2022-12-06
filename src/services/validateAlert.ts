@@ -1,6 +1,7 @@
 import { AlertObject } from '../types';
 import { Market } from '@dydxprotocol/v3-client';
 import DYDXConnector from './dydx/client';
+import { getStrategiesDB } from '../helper';
 
 export const validateAlert = async (
 	alertMessage: AlertObject
@@ -88,6 +89,29 @@ export const validateAlert = async (
 			);
 			return false;
 		}
+	}
+
+	const [db, rootData] = getStrategiesDB();
+	console.log('strategyData', rootData[alertMessage.strategy]);
+
+	const rootPath = '/' + alertMessage.strategy;
+
+	if (!rootData[alertMessage.strategy]) {
+		const reversePath = rootPath + '/reverse';
+		db.push(reversePath, alertMessage.reverse);
+
+		const isFirstOrderPath = rootPath + '/isFirstOrder';
+		db.push(isFirstOrderPath, 'true');
+	}
+
+	if (
+		alertMessage.position == 'flat' &&
+		rootData[alertMessage.strategy].isFirstOrder == 'true'
+	) {
+		console.log(
+			'this alert is first and close order, so does not create a new order.'
+		);
+		return false;
 	}
 
 	return true;

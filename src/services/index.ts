@@ -8,6 +8,7 @@ export * from './perp/client';
 export * from './perp/createOrder';
 export * from './perp/buildOrderParams';
 export * from './perp/getAccount';
-export * from './exportOrder';
+export * from './perp/exportOrder';
+export * from './dydx/exportOrder';
 export * from './validateAlert';
 export * from './checkAfterPosition';

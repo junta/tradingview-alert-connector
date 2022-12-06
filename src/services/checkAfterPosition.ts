@@ -2,9 +2,7 @@ import { getStrategiesDB } from '../helper';
 import { AlertObject } from '../types';
 
 export const checkAfterPosition = async (alertMessage: AlertObject) => {
-	const db = getStrategiesDB();
-
-	const rootData = db.getData('/');
+	const [db, rootData] = getStrategiesDB();
 
 	const storedPositionSize = rootData[alertMessage.strategy].position;
 	// console.log('storedPositionSize', storedPositionSize);
