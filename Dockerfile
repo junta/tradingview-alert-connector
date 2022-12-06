@@ -3,9 +3,8 @@ FROM node:16.14
 WORKDIR /app
 
 COPY ./package.json ./
-COPY ./package-lock.json ./
 
-RUN npm install
+RUN npm install --force
 
 COPY . .
 
