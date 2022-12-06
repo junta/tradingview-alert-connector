@@ -14,7 +14,7 @@
 	"author": "0xIbuki",
 	"license": "MIT",
 	"dependencies": {
-		"@dydxprotocol/v3-client": "^1.6.7",
+		"@dydxprotocol/v3-client": "^1.14.0",
 		"@sentry/integrations": "^6.19.1",
 		"@sentry/node": "^6.18.2",
 		"@sentry/tracing": "^6.18.2",
