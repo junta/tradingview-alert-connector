@@ -1,14 +1,16 @@
-# dydx-tradingview-integration
+# Tradingview-Alert-Connector
 
-dYdX Tradingview Integration is a free and noncustodial tool for you to Integrate tradingView strategy alert and execute automated trading for dYdX.
+Tradingview-Alert-Connector is a free and noncustodial tool for you to Integrate tradingView alert and execute automated trading for perpetual futures DEXes.
+Currently support [dYdX](https://dydx.exchange/) and [Perpetual Protocol](https://perp.com/).
 
 # Docs
 
-https://dydx-tv.gitbook.io/
+new URL
 
 # Video Tutorial
 
 https://www.youtube.com/watch?v=I8hB2O2-xx4
+new URL
 
 # Prerequisites
 
@@ -16,9 +18,10 @@ https://www.youtube.com/watch?v=I8hB2O2-xx4
 
 https://www.tradingview.com/gopro/
 
-- dYdX trading account with collateral already in place
+- dYdX or Perpetual Protocol account with collateral already in place
 
 https://dydx.exchange/
+https://app.perp.com/
 
 # Installation
 
@@ -48,4 +51,4 @@ yarn start
 
 ## Disclaimer
 
-This project is hosted under an MIT OpenSource License. Neither the dYdX Trading Inc nor any dYdX affiliated company, are liable for any consequences associated with running this software. This tool does not guarantee users’ future profit and users have to use this tool by their own responsibility.This is an experimental product, and users should practice caution when using it.
+This project is hosted under an MIT OpenSource License. This tool does not guarantee users’ future profit and users have to use this tool by their own responsibility.
