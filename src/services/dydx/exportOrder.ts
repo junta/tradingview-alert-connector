@@ -42,21 +42,16 @@ export const dydxExportOrder = async (
 		price = '';
 	}
 
-	// check exports directories exist
-	const folderPath = './data/exports/';
+	const environment =
+	config.util.getEnv('NODE_ENV') == 'production' ? 'mainnet' : 'testnet';
+	const folderPath = './data/exports/' + environment;
 	if (!fs.existsSync(folderPath)) {
-		// create directories
-		fs.mkdirSync(folderPath + 'mainnet', {
-			recursive: true
-		});
-		fs.mkdirSync(folderPath + 'testnet', {
+		fs.mkdirSync(folderPath, {
 			recursive: true
 		});
 	}
 
-	const environment =
-	config.util.getEnv('NODE_ENV') == 'production' ? 'mainnet' : 'testnet';
-	const fullPath = folderPath + environment + '/tradeHistoryDydx.csv';
+	const fullPath = folderPath + '/tradeHistoryDydx.csv';
 	if (!fs.existsSync(fullPath)) {
 		const headerString = 'datetime,strategy,market,side,size,orderPrice,tradingviewPrice,priceGap,status,orderId,accountId';
 		fs.writeFileSync(fullPath, headerString);
