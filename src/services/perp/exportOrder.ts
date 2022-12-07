@@ -29,27 +29,23 @@ export const perpExportOrder = async (
 
 	db.push(positionPath, storedSize + position);
 
-	// check exports directories exist
-	const path = './data/exports/';
-	if (!fs.existsSync(path)) {
-		// create directories
-		fs.mkdirSync(path + 'mainnet', {
+	const folderPath = './data/exports/';
+	if (!fs.existsSync(folderPath)) {
+		fs.mkdirSync(folderPath + 'mainnet', {
 			recursive: true
 		});
-
-		// create new CSV
-		const headerString =
-			'datetime,strategy,market,side,size,orderPrice,tradingviewPrice,priceGap,transaction_hash';
-		fs.writeFileSync(path + 'mainnet/tradeHistoryPerpetual.csv', headerString);
 	}
 
-	const csvPath = './data/exports/mainnet/tradeHistoryPerpetual.csv';
+	const perpPath = 'mainnet/tradeHistoryPerpetual.csv'
+	const fullPath = folderPath + perpPath;
+	if (!fs.existsSync(fullPath)) {
+		const headerString = 'datetime,strategy,market,side,size,tradingviewPrice,transaction_hash';
+		fs.writeFileSync(fullPath, headerString);
+	}
+
 	// export price gap between tradingview price and ordered price
-	// TODO: this number is not correct and need fix
-	const orderPrice = bigNumber2BigAndScaleDown(
-		orderResult.metadata.args[0].oppositeAmountBound
-	).toNumber();
-	const priceGap = orderPrice - tradingviewPrice;
+	// TODO: Get correct ordered price and store them
+	// const priceGap = orderPrice - tradingviewPrice;
 
 	const date = new Date();
 
@@ -59,12 +55,12 @@ export const perpExportOrder = async (
 		market,
 		orderSide,
 		orderSize,
-		orderPrice,
+		// orderPrice,
 		tradingviewPrice,
-		priceGap,
+		// priceGap,
 		orderResult.transaction.hash
 	];
 	const appendString = '\r\n' + appendArray.join();
 
-	fs.appendFileSync(csvPath, appendString);
+	fs.appendFileSync(fullPath, appendString);
 };

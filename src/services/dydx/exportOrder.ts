@@ -43,26 +43,25 @@ export const dydxExportOrder = async (
 	}
 
 	// check exports directories exist
-	const path = './data/exports/';
-	if (!fs.existsSync(path)) {
+	const folderPath = './data/exports/';
+	if (!fs.existsSync(folderPath)) {
 		// create directories
-		fs.mkdirSync(path + 'mainnet', {
+		fs.mkdirSync(folderPath + 'mainnet', {
 			recursive: true
 		});
-		fs.mkdirSync(path + 'testnet', {
+		fs.mkdirSync(folderPath + 'testnet', {
 			recursive: true
 		});
-
-		// create new CSV
-		const headerString =
-			'datetime,strategy,market,side,size,orderPrice,tradingviewPrice,priceGap,status,orderId,accountId';
-		fs.writeFileSync(path + 'mainnet/tradeHistoryDydx.csv', headerString);
-		fs.writeFileSync(path + 'testnet/tradeHistoryDydx.csv', headerString);
 	}
 
 	const environment =
-		config.util.getEnv('NODE_ENV') == 'production' ? 'mainnet' : 'testnet';
-	const csvPath = './data/exports/' + environment + '/tradeHistoryDydx.csv';
+	config.util.getEnv('NODE_ENV') == 'production' ? 'mainnet' : 'testnet';
+	const fullPath = folderPath + environment + '/tradeHistoryDydx.csv';
+	if (!fs.existsSync(fullPath)) {
+		const headerString = 'datetime,strategy,market,side,size,orderPrice,tradingviewPrice,priceGap,status,orderId,accountId';
+		fs.writeFileSync(fullPath, headerString);
+	}
+
 	// export price gap between tradingview price and ordered price
 	const priceGap = Number(price) - tradingviewPrice;
 	const appendArray = [
@@ -80,5 +79,5 @@ export const dydxExportOrder = async (
 	];
 	const appendString = '\r\n' + appendArray.join();
 
-	fs.appendFileSync(csvPath, appendString);
+	fs.appendFileSync(fullPath, appendString);
 };
