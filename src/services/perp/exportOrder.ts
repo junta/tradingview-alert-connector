@@ -29,14 +29,14 @@ export const perpExportOrder = async (
 
 	db.push(positionPath, storedSize + position);
 
-	const folderPath = './data/exports/';
+	const folderPath = './data/exports/mainnet';
 	if (!fs.existsSync(folderPath)) {
-		fs.mkdirSync(folderPath + 'mainnet', {
+		fs.mkdirSync(folderPath, {
 			recursive: true
 		});
 	}
 
-	const perpPath = 'mainnet/tradeHistoryPerpetual.csv'
+	const perpPath = '/tradeHistoryPerpetual.csv'
 	const fullPath = folderPath + perpPath;
 	if (!fs.existsSync(fullPath)) {
 		const headerString = 'datetime,strategy,market,side,size,tradingviewPrice,transaction_hash';
