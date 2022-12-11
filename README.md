@@ -5,11 +5,14 @@ Currently support [dYdX](https://dydx.exchange/) and [Perpetual Protocol](https:
 
 # Docs
 
-new URL
+https://tv-connector.gitbook.io/docs/
 
 # Video Tutorial
 
+For dYdX:
 https://www.youtube.com/watch?v=I8hB2O2-xx4
+
+For Perpetual Protocol:
 new URL
 
 # Prerequisites
@@ -20,21 +23,18 @@ https://www.tradingview.com/gopro/
 
 - dYdX or Perpetual Protocol account with collateral already in place
 
-https://dydx.exchange/
-https://app.perp.com/
-
 # Installation
 
 ```bash
-git clone https://github.com/junta/dydx-tradingview-integration
-cd dydx-tradingview-integration
+git clone https://github.com/junta/tradingview-alert-connector.git
+cd tradingview-alert-connector
 yarn
 ```
 
 # Quick Start
 
 - rename .env.sample to .env
-- fill environment variables in .env (see [full tutorial](https://dydx-tv.gitbook.io/dydx-tradingview-strategy-integration/setuup/running-on-local-pc#steps))
+- fill environment variables in .env (see [full tutorial](https://tv-connector.gitbook.io/docs/setuup/running-on-local-pc#steps))
 
 ### with Docker
 
