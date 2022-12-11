@@ -5,6 +5,7 @@ services:
     tty: true
     volumes:
       - ./data:/app/data
+      - ./src:/app/src
     ports:
       - '80:3000'
     environment:
@@ -17,3 +18,4 @@ services:
       TRADINGVIEW_PASSPHRASE: ${TRADINGVIEW_PASSPHRASE}
       SENTRY_DNS: ${SENTRY_DNS}
       ETH_PRIVATE_KEY: ${ETH_PRIVATE_KEY}
+    command: yarn start:dev

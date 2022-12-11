@@ -1,10 +1,11 @@
-import { DydxClient, AccountResponseObject } from '@dydxprotocol/v3-client';
+import { DydxClient } from '@dydxprotocol/v3-client';
 import config = require('config');
 import 'dotenv/config';
 
 class DYDXConnector {
 	client: DydxClient;
 	positionID = '0';
+	static instance: DYDXConnector | null = null;
 
 	public constructor() {
 		if (
@@ -29,33 +30,26 @@ class DYDXConnector {
 			privateKey: process.env.STARK_PRIVATE_KEY
 		};
 
-		this.client = new DydxClient(config.get('Network.host'), {
+		this.client = new DydxClient(config.get('Dydx.Network.host'), {
 			apiTimeout: 3000,
-			networkId: config.get('Network.chainID'),
+			networkId: config.get('Dydx.Network.chainID'),
 			apiKeyCredentials: apiKeys,
 			starkPrivateKey: starkKeyPair
 		});
 	}
 
 	static async build() {
-		if (!process.env.ETH_ADDRESS) {
-			throw new Error('ethAddress is not set in config file');
+		if (!this.instance) {
+			const connector = new DYDXConnector();
+			const account = await connector.client.private.getAccount(
+				process.env.ETH_ADDRESS
+			);
+
+			connector.positionID = account.account.positionId;
+			this.instance = connector;
 		}
 
-		const connector = new DYDXConnector();
-		const account: { account: AccountResponseObject } =
-			await connector.client.private.getAccount(process.env.ETH_ADDRESS);
-
-		connector.positionID = account.account.positionId;
-
-		// console.log(
-		// 	'initialized. ethAddress:',
-		// 	ethAddress,
-		// 	'positionID:',
-		// 	connector.positionID
-		// );
-
-		return connector;
+		return this.instance;
 	}
 }
 

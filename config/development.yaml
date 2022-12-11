@@ -1,5 +1,11 @@
-Network:
-  host: https://api.stage.dydx.exchange
-  chainID: 3
-User:
-  limitFee: 0.2
+Dydx:
+  Network:
+    host: https://api.stage.dydx.exchange
+    chainID: 3
+  User:
+    limitFee: 0.2
+Perpetual:
+  Network:
+    host: https://goerli.optimism.io/
+  User:
+    slippage: 0.05

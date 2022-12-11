@@ -6,35 +6,12 @@ import {
 	TimeInForce
 } from '@dydxprotocol/v3-client';
 import config = require('config');
-import { AlertObject, OrderParams } from '../types';
+import { AlertObject, dydxOrderParams } from '../../types';
 import 'dotenv/config';
-import { getDecimalPointLength, getStrategiesDB } from '../helper';
+import { getDecimalPointLength, getStrategiesDB } from '../../helper';
 
-export const buildOrderParams = async (alertMessage: AlertObject) => {
-	const db = getStrategiesDB();
-
-	const rootData = db.getData('/');
-	console.log('strategyData', rootData[alertMessage.strategy]);
-
-	const rootPath = '/' + alertMessage.strategy;
-
-	if (!rootData[alertMessage.strategy]) {
-		const reversePath = rootPath + '/reverse';
-		db.push(reversePath, alertMessage.reverse);
-
-		const isFirstOrderPath = rootPath + '/isFirstOrder';
-		db.push(isFirstOrderPath, 'true');
-	}
-
-	if (
-		alertMessage.position == 'flat' &&
-		rootData[alertMessage.strategy].isFirstOrder == 'true'
-	) {
-		console.log(
-			'this alert is first and close order, so does not create a new order.'
-		);
-		return;
-	}
+export const dydxBuildOrderParams = async (alertMessage: AlertObject) => {
+	const [db, rootData] = getStrategiesDB();
 
 	// set expiration datetime. must be more than 1 minute from current datetime
 	const date = new Date();
@@ -77,7 +54,7 @@ export const buildOrderParams = async (alertMessage: AlertObject) => {
 	const decimal = getDecimalPointLength(tickSize);
 	const price = minPrice.toFixed(decimal);
 
-	const orderParams: OrderParams = {
+	const orderParams: dydxOrderParams = {
 		market: market,
 		side: orderSide,
 		type: OrderType.MARKET,
@@ -85,9 +62,9 @@ export const buildOrderParams = async (alertMessage: AlertObject) => {
 		postOnly: false,
 		size: orderSizeStr,
 		price: price,
-		limitFee: config.get('User.limitFee'),
+		limitFee: config.get('Dydx.User.limitFee'),
 		expiration: dateStr
 	};
-	console.log('orderParams', orderParams);
+	console.log('orderParams for dydx', orderParams);
 	return orderParams;
 };

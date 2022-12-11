@@ -1,25 +1,34 @@
 import express, { Router } from 'express';
 import {
-	createOrder,
-	getAccount,
-	buildOrderParams,
-	exportOrder,
+	dydxCreateOrder,
+	dydxGetAccount,
+	dydxBuildOrderParams,
+	dydxExportOrder,
 	validateAlert,
-	checkAfterPosition
+	checkAfterPosition,
+	perpCreateOrder,
+	perpBuildOrderParams,
+	perpGetAccount,
+	perpExportOrder
 } from '../services';
-import { OrderParams } from '../types';
 
 const router: Router = express.Router();
 
 router.get('/', async (req, res) => {
 	console.log('Recieved GET request.');
 
-	const accountResult = await getAccount();
-	console.log(accountResult);
-	if (accountResult) {
-		res.send('OK');
-	} else {
+	const dydxAccount = await dydxGetAccount();
+	const perpAccount = await perpGetAccount();
+
+	if (!dydxAccount && !perpAccount) {
 		res.send('Error on getting account data');
+	} else {
+		const message =
+			'dYdX Account Ready: ' +
+			dydxAccount +
+			'\n  Perpetual Protocol Account Ready: ' +
+			perpAccount;
+		res.send(message);
 	}
 });
 
@@ -32,22 +41,35 @@ router.post('/', async (req, res) => {
 		return;
 	}
 
-	const orderParams: OrderParams | undefined = await buildOrderParams(req.body);
-
+	// if (!orderParams) return;
 	let orderResult;
-	if (orderParams) {
-		orderResult = await createOrder(orderParams);
+	switch (req.body['exchange']) {
+		case 'perpetual': {
+			const orderParams = await perpBuildOrderParams(req.body);
+			if (!orderParams) return;
+			orderResult = await perpCreateOrder(orderParams);
+			await perpExportOrder(
+				req.body['strategy'],
+				orderResult,
+				req.body['price'],
+				req.body['market']
+			);
+			break;
+		}
+		default: {
+			const orderParams = await dydxBuildOrderParams(req.body);
+			if (!orderParams) return;
+			orderResult = await dydxCreateOrder(orderParams);
+			if (!orderResult) return;
+			await dydxExportOrder(
+				req.body['strategy'],
+				orderResult.order,
+				req.body['price']
+			);
+		}
 	}
 
-	if (orderResult) {
-		await exportOrder(
-			req.body['strategy'],
-			orderResult.order,
-			req.body['price']
-		);
-	}
-
-	checkAfterPosition(req.body);
+	// checkAfterPosition(req.body);
 
 	res.send('OK');
 });

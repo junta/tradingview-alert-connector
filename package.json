@@ -7,14 +7,15 @@
 	"scripts": {
 		"start": "tsc && NODE_ENV=production ts-node dist/index.js",
 		"start:test": "tsc && NODE_ENV=development ts-node dist/index.js",
-		"start:dev": "NODE_ENV=development tsc-watch --onSuccess \"ts-node dist/index.js\"",
+		"start:dev": "tsc && NODE_ENV=development tsc-watch --onSuccess \"ts-node dist/index.js\"",
 		"ngrok": "ngrok http 3000",
+		"ngrok:docker": "ngrok http 80",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"author": "0xIbuki",
 	"license": "MIT",
 	"dependencies": {
-		"@dydxprotocol/v3-client": "^1.6.7",
+		"@dydxprotocol/v3-client": "^1.14.0",
 		"@sentry/integrations": "^6.19.1",
 		"@sentry/node": "^6.18.2",
 		"@sentry/tracing": "^6.18.2",
@@ -29,7 +30,9 @@
 		"ngrok": "^4.3.0",
 		"node-json-db": "^1.4.1",
 		"ts-node": "^10.5.0",
-		"typescript": "^4.5.5"
+		"typescript": "^4.5.5",
+		"@perp/sdk-curie": "1.16.0",
+		"ethers": "^5.7.2"
 	},
 	"devDependencies": {
 		"@typescript-eslint/eslint-plugin": "^5.13.0",

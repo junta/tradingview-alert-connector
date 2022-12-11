@@ -1,6 +1,6 @@
 import DYDXConnector from './client';
 import { FillResponseObject } from '@dydxprotocol/v3-client';
-import { _sleep } from '../helper';
+import { _sleep } from '../../helper';
 
 export const getFill = async (order_id: string) => {
 	let count = 0;
@@ -17,7 +17,7 @@ export const getFill = async (order_id: string) => {
 			if (count == maxTries) {
 				console.error(error);
 			}
-			_sleep(5000);
+			await _sleep(5000);
 		}
 	}
 };
