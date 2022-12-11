@@ -52,4 +52,4 @@ yarn start
 
 ## Disclaimer
 
-This project is hosted under an MIT OpenSource License. This tool does not guarantee users’ future profit and users have to use this tool by their own responsibility.
+This project is hosted under an MIT OpenSource License. This tool does not guarantee users’ future profit and users have to use this tool on their own responsibility.
