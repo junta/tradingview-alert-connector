@@ -4,6 +4,8 @@ import 'dotenv/config';
 export const dydxGetAccount = async () => {
 	try {
 		const connector = await DYDXConnector.build();
+		if(!connector) return false;
+		
 		const account = await connector.client.private.getAccount(
 			process.env.ETH_ADDRESS
 		);

@@ -1,10 +1,9 @@
 import PerpetualConnector from './client';
-import { PerpetualProtocol } from '@perp/sdk-curie';
 
 export const perpGetAccount = async () => {
 	try {
-		const perp: PerpetualProtocol = await PerpetualConnector.build();
-		if (!perp.wallet) return;
+		const perp = await PerpetualConnector.build();
+		if (!perp || !perp.wallet) return false;
 
 		const account = await perp.wallet.getBalanceEth();
 		console.log('Perpetual Protocol ETH balance: ', Number(account));

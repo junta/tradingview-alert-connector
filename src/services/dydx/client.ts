@@ -3,7 +3,7 @@ import config = require('config');
 import 'dotenv/config';
 
 class DYDXConnector {
-	client: DydxClient;
+	client: DydxClient | undefined;
 	positionID = '0';
 	static instance: DYDXConnector | null = null;
 
@@ -13,10 +13,12 @@ class DYDXConnector {
 			!process.env.API_PASSPHRASE ||
 			!process.env.API_PASSPHRASE
 		) {
-			throw new Error('API Key is not set in config file');
+			console.error('API Key is not set as environment variable');
+			return;
 		}
 		if (!process.env.STARK_PUBLIC_KEY || !process.env.STARK_PRIVATE_KEY) {
-			throw new Error('STARK Key is not set in config file');
+			console.error('STARK Key is not set as environment variable');
+			return;
 		}
 
 		const apiKeys = {
@@ -41,6 +43,7 @@ class DYDXConnector {
 	static async build() {
 		if (!this.instance) {
 			const connector = new DYDXConnector();
+			if (!connector || !connector.client) return;
 			const account = await connector.client.private.getAccount(
 				process.env.ETH_ADDRESS
 			);

@@ -1,8 +1,8 @@
 {
-	"name": "dydx-tradingview-integration",
+	"name": "tradingview-alert-connector",
 	"version": "1.0.0",
 	"description": "Free and self-hosted tool for you to Integrate TradingView strategy alert and execute automated trading for dYdX.",
-	"homepage": "https://dydx-tv.gitbook.io/",
+	"homepage": "https://tv-connector.gitbook.io/docs/",
 	"main": "index.js",
 	"scripts": {
 		"start": "tsc && NODE_ENV=production ts-node dist/index.js",

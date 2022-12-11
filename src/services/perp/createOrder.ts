@@ -1,7 +1,6 @@
 import { perpOrderParams } from '../../types';
 import { _sleep } from '../../helper';
 import PerpetualConnector from './client';
-import { PerpetualProtocol } from '@perp/sdk-curie';
 import Big from 'big.js';
 import config = require('config');
 
@@ -10,8 +9,8 @@ export const perpCreateOrder = async (orderParams: perpOrderParams) => {
 	const maxTries = 3;
 	while (count <= maxTries) {
 		try {
-			const perp: PerpetualProtocol = await PerpetualConnector.build();
-			if (!perp.clearingHouse) return;
+			const perp = await PerpetualConnector.build();
+			if (!perp || !perp.clearingHouse) return;
 
 			const newPositionDraft = perp.clearingHouse.createPositionDraft({
 				tickerSymbol: orderParams.tickerSymbol,

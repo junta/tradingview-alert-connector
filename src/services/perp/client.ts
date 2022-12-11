@@ -6,7 +6,8 @@ import { ethers } from 'ethers';
 class PerpetualConnector {
 	static async build() {
 		if (!process.env.ETH_PRIVATE_KEY) {
-			throw new Error('ETH_PRIVATE_KEY is not set in config file');
+			console.error('ETH_PRIVATE_KEY is not set as environment variable');
+			return;
 		}
 		const rpcURL: string = config.get('Perpetual.Network.host');
 		const perp = new PerpetualProtocol({
