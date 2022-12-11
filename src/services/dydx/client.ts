@@ -13,11 +13,11 @@ class DYDXConnector {
 			!process.env.API_PASSPHRASE ||
 			!process.env.API_PASSPHRASE
 		) {
-			console.error('API Key for dYdX is not set as environment variable');
+			console.log('API Key for dYdX is not set as environment variable');
 			return;
 		}
 		if (!process.env.STARK_PUBLIC_KEY || !process.env.STARK_PRIVATE_KEY) {
-			console.error('STARK Key for dYdX is not set as environment variable');
+			console.log('STARK Key for dYdX is not set as environment variable');
 			return;
 		}
 

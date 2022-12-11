@@ -6,7 +6,7 @@ import { ethers } from 'ethers';
 class PerpetualConnector {
 	static async build() {
 		if (!process.env.PERPETUAL_PRIVATE_KEY) {
-			console.error('PERPETUAL_PRIVATE_KEY for Perpetual Protocol is not set as environment variable');
+			console.log('PERPETUAL_PRIVATE_KEY for Perpetual Protocol is not set as environment variable');
 			return;
 		}
 		const rpcURL: string = config.get('Perpetual.Network.host');
@@ -23,7 +23,7 @@ class PerpetualConnector {
 		await perp.init();
 
 		const provider = new ethers.providers.JsonRpcProvider(rpcURL);
-		const signer = new ethers.Wallet(process.env.PERPETUAL_PRIVATE_KEY, provider);
+		const signer = new ethers.Wallet('0x' + process.env.PERPETUAL_PRIVATE_KEY, provider);
 		await perp.connect({ signer });
 
 		return perp;
