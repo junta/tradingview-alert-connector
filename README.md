@@ -14,7 +14,7 @@ For dYdX:
 https://www.youtube.com/watch?v=I8hB2O2-xx4
 
 For Perpetual Protocol:
-new URL
+https://youtu.be/YqrOZW_mnUM
 
 # Prerequisites
 
