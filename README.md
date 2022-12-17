@@ -29,7 +29,7 @@ https://www.tradingview.com/gopro/
 ```bash
 git clone https://github.com/junta/tradingview-alert-connector.git
 cd tradingview-alert-connector
-yarn
+npm install --force
 ```
 
 # Quick Start
