@@ -48,5 +48,5 @@ if (process.env.SENTRY_DNS) {
 }
 
 app.listen(port, () => {
-	console.log(`dYdX-tradingview-integration app listening on port ${port}`);
+	console.log(`TV-Connector web server listening on port ${port}`);
 });

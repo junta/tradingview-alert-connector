@@ -21,7 +21,8 @@ export const perpCreateOrder = async (orderParams: perpOrderParams) => {
 			const slippage = new Big(config.get('Perpetual.User.slippage'));
 			const orderResult = await perp.clearingHouse.openPosition(
 				newPositionDraft,
-				slippage
+				slippage,
+				orderParams.referralCode
 			);
 
 			// console.log(orderResult.order);

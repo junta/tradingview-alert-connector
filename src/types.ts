@@ -35,4 +35,5 @@ export type perpOrderParams = {
 	side: PositionSide;
 	amountInput: number;
 	isAmountInputBase: boolean;
+	referralCode: string;
 };
