@@ -10,7 +10,8 @@ export type AlertObject = {
 	exchange: string;
 	strategy: string;
 	market: string;
-	size: number;
+	size?: number;
+	sizeUsd?: number;
 	order: string;
 	price: number;
 	position: string;

@@ -27,8 +27,13 @@ export const dydxBuildOrderParams = async (alertMessage: AlertObject) => {
 	const orderSide =
 		alertMessage.order == 'buy' ? OrderSide.BUY : OrderSide.SELL;
 
+	const latestPrice = parseFloat(marketsData.markets[market].oraclePrice);
+	console.log('latestPrice', latestPrice);
+
 	let orderSize: number;
-	if (
+	if (alertMessage.sizeUsd) {
+		orderSize = Number(alertMessage.sizeUsd) / latestPrice;
+	} else if (
 		alertMessage.reverse &&
 		rootData[alertMessage.strategy].isFirstOrder == 'false'
 	) {
@@ -41,9 +46,8 @@ export const dydxBuildOrderParams = async (alertMessage: AlertObject) => {
 	const stepDecimal = getDecimalPointLength(stepSize);
 	const orderSizeStr = Number(orderSize).toFixed(stepDecimal);
 
-	const latestPrice = parseFloat(marketsData.markets[market].oraclePrice);
 	const tickSize = parseFloat(marketsData.markets[market].tickSize);
-	console.log('latestPrice', latestPrice);
+	
 
 	const slippagePercentage = 0.05;
 	const minPrice =

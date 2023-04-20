@@ -82,7 +82,7 @@ export const validateAlert = async (
 		const minOrderSize = parseFloat(markets.markets[market].minOrderSize);
 
 		// check order size is greater than mininum order size
-		if (alertMessage.size < minOrderSize) {
+		if (alertMessage.size && alertMessage.size < minOrderSize) {
 			console.error(
 				'Order size of this strategy must be greater than mininum order size:',
 				minOrderSize
