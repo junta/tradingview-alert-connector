@@ -31,7 +31,13 @@ export const dydxBuildOrderParams = async (alertMessage: AlertObject) => {
 	console.log('latestPrice', latestPrice);
 
 	let orderSize: number;
-	if (alertMessage.sizeUsd) {
+	if (alertMessage.sizeByLeverage) {
+		const account = await connector.client.private.getAccount(
+			process.env.ETH_ADDRESS
+		);
+		const freeCollateral = Number(account.account.freeCollateral)
+		orderSize = (freeCollateral * Number(alertMessage.sizeByLeverage)) / latestPrice;
+	} else if (alertMessage.sizeUsd) {
 		orderSize = Number(alertMessage.sizeUsd) / latestPrice;
 	} else if (
 		alertMessage.reverse &&

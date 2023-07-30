@@ -12,6 +12,7 @@ export type AlertObject = {
 	market: string;
 	size?: number;
 	sizeUsd?: number;
+	sizeByLeverage?: number;
 	order: string;
 	price: number;
 	position: string;
