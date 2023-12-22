@@ -1,4 +1,4 @@
-# Tradingview-Alert-Connector
+# Alfred Tradingview-Alert-Connector
 
 Tradingview-Alert-Connector is a free and noncustodial tool for you to Integrate tradingView alert and execute automated trading for perpetual futures DEXes.
 
