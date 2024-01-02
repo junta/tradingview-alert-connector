@@ -39,3 +39,11 @@ export type perpOrderParams = {
 	isAmountInputBase: boolean;
 	referralCode: string;
 };
+
+export type gmxOrderParams = {
+	marketAddress: string;
+	orderType: number;
+	isLong: boolean;
+	sizeUsd: number;
+	price: number;
+};

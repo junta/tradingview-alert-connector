@@ -9,3 +9,7 @@ Perpetual:
     host: https://mainnet.optimism.io/
   User:
     slippage: 0.05
+GMX:
+  Network:
+    host: https://arbitrum.llamarpc.com # https://arbitrum-goerli.public.blastapi.io
+

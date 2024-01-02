@@ -11,23 +11,31 @@ import {
 	perpGetAccount,
 	perpExportOrder
 } from '../services';
+import { gmxBuildOrderParams } from '../services/gmx/buildOrderParams';
+import { gmxCreateOrder } from '../services/gmx/createOrder';
+import { gmxGetAccount } from '../services/gmx/getAccount';
 
 const router: Router = express.Router();
 
 router.get('/', async (req, res) => {
 	console.log('Recieved GET request.');
 
-	const dydxAccount = await dydxGetAccount();
-	const perpAccount = await perpGetAccount();
+	const [dydxAccount, perpAccount, gmxAccount] = await Promise.all([
+		dydxGetAccount(),
+		perpGetAccount(),
+		gmxGetAccount()
+	]);
 
-	if (!dydxAccount && !perpAccount) {
+	if (!dydxAccount && !perpAccount && !gmxAccount) {
 		res.send('Error on getting account data');
 	} else {
 		const message =
-			'dYdX Account Ready: ' +
+			'dYdX Account Ready:' +
 			dydxAccount +
-			'\n  Perpetual Protocol Account Ready: ' +
-			perpAccount;
+			', \n   Perpetual Protocol Account Ready:' +
+			perpAccount +
+			', \n   GMX Account Ready:' +
+			gmxAccount;
 		res.send(message);
 	}
 });
@@ -41,7 +49,6 @@ router.post('/', async (req, res) => {
 		return;
 	}
 
-	// if (!orderParams) return;
 	let orderResult;
 	switch (req.body['exchange']) {
 		case 'perpetual': {
@@ -54,6 +61,18 @@ router.post('/', async (req, res) => {
 				req.body['price'],
 				req.body['market']
 			);
+			break;
+		}
+		case 'gmx': {
+			const orderParams = await gmxBuildOrderParams(req.body);
+			if (!orderParams) return;
+			orderResult = await gmxCreateOrder(orderParams);
+			// await perpExportOrder(
+			// 	req.body['strategy'],
+			// 	orderResult,
+			// 	req.body['price'],
+			// 	req.body['market']
+			// );
 			break;
 		}
 		default: {

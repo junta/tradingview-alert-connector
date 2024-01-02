@@ -10,19 +10,22 @@
 		"start:dev": "tsc && NODE_ENV=development tsc-watch --onSuccess \"ts-node dist/index.js\"",
 		"ngrok": "ngrok http 3000",
 		"ngrok:docker": "ngrok http 80",
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"dev:example": "ts-node example.ts"
 	},
 	"author": "0xIbuki",
 	"license": "MIT",
 	"dependencies": {
 		"@dydxprotocol/v3-client": "^1.14.0",
+		"@perp/sdk-curie": "^1.22.0",
 		"@sentry/integrations": "^6.19.1",
 		"@sentry/node": "^6.18.2",
 		"@sentry/tracing": "^6.18.2",
 		"@types/config": "^0.0.41",
 		"@types/express": "^4.17.13",
-		"@types/node": "^17.0.21",
+		"@types/node": "^20.10.0",
 		"config": "^3.3.7",
+		"decimal.js": "^10.4.3",
 		"dotenv": "^16.0.0",
 		"express": "^4.17.3",
 		"helmet": "^5.0.2",
@@ -30,9 +33,7 @@
 		"ngrok": "^4.3.0",
 		"node-json-db": "^1.4.1",
 		"ts-node": "^10.5.0",
-		"typescript": "^4.5.5",
-		"@perp/sdk-curie": "1.16.0",
-		"ethers": "^5.7.2"
+		"typescript": "^4.5.5"
 	},
 	"devDependencies": {
 		"@typescript-eslint/eslint-plugin": "^5.13.0",
