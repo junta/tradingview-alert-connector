@@ -20,7 +20,7 @@ router.get('/', async (req, res) => {
 	const dydxAccount = await dydxGetAccount();
 	const perpAccount = await perpGetAccount();
 
-	if (!dydxAccount && !perpAccount) {
+	if (!dydxAccount) {
 		res.send('Error on getting account data');
 	} else {
 		const message =
