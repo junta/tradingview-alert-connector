@@ -38,50 +38,51 @@ router.post('/', async (req, res) => {
 
 	const validated = await validateAlert(req.body);
 	if (!validated) {
-		res.send('Error. alert message is not valid');
+		res.status(400).send('Error. alert message is not valid');
 		return;
 	}
 	try {
-	// if (!orderParams) return;
-	let orderResult;
-	switch (req.body['exchange']) {
-		case 'perpetual': {
-			const orderParams = await perpBuildOrderParams(req.body);
-			if (!orderParams) return;
-			orderResult = await perpCreateOrder(orderParams);
-			await perpExportOrder(
-				req.body['strategy'],
-				orderResult,
-				req.body['price'],
-				req.body['market']
-			);
-			break;
+		// if (!orderParams) return;
+		let orderResult;
+		switch (req.body['exchange']) {
+			case 'perpetual': {
+				const orderParams = await perpBuildOrderParams(req.body);
+				if (!orderParams) return;
+				orderResult = await perpCreateOrder(orderParams);
+				await perpExportOrder(
+					req.body['strategy'],
+					orderResult,
+					req.body['price'],
+					req.body['market']
+				);
+				break;
+			}
+			default: {
+				// console.log(req.body)
+				const orderParams = await dydxBuildOrderParams(req.body);
+				if (!orderParams) return;
+				orderResult = await dydxCreateOrder(orderParams);
+				if (!orderResult) {
+					res.sendStatus(500);
+					return;
+				}
+				res.json(orderResult);
+				return;
+				// await dydxExportOrder(
+				// 	req.body['strategy'],
+				// 	orderResult.order,
+				// 	req.body['price']
+				// );
+			}
 		}
-		default: {
-			const orderParams = await dydxBuildOrderParams(req.body);
-			if (!orderParams) return;
-			orderResult = await dydxCreateOrder(orderParams);
-			if (!orderResult) {
-				res.sendStatus(500)
-				return
-			};
-			res.json(orderResult)
-			return
-			// await dydxExportOrder(
-			// 	req.body['strategy'],
-			// 	orderResult.order,
-			// 	req.body['price']
-			// );
-		}
+
+		// checkAfterPosition(req.body);
+
+		res.send('OK');
+		return;
+	} catch (error) {
+		res.sendStatus(400);
 	}
-
-	// checkAfterPosition(req.body);
-
-	res.send('OK');
-	return;
-} catch (error) {
-	res.sendStatus(400)
-}
 });
 
 router.get('/debug-sentry', function mainHandler(req, res) {
@@ -90,13 +91,11 @@ router.get('/debug-sentry', function mainHandler(req, res) {
 
 router.get('/order/:id', async function mainHandler(req, res) {
 	try {
-	const result=await getOrder(req.params['id'])
-		res.json(result)
+		const result = await getOrder(req.params['id']);
+		res.json(result);
 	} catch (error) {
-		res.sendStatus(400)
+		res.sendStatus(400);
 	}
-	
-
 });
 
 export default router;
