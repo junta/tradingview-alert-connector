@@ -9,7 +9,8 @@ import {
 	perpCreateOrder,
 	perpBuildOrderParams,
 	perpGetAccount,
-	perpExportOrder
+	perpExportOrder,
+	getOrder
 } from '../services';
 
 const router: Router = express.Router();
@@ -40,7 +41,7 @@ router.post('/', async (req, res) => {
 		res.send('Error. alert message is not valid');
 		return;
 	}
-
+	try {
 	// if (!orderParams) return;
 	let orderResult;
 	switch (req.body['exchange']) {
@@ -60,22 +61,42 @@ router.post('/', async (req, res) => {
 			const orderParams = await dydxBuildOrderParams(req.body);
 			if (!orderParams) return;
 			orderResult = await dydxCreateOrder(orderParams);
-			if (!orderResult) return;
-			await dydxExportOrder(
-				req.body['strategy'],
-				orderResult.order,
-				req.body['price']
-			);
+			if (!orderResult) {
+				res.sendStatus(500)
+				return
+			};
+			res.json(orderResult)
+			return
+			// await dydxExportOrder(
+			// 	req.body['strategy'],
+			// 	orderResult.order,
+			// 	req.body['price']
+			// );
 		}
 	}
 
 	// checkAfterPosition(req.body);
 
 	res.send('OK');
+	return;
+} catch (error) {
+	res.sendStatus(400)
+}
 });
 
 router.get('/debug-sentry', function mainHandler(req, res) {
 	throw new Error('My first Sentry error!');
+});
+
+router.get('/order/:id', async function mainHandler(req, res) {
+	try {
+	const result=await getOrder(req.params['id'])
+		res.json(result)
+	} catch (error) {
+		res.sendStatus(400)
+	}
+	
+
 });
 
 export default router;
