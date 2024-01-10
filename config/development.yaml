@@ -1,7 +1,7 @@
 Dydx:
   Network:
     host: https://api.stage.dydx.exchange
-    chainID: 5
+    chainID: 11155111
   User:
     limitFee: 0.2
 Perpetual:
