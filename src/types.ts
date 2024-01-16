@@ -18,18 +18,22 @@ export type AlertObject = {
 	position: string;
 	reverse: boolean;
 	passphrase?: string;
+	type: OrderType;
+	trailingPercent?: string;
+	expirationDays?: number;
 };
 
 export type dydxOrderParams = {
 	market: Market;
 	side: OrderSide;
-	type: OrderType.MARKET;
+	type: OrderType;
 	timeInForce: TimeInForce.FOK;
 	postOnly: false;
 	size: string;
 	price: string;
 	limitFee: string;
 	expiration: string;
+	trailingPercent: string;
 };
 
 export type perpOrderParams = {

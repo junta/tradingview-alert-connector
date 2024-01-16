@@ -15,7 +15,9 @@ export const dydxBuildOrderParams = async (alertMessage: AlertObject) => {
 
 	// set expiration datetime. must be more than 1 minute from current datetime
 	const date = new Date();
-	date.setMinutes(date.getMinutes() + 2);
+	date.setMinutes(
+		date.getMinutes() + (alertMessage.expirationDays || 2) * 1440
+	);
 	const dateStr = date.toJSON();
 
 	const connector = await DYDXConnector.build();
@@ -35,7 +37,7 @@ export const dydxBuildOrderParams = async (alertMessage: AlertObject) => {
 		const account = await connector.client.private.getAccount(
 			process.env.ETH_ADDRESS
 		);
-		const equity = Number(account.account.equity)
+		const equity = Number(account.account.equity);
 		orderSize = (equity * Number(alertMessage.sizeByLeverage)) / latestPrice;
 	} else if (alertMessage.sizeUsd) {
 		orderSize = Number(alertMessage.sizeUsd) / latestPrice;
@@ -53,7 +55,6 @@ export const dydxBuildOrderParams = async (alertMessage: AlertObject) => {
 	const orderSizeStr = Number(orderSize).toFixed(stepDecimal);
 
 	const tickSize = parseFloat(marketsData.markets[market].tickSize);
-	
 
 	const slippagePercentage = 0.05;
 	const minPrice =
@@ -67,13 +68,14 @@ export const dydxBuildOrderParams = async (alertMessage: AlertObject) => {
 	const orderParams: dydxOrderParams = {
 		market: market,
 		side: orderSide,
-		type: OrderType.MARKET,
+		type: alertMessage.type,
 		timeInForce: TimeInForce.FOK,
 		postOnly: false,
 		size: orderSizeStr,
 		price: price,
 		limitFee: config.get('Dydx.User.limitFee'),
-		expiration: dateStr
+		expiration: dateStr,
+		trailingPercent: alertMessage.trailingPercent
 	};
 	console.log('orderParams for dydx', orderParams);
 	return orderParams;
