@@ -1,7 +1,7 @@
 import { AlertObject, gmxOrderParams } from '../../types';
 import { getStrategiesDB } from '../../helper';
 import 'dotenv/config';
-import { tokenMap } from './tokenMap';
+import { gmxTokenMap } from './constants';
 
 export const gmxBuildOrderParams = async (alertMessage: AlertObject) => {
 	const [db, rootData] = getStrategiesDB();
@@ -13,20 +13,17 @@ export const gmxBuildOrderParams = async (alertMessage: AlertObject) => {
 		alertMessage.reverse &&
 		rootData[alertMessage.strategy].isFirstOrder == 'false'
 	) {
-		orderSize = alertMessage.size * 2;
+		orderSize = alertMessage.sizeUsd * 2;
 	} else {
-		orderSize = alertMessage.size;
+		orderSize = alertMessage.sizeUsd;
 	}
 
-	tokenMap.get(alertMessage.market);
+	gmxTokenMap.get(alertMessage.market);
 
 	const orderParams: gmxOrderParams = {
-		marketAddress: tokenMap.get(alertMessage.market),
-		// TODO:
-		orderType: 2,
+		marketAddress: gmxTokenMap.get(alertMessage.market),
 		isLong,
-		// sizeUsd: orderSize
-		sizeUsd: 3,
+		sizeUsd: orderSize,
 		price: alertMessage.price
 	};
 	console.log('orderParams for GMX', orderParams);

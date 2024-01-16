@@ -14,6 +14,7 @@ import {
 import { gmxBuildOrderParams } from '../services/gmx/buildOrderParams';
 import { gmxCreateOrder } from '../services/gmx/createOrder';
 import { gmxGetAccount } from '../services/gmx/getAccount';
+import { gmxExportOrder } from '../services/gmx/exportOrder';
 
 const router: Router = express.Router();
 
@@ -67,12 +68,12 @@ router.post('/', async (req, res) => {
 			const orderParams = await gmxBuildOrderParams(req.body);
 			if (!orderParams) return;
 			orderResult = await gmxCreateOrder(orderParams);
-			// await perpExportOrder(
-			// 	req.body['strategy'],
-			// 	orderResult,
-			// 	req.body['price'],
-			// 	req.body['market']
-			// );
+			await gmxExportOrder(
+				req.body['strategy'],
+				orderResult,
+				req.body['price'],
+				req.body['market']
+			);
 			break;
 		}
 		default: {

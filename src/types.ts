@@ -42,8 +42,13 @@ export type perpOrderParams = {
 
 export type gmxOrderParams = {
 	marketAddress: string;
-	orderType: number;
 	isLong: boolean;
 	sizeUsd: number;
 	price: number;
+};
+
+export type gmxOrderResult = {
+	txHash: string;
+	sizeUsd: number;
+	isLong: boolean;
 };
