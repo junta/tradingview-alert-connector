@@ -16,7 +16,7 @@ export const dydxBuildOrderParams = async (alertMessage: AlertObject) => {
 	// set expiration datetime. must be more than 1 minute from current datetime
 	const date = new Date();
 	date.setMinutes(
-		date.getMinutes() + (alertMessage.expirationDays || 2) * 1440
+		date.getMinutes() + (alertMessage.expirationDays || 0.003) * 1440  //5 min default
 	);
 	const dateStr = date.toJSON();
 

@@ -13,11 +13,11 @@ export const getOrder = async (order_id: string) => {
 		await connector.client.private.getOrderById(order_id);
 
 	// count++;
-	const filled = orderResponse.order.status == 'FILLED' ? true : false;
+	// const filled = orderResponse.order.status == 'FILLED' ? true : false;
 
-	if (filled) {
+	// if (filled) {
 		return orderResponse;
-	}
+	// }
 	// } catch (error) {
 	// 	count++;
 	// 	filled = false;

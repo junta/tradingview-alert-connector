@@ -25,7 +25,7 @@ router.get('/', async (req, res) => {
 		res.send('Error on getting account data');
 	} else {
 		const message =
-			'dYdX Account Ready: ' +
+			`dYdX Account Read (${process.env.ETH_ADDRESS}): ` +
 			dydxAccount +
 			'\n  Perpetual Protocol Account Ready: ' +
 			perpAccount;
