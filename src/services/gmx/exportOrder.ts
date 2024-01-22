@@ -13,9 +13,9 @@ export const gmxExportOrder = async (
 	const isFirstOrderPath = rootPath + '/isFirstOrder';
 	db.push(isFirstOrderPath, 'false');
 
-	const orderSize = orderResult.sizeUsd;
+	const orderSize = Number(orderResult.sizeUsd);
 
-	const orderSide = orderResult.isLong == true ? 'SELL' : 'BUY';
+	const orderSide = orderResult.isLong ? 'BUY' : 'SELL';
 
 	// Store position data
 	const positionPath = rootPath + '/position';

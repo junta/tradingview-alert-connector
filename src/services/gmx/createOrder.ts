@@ -1,6 +1,10 @@
 import { ExchangeRouterAbi } from './abi/exchangeRounter';
 import { ethers } from 'ethers';
-import { gmxOrderParams, gmxOrderResult } from '../../types';
+import {
+	GmxPositionResponse,
+	gmxOrderParams,
+	gmxOrderResult
+} from '../../types';
 import { erc20Abi } from './abi/erc20';
 import { getGmxClient } from './client';
 import { ReaderAbi } from './abi/reader';
@@ -15,39 +19,39 @@ const dataStore = '0xFD70de6b91282D8017aA4E741e9Ae325CAb992d8';
 const orderVault = '0x31eF83a530Fde1B38EE9A18093A333D8Bbbc40D5';
 const usdc = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831';
 const usdcDecimal = 6;
+const myReferralCode =
+	'0x74765f616c6572745f636f6e6e6563746f720000000000000000000000000000';
 
 const executionFee = ethers.utils.parseEther('0.0015675');
 const signer = getGmxClient();
 
 export const gmxCreateOrder = async (orderParams: gmxOrderParams) => {
 	try {
-		let sendCollateralAmount =
-			orderParams.sizeUsd / Number(process.env.GMX_LEVERAGE);
-		sendCollateralAmount = Math.round(sendCollateralAmount * 100) / 100;
-		const parsedSendCollateralAmount = ethers.utils.parseUnits(
-			String(sendCollateralAmount),
-			usdcDecimal
-		);
-
-		await checkAndApprove(parsedSendCollateralAmount);
-
 		const gmxContract = new ethers.Contract(
 			exchangeRounter,
 			ExchangeRouterAbi,
 			signer
 		);
 
-		const [hasLongPosition, orderType, positionSizeUsd, collateralAmount] =
-			await getOrderTypeAndPosition(
-				orderParams.marketAddress,
-				orderParams.isLong
-			);
+		const positionResponse = await getOrderTypeAndPosition(
+			orderParams.marketAddress,
+			orderParams.isLong
+		);
+		const orderType = positionResponse.orderType;
+
+		let adustedSizeUsd = orderParams.sizeUsd;
 
 		let initialCollateralDeltaAmount = ethers.BigNumber.from(0);
-		if (orderType === gmxOrderType.MarketDecrease) {
+		if (positionResponse.orderType === gmxOrderType.MarketDecrease) {
 			let withdrawAmount =
-				collateralAmount * (orderParams.sizeUsd / positionSizeUsd);
-			withdrawAmount = Math.round(withdrawAmount * 100) / 100;
+				positionResponse.collateralAmount *
+				(orderParams.sizeUsd / positionResponse.positionSizeUsd);
+			// when full close
+			if (positionResponse.positionSizeUsd < orderParams.sizeUsd) {
+				adustedSizeUsd = positionResponse.positionSizeUsd;
+				withdrawAmount = positionResponse.collateralAmount;
+			}
+			withdrawAmount = Math.floor(withdrawAmount * 10000) / 10000;
 
 			initialCollateralDeltaAmount = ethers.utils.parseUnits(
 				String(withdrawAmount),
@@ -56,9 +60,9 @@ export const gmxCreateOrder = async (orderParams: gmxOrderParams) => {
 		}
 
 		const decreasePositionSwapType =
-			orderType === gmxOrderType.MarketIncrease ? 0 : 1;
+			positionResponse.orderType === gmxOrderType.MarketIncrease ? 0 : 1;
 		const sizeDeltaUsd = ethers.utils.parseUnits(
-			String(orderParams.sizeUsd),
+			String(adustedSizeUsd),
 			BASE_DECIMAL
 		);
 		const acceptablePrice = getAcceptablePrice(
@@ -86,10 +90,9 @@ export const gmxCreateOrder = async (orderParams: gmxOrderParams) => {
 			},
 			orderType,
 			decreasePositionSwapType,
-			isLong: hasLongPosition ?? orderParams.isLong,
+			isLong: positionResponse.hasLongPosition ?? orderParams.isLong,
 			shouldUnwrapNativeToken: false,
-			referralCode:
-				'0x74765f616c6572745f636f6e6e6563746f720000000000000000000000000000'
+			referralCode: myReferralCode
 			// 0x0000000000000000000000000000000000000000000000000000000000000000
 		};
 
@@ -107,7 +110,20 @@ export const gmxCreateOrder = async (orderParams: gmxOrderParams) => {
 				executionFee
 			])
 		];
+
+		// when MarketIncrease, calculate collateral amount, approve, sentToken
 		if (orderType == gmxOrderType.MarketIncrease) {
+			let sendCollateralAmount =
+				orderParams.sizeUsd / Number(process.env.GMX_LEVERAGE);
+			if (sendCollateralAmount < 2) throw Error("Can't send less than 2 USD");
+			sendCollateralAmount = Math.ceil(sendCollateralAmount * 100) / 100;
+			const parsedSendCollateralAmount = ethers.utils.parseUnits(
+				String(sendCollateralAmount),
+				usdcDecimal
+			);
+
+			await checkAndApprove(parsedSendCollateralAmount);
+
 			multiCallParams.push(
 				gmxContract.interface.encodeFunctionData('sendTokens', [
 					usdc,
@@ -116,6 +132,7 @@ export const gmxCreateOrder = async (orderParams: gmxOrderParams) => {
 				])
 			);
 		}
+
 		multiCallParams.push(createOrderData);
 
 		const tx = await gmxContract.multicall(multiCallParams, {
@@ -130,16 +147,18 @@ export const gmxCreateOrder = async (orderParams: gmxOrderParams) => {
 		// if it's a decrease order, create another order with rest size
 		if (
 			orderType == gmxOrderType.MarketDecrease &&
-			positionSizeUsd &&
-			positionSizeUsd + 2 < orderParams.sizeUsd
+			positionResponse.positionSizeUsd &&
+			positionResponse.positionSizeUsd + 2 < orderParams.sizeUsd
 		) {
 			// wait actual first order is executed
 			await _sleep(20000);
+			const restSizeUsd =
+				orderParams.sizeUsd - positionResponse.positionSizeUsd;
 
 			const restOrderParams: gmxOrderParams = {
 				marketAddress: orderParams.marketAddress,
 				isLong: orderParams.isLong,
-				sizeUsd: orderParams.sizeUsd - positionSizeUsd,
+				sizeUsd: Math.round(restSizeUsd * 100) / 100,
 				price: orderParams.price
 			};
 			await gmxCreateOrder(restOrderParams);
@@ -180,7 +199,7 @@ export const checkAndApprove = async (amount) => {
 export const getOrderTypeAndPosition = async (
 	market: string,
 	isLongOrder: boolean
-): Promise<[boolean, gmxOrderType, number, number]> => {
+): Promise<GmxPositionResponse> => {
 	const readerContract = new ethers.Contract(reader, ReaderAbi, signer);
 
 	const positions = await readerContract.getAccountPositions(
@@ -197,11 +216,15 @@ export const getOrderTypeAndPosition = async (
 	const hasLongPosition = position && position['flags']['isLong'];
 
 	// no existing position, always marketIncrease order
-	if (!position) return [null, gmxOrderType.MarketIncrease, null, null];
+	if (!position) return { orderType: gmxOrderType.MarketIncrease };
 
 	// if it's the same order direction, marketIncrease order
 	if ((hasLongPosition && isLongOrder) || (!hasLongPosition && !isLongOrder)) {
-		return [hasLongPosition, gmxOrderType.MarketIncrease, null, null];
+		const gmxPositionResponse: GmxPositionResponse = {
+			orderType: gmxOrderType.MarketIncrease,
+			hasLongPosition
+		};
+		return gmxPositionResponse;
 	} else {
 		const positionSizeUsd = ethers.utils.formatUnits(
 			String(position.numbers.sizeInUsd),
@@ -213,20 +236,20 @@ export const getOrderTypeAndPosition = async (
 			usdcDecimal
 		);
 
-		return [
+		return {
+			orderType: gmxOrderType.MarketDecrease,
 			hasLongPosition,
-			gmxOrderType.MarketDecrease,
-			Number(positionSizeUsd),
-			Number(collateralAmount)
-		];
+			positionSizeUsd: Number(positionSizeUsd),
+			collateralAmount: Number(collateralAmount)
+		};
 	}
 };
 
 export const getAcceptablePrice = (isLong: boolean, price: number) => {
-	const slippage = 0.05;
-	const multiplier = isLong ? 1 + slippage : 1 - slippage;
-	return ethers.utils.parseUnits(String(price * multiplier), 22);
+	// const slippage = 0.05;
+	// const multiplier = isLong ? 1 + slippage : 1 - slippage;
+	// return ethers.utils.parseUnits(String(price * multiplier), 22);
 
 	// temporary fix
-	// return isLong ? ethers.constants.MaxUint256 : 1;
+	return isLong ? ethers.constants.MaxUint256 : 1;
 };

@@ -14,41 +14,22 @@ jest.setTimeout(40000);
 
 describe('getOrderType', () => {
 	it('should return marketIncrease when no position', async () => {
-		const [hasLongPosition, orderType] = await getOrderTypeAndPosition(
-			gmxTokenMap.get('BTC_USD')!,
-			true
-		);
-		console.log(hasLongPosition);
+		const { orderType, hasLongPosition, positionSizeUsd, collateralAmount } =
+			await getOrderTypeAndPosition(gmxTokenMap.get('BTC_USD')!, true);
+
 		expect(orderType).toEqual(2);
 	});
 
-	it('should return marketIncrease when long order + have long position', async () => {
-		const [hasLongPosition, orderType] = await getOrderTypeAndPosition(
-			gmxTokenMap.get('DOGE_USD')!,
-			true
-		);
-
-		console.log(hasLongPosition);
+	it('should return marketIncrease when short position and sell order', async () => {
+		const { orderType, hasLongPosition, positionSizeUsd, collateralAmount } =
+			await getOrderTypeAndPosition(gmxTokenMap.get('XRP_USD')!, false);
 		expect(orderType).toEqual(2);
 	});
 
-	it('should return marketDecrease when short order + have long position', async () => {
-		const [hasLongPosition, orderType] = await getOrderTypeAndPosition(
-			gmxTokenMap.get('DOGE_USD')!,
-			false
-		);
-
-		console.log(hasLongPosition);
+	it('should return marketDecrease when short position and buy order', async () => {
+		const { orderType, hasLongPosition, positionSizeUsd, collateralAmount } =
+			await getOrderTypeAndPosition(gmxTokenMap.get('XRP_USD')!, true);
 		expect(orderType).toEqual(4);
-	});
-
-	it('should return hasLongPosition=false', async () => {
-		const [hasLongPosition, orderType] = await getOrderTypeAndPosition(
-			gmxTokenMap.get('XRP_USD')!,
-			false
-		);
-
-		console.log(hasLongPosition);
 	});
 });
 
