@@ -5,14 +5,10 @@ export const perpGetAccount = async () => {
 		const perp = await PerpetualConnector.build();
 		if (!perp || !perp.wallet) return false;
 
-		const account = await perp.wallet.getBalanceEth();
-		console.log('Perpetual Protocol ETH balance: ', Number(account));
+		const balance = await perp.wallet.getBalanceEth();
+		console.log('Perpetual Protocol(Optimism) ETH balance: ', Number(balance));
 
-		if (Number(account) == 0) {
-			return false;
-		} else {
-			return true;
-		}
+		return Number(balance) != 0;
 	} catch (error) {
 		console.error(error);
 	}

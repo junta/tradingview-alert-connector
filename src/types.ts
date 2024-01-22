@@ -5,6 +5,7 @@ import {
 	Market
 } from '@dydxprotocol/v3-client';
 import { PositionSide } from '@perp/sdk-curie';
+import { gmxOrderType } from './services/gmx/constants';
 
 export type AlertObject = {
 	exchange: string;
@@ -38,4 +39,24 @@ export type perpOrderParams = {
 	amountInput: number;
 	isAmountInputBase: boolean;
 	referralCode: string;
+};
+
+export type gmxOrderParams = {
+	marketAddress: string;
+	isLong: boolean;
+	sizeUsd: number;
+	price: number;
+};
+
+export type gmxOrderResult = {
+	txHash: string;
+	sizeUsd: number;
+	isLong: boolean;
+};
+
+export type GmxPositionResponse = {
+	orderType: gmxOrderType;
+	hasLongPosition?: boolean;
+	positionSizeUsd?: number;
+	collateralAmount?: number;
 };

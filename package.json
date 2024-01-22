@@ -8,21 +8,23 @@
 		"start": "tsc && NODE_ENV=production ts-node dist/index.js",
 		"start:test": "tsc && NODE_ENV=development ts-node dist/index.js",
 		"start:dev": "tsc && NODE_ENV=development tsc-watch --onSuccess \"ts-node dist/index.js\"",
+		"test": "jest",
 		"ngrok": "ngrok http 3000",
-		"ngrok:docker": "ngrok http 80",
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"ngrok:docker": "ngrok http 80"
 	},
 	"author": "0xIbuki",
 	"license": "MIT",
 	"dependencies": {
 		"@dydxprotocol/v3-client": "^1.14.0",
+		"@perp/sdk-curie": "^1.22.0",
 		"@sentry/integrations": "^6.19.1",
 		"@sentry/node": "^6.18.2",
 		"@sentry/tracing": "^6.18.2",
 		"@types/config": "^0.0.41",
 		"@types/express": "^4.17.13",
-		"@types/node": "^17.0.21",
+		"@types/node": "^20.10.0",
 		"config": "^3.3.7",
+		"decimal.js": "^10.4.3",
 		"dotenv": "^16.0.0",
 		"express": "^4.17.3",
 		"helmet": "^5.0.2",
@@ -30,16 +32,17 @@
 		"ngrok": "^4.3.0",
 		"node-json-db": "^1.4.1",
 		"ts-node": "^10.5.0",
-		"typescript": "^4.5.5",
-		"@perp/sdk-curie": "1.16.0",
-		"ethers": "^5.7.2"
+		"typescript": "^4.5.5"
 	},
 	"devDependencies": {
+		"@types/jest": "^29.5.11",
 		"@typescript-eslint/eslint-plugin": "^5.13.0",
 		"@typescript-eslint/parser": "^5.13.0",
 		"eslint": "^8.10.0",
 		"eslint-config-prettier": "^8.4.0",
+		"jest": "^29.7.0",
 		"prettier": "2.5.1",
+		"ts-jest": "^29.1.1",
 		"tsc-watch": "^4.6.0"
 	}
 }
