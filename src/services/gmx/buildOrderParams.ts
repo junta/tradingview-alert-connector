@@ -18,10 +18,19 @@ export const gmxBuildOrderParams = async (alertMessage: AlertObject) => {
 		orderSize = alertMessage.sizeUsd;
 	}
 
-	gmxTokenMap.get(alertMessage.market);
+	if (orderSize < 2) {
+		console.error('Order size must be greater than 2 USD');
+		return;
+	}
+
+	const market = gmxTokenMap.get(alertMessage.market);
+	if (!market) {
+		console.error(`Market: ${alertMessage.market} is not supported`);
+		return;
+	}
 
 	const orderParams: gmxOrderParams = {
-		marketAddress: gmxTokenMap.get(alertMessage.market),
+		marketAddress: market,
 		isLong,
 		sizeUsd: orderSize,
 		price: alertMessage.price

@@ -4,7 +4,19 @@ import 'dotenv/config';
 
 export const getGmxClient = () => {
 	if (!process.env.GMX_PRIVATE_KEY) {
-		console.log('GMX_PRIVATE_KEY for GMX is not set as environment variable');
+		console.error('GMX_PRIVATE_KEY for GMX is not set as environment variable');
+		return;
+	}
+
+	if (!process.env.GMX_LEVERAGE) {
+		console.error('GMX_LEVERAGE for GMX is not set as environment variable');
+		return;
+	}
+
+	const GMX_LEVERAGE = Number(process.env.GMX_LEVERAGE);
+
+	if (GMX_LEVERAGE < 1.1 || GMX_LEVERAGE > 50) {
+		console.error('GMX_LEVERAGE must be between 1.1 and 50');
 		return;
 	}
 

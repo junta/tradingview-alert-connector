@@ -14,3 +14,5 @@ export enum gmxOrderType {
 	MarketIncrease = 2,
 	MarketDecrease = 4
 }
+
+export const BASE_DECIMAL = 30;

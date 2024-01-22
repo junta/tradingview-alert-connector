@@ -50,48 +50,51 @@ router.post('/', async (req, res) => {
 		return;
 	}
 
-	let orderResult;
-	switch (req.body['exchange']) {
-		case 'perpetual': {
-			const orderParams = await perpBuildOrderParams(req.body);
-			if (!orderParams) return;
-			orderResult = await perpCreateOrder(orderParams);
-			await perpExportOrder(
-				req.body['strategy'],
-				orderResult,
-				req.body['price'],
-				req.body['market']
-			);
-			break;
+	try {
+		let orderResult;
+		switch (req.body['exchange']) {
+			case 'perpetual': {
+				const orderParams = await perpBuildOrderParams(req.body);
+				if (!orderParams) return;
+				orderResult = await perpCreateOrder(orderParams);
+				await perpExportOrder(
+					req.body['strategy'],
+					orderResult,
+					req.body['price'],
+					req.body['market']
+				);
+				break;
+			}
+			case 'gmx': {
+				const orderParams = await gmxBuildOrderParams(req.body);
+				if (!orderParams) return;
+				orderResult = await gmxCreateOrder(orderParams);
+				if (!orderResult) throw Error('Order is not executed');
+				await gmxExportOrder(
+					req.body['strategy'],
+					orderResult,
+					req.body['price'],
+					req.body['market']
+				);
+				break;
+			}
+			default: {
+				const orderParams = await dydxBuildOrderParams(req.body);
+				if (!orderParams) return;
+				orderResult = await dydxCreateOrder(orderParams);
+				if (!orderResult) throw Error('Order is not executed');
+				await dydxExportOrder(
+					req.body['strategy'],
+					orderResult.order,
+					req.body['price']
+				);
+			}
 		}
-		case 'gmx': {
-			const orderParams = await gmxBuildOrderParams(req.body);
-			if (!orderParams) return;
-			orderResult = await gmxCreateOrder(orderParams);
-			await gmxExportOrder(
-				req.body['strategy'],
-				orderResult,
-				req.body['price'],
-				req.body['market']
-			);
-			break;
-		}
-		default: {
-			const orderParams = await dydxBuildOrderParams(req.body);
-			if (!orderParams) return;
-			orderResult = await dydxCreateOrder(orderParams);
-			if (!orderResult) return;
-			await dydxExportOrder(
-				req.body['strategy'],
-				orderResult.order,
-				req.body['price']
-			);
-		}
+		res.send('OK');
+		// checkAfterPosition(req.body);
+	} catch (e) {
+		res.send('error');
 	}
-
-	// checkAfterPosition(req.body);
-
-	res.send('OK');
 });
 
 router.get('/debug-sentry', function mainHandler(req, res) {
