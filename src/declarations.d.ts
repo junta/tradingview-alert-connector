@@ -7,5 +7,9 @@ declare namespace NodeJS {
 		readonly API_PASSPHRASE: string;
 		readonly API_SECRET: string;
 		readonly TRADINGVIEW_PASSPHRASE: string;
+		readonly SENTRY_DNS: string;
+		readonly PERPETUAL_PRIVATE_KEY: string;
+		readonly GMX_PRIVATE_KEY: string;
+		readonly GMX_LEVERAGE: string;
 	}
 }

@@ -10,6 +10,8 @@ export const gmxGetAccount = async () => {
 			ethers.utils.formatEther(balance)
 		);
 
+		console.log('GMX_LEVERAGE: ' + process.env.GMX_LEVERAGE);
+
 		return Number(balance) != 0;
 	} catch (error) {
 		console.error(error);

@@ -20,8 +20,6 @@ export const getGmxClient = () => {
 		return;
 	}
 
-	console.log('GMX_LEVERAGE: ' + process.env.GMX_LEVERAGE);
-
 	const rpcUrl: string = config.get('GMX.Network.host');
 	const provider = ethers.getDefaultProvider(rpcUrl);
 	return new ethers.Wallet(process.env.GMX_PRIVATE_KEY, provider);

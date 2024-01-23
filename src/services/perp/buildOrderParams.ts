@@ -3,6 +3,7 @@ import { AlertObject, perpOrderParams } from '../../types';
 import { getStrategiesDB } from '../../helper';
 import config = require('config');
 import 'dotenv/config';
+import PerpetualConnector from './client';
 
 export const perpBuildOrderParams = async (alertMessage: AlertObject) => {
 	const [db, rootData] = getStrategiesDB();
@@ -11,7 +12,15 @@ export const perpBuildOrderParams = async (alertMessage: AlertObject) => {
 		alertMessage.order == 'buy' ? PositionSide.LONG : PositionSide.SHORT;
 
 	let orderSize: number;
-	if (
+	if (alertMessage.sizeByLeverage) {
+		const perp = await PerpetualConnector.build();
+		if (!perp || !perp.vault)
+			throw Error('Perpetual Protocol Vault is not connected');
+		const collateral = await perp.vault.getFreeCollateral();
+		orderSize =
+			(Number(collateral) * Number(alertMessage.sizeByLeverage)) /
+			Number(alertMessage.price);
+	} else if (
 		alertMessage.reverse &&
 		rootData[alertMessage.strategy].isFirstOrder == 'false'
 	) {
@@ -23,7 +32,9 @@ export const perpBuildOrderParams = async (alertMessage: AlertObject) => {
 	const tickerSymbol = alertMessage.market.replace('_', '');
 	const side = orderSide;
 
-	const referralCode = process.env.PERPETUAL_REFERRAL_CODE ? process.env.PERPETUAL_REFERRAL_CODE : "0xibuki";
+	const referralCode = process.env.PERPETUAL_REFERRAL_CODE
+		? process.env.PERPETUAL_REFERRAL_CODE
+		: '0xibuki';
 
 	const orderParams: perpOrderParams = {
 		tickerSymbol,
