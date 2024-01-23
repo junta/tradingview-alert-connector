@@ -12,6 +12,7 @@ import {
 	perpExportOrder,
 	getOrder
 } from '../services';
+import { cancelOrder } from '../services/dydx/cancleOrder';
 
 const router: Router = express.Router();
 
@@ -81,6 +82,8 @@ router.post('/', async (req, res) => {
 		res.send('OK');
 		return;
 	} catch (error) {
+		console.log(error);
+
 		res.sendStatus(400);
 	}
 });
@@ -92,6 +95,15 @@ router.get('/debug-sentry', function mainHandler(req, res) {
 router.get('/order/:id', async function mainHandler(req, res) {
 	try {
 		const result = await getOrder(req.params['id']);
+		res.json(result);
+	} catch (error) {
+		res.sendStatus(400);
+	}
+});
+
+router.delete('/order/:id', async function mainHandler(req, res) {
+	try {
+		const result = await cancelOrder(req.params['id']);
 		res.json(result);
 	} catch (error) {
 		res.sendStatus(400);

@@ -21,6 +21,7 @@ export type AlertObject = {
 	type: OrderType;
 	trailingPercent?: string;
 	expirationDays?: number;
+	stopLimitPercent?: number;
 };
 
 export type dydxOrderParams = {
@@ -34,6 +35,7 @@ export type dydxOrderParams = {
 	limitFee: string;
 	expiration: string;
 	trailingPercent: string;
+	triggerPrice: string;
 };
 
 export type perpOrderParams = {

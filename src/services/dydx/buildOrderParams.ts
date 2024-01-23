@@ -16,7 +16,7 @@ export const dydxBuildOrderParams = async (alertMessage: AlertObject) => {
 	// set expiration datetime. must be more than 1 minute from current datetime
 	const date = new Date();
 	date.setMinutes(
-		date.getMinutes() + (alertMessage.expirationDays || 0.003) * 1440  //5 min default
+		date.getMinutes() + (alertMessage.expirationDays || 0.003) * 1440 //5 min default
 	);
 	const dateStr = date.toJSON();
 
@@ -64,7 +64,11 @@ export const dydxBuildOrderParams = async (alertMessage: AlertObject) => {
 
 	const decimal = getDecimalPointLength(tickSize);
 	const price = minPrice.toFixed(decimal);
-
+	const triggerPrice =
+		alertMessage.order == 'buy'
+			? (1 - (alertMessage.stopLimitPercent || 0) / 100) * latestPrice
+			: (1 + (alertMessage.stopLimitPercent || 0) / 100) * latestPrice;
+	console.log(latestPrice, triggerPrice);
 	const orderParams: dydxOrderParams = {
 		market: market,
 		side: orderSide,
@@ -75,8 +79,12 @@ export const dydxBuildOrderParams = async (alertMessage: AlertObject) => {
 		price: price,
 		limitFee: config.get('Dydx.User.limitFee'),
 		expiration: dateStr,
-		trailingPercent: alertMessage.trailingPercent
+		trailingPercent: alertMessage.trailingPercent,
+		triggerPrice: triggerPrice.toFixed(decimal).toString()
 	};
+	if (alertMessage.type !== OrderType.STOP_LIMIT) {
+		delete orderParams['triggerPrice'];
+	}
 	console.log('orderParams for dydx', orderParams);
 	return orderParams;
 };
