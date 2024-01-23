@@ -66,8 +66,8 @@ export const dydxBuildOrderParams = async (alertMessage: AlertObject) => {
 	const price = minPrice.toFixed(decimal);
 	const triggerPrice =
 		alertMessage.order == 'buy'
-			? (1 - (alertMessage.stopLimitPercent || 0) / 100) * latestPrice
-			: (1 + (alertMessage.stopLimitPercent || 0) / 100) * latestPrice;
+			? (1 + (alertMessage.stopLimitPercent || 0) / 100) * latestPrice
+			: (1 - (alertMessage.stopLimitPercent || 0) / 100) * latestPrice;
 	console.log(latestPrice, triggerPrice);
 	const orderParams: dydxOrderParams = {
 		market: market,
