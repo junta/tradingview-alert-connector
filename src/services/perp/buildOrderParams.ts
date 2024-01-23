@@ -20,6 +20,8 @@ export const perpBuildOrderParams = async (alertMessage: AlertObject) => {
 		orderSize =
 			(Number(collateral) * Number(alertMessage.sizeByLeverage)) /
 			Number(alertMessage.price);
+	} else if (alertMessage.sizeUsd) {
+		orderSize = Number(alertMessage.sizeUsd) / Number(alertMessage.price);
 	} else if (
 		alertMessage.reverse &&
 		rootData[alertMessage.strategy].isFirstOrder == 'false'
