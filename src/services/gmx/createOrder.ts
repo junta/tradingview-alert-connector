@@ -246,10 +246,5 @@ export const getOrderTypeAndPosition = async (
 };
 
 export const getAcceptablePrice = (isLong: boolean, price: number) => {
-	// const slippage = 0.05;
-	// const multiplier = isLong ? 1 + slippage : 1 - slippage;
-	// return ethers.utils.parseUnits(String(price * multiplier), 22);
-
-	// temporary fix
 	return isLong ? ethers.constants.MaxUint256 : 1;
 };
