@@ -9,13 +9,24 @@ export const gmxBuildOrderParams = async (alertMessage: AlertObject) => {
 	const isLong = alertMessage.order == 'buy' ? true : false;
 
 	let orderSize: number;
+
+	if (alertMessage.size) {
+		// convert to USD size
+		orderSize = Math.floor(
+			Number(alertMessage.size) * Number(alertMessage.price)
+		);
+	} else if (alertMessage.sizeUsd) {
+		orderSize = alertMessage.sizeUsd;
+	} else {
+		console.error('Order size is not specified in alert message');
+		return;
+	}
+
 	if (
 		alertMessage.reverse &&
 		rootData[alertMessage.strategy].isFirstOrder == 'false'
 	) {
-		orderSize = alertMessage.sizeUsd * 2;
-	} else {
-		orderSize = alertMessage.sizeUsd;
+		orderSize = orderSize * 2;
 	}
 
 	if (orderSize < 2) {
