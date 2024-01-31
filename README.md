@@ -2,7 +2,7 @@
 
 Tradingview-Alert-Connector is a free and noncustodial tool for you to Integrate tradingView alert and execute automated trading for perpetual futures DEXes.
 
-Currently supports [dYdX](https://dydx.exchange/) and [Perpetual Protocol](https://perp.com/).
+Currently supports [dYdX v3](https://dydx.exchange/), [Perpetual Protocol](https://perp.com/) and [GMX v2](https://app.gmx.io/#/trade/).
 
 # Docs
 
