@@ -11,4 +11,4 @@ Perpetual:
     slippage: 0.05
 GMX:
   Network:
-    host: https://arbitrum.llamarpc.com
+    host: 'https://arb1.arbitrum.io/rpc'
