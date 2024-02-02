@@ -5,7 +5,7 @@
 	"homepage": "https://tv-connector.gitbook.io/docs/",
 	"main": "index.js",
 	"scripts": {
-		"start": "tsc && NODE_ENV=production ts-node dist/index.js",
+		"start": "tsc && NODE_ENV=production node dist/index.js",
 		"start:test": "tsc && NODE_ENV=test ts-node dist/index.js",
 		"start:dev": "tsc && NODE_ENV=development tsc-watch --onSuccess \"ts-node dist/index.js\"",
 		"test": "jest",
