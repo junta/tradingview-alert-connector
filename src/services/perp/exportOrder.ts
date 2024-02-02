@@ -12,12 +12,9 @@ export const perpExportOrder = async (
 	const isFirstOrderPath = rootPath + '/isFirstOrder';
 	db.push(isFirstOrderPath, 'false');
 
-	const orderSize = bigNumber2BigAndScaleDown(
-		orderResult.metadata.args[0].amount
-	).toNumber();
+	const orderSize = orderResult.amount.toNumber();
 
-	const orderSide =
-		orderResult.metadata.args[0].isBaseToQuote == true ? 'SELL' : 'BUY';
+	const orderSide = orderResult.isBaseToQuote == true ? 'SELL' : 'BUY';
 
 	// Store position data
 	const positionPath = rootPath + '/position';
@@ -36,10 +33,11 @@ export const perpExportOrder = async (
 		});
 	}
 
-	const perpPath = '/tradeHistoryPerpetual.csv'
+	const perpPath = '/tradeHistoryPerpetual.csv';
 	const fullPath = folderPath + perpPath;
 	if (!fs.existsSync(fullPath)) {
-		const headerString = 'datetime,strategy,market,side,size,tradingviewPrice,transaction_hash';
+		const headerString =
+			'datetime,strategy,market,side,size,tradingviewPrice,transaction_hash';
 		fs.writeFileSync(fullPath, headerString);
 	}
 
@@ -58,7 +56,7 @@ export const perpExportOrder = async (
 		// orderPrice,
 		tradingviewPrice,
 		// priceGap,
-		orderResult.transaction.hash
+		orderResult.txHash
 	];
 	const appendString = '\r\n' + appendArray.join();
 
