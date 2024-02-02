@@ -29,7 +29,7 @@ export const perpCreateOrder = async (orderParams: perpOrderParams) => {
 			);
 
 			const feeData = await provider.getFeeData();
-			const maxFeePerGas = feeData.lastBaseFeePerGas.mul(2);
+			const maxFeePerGas = feeData['lastBaseFeePerGas'].mul(2);
 			const maxPriorityFeePerGas = utils.parseUnits('0.001', 'gwei');
 
 			const positionDraft = perp.clearingHouse.createPositionDraft({
