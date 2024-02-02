@@ -28,8 +28,6 @@ export const perpCreateOrder = async (orderParams: perpOrderParams) => {
 				wallet
 			);
 
-			const feeData = await provider.getFeeData();
-			const maxFeePerGas = feeData['lastBaseFeePerGas'].mul(2);
 			const maxPriorityFeePerGas = utils.parseUnits('0.001', 'gwei');
 
 			const positionDraft = perp.clearingHouse.createPositionDraft({
@@ -58,7 +56,6 @@ export const perpCreateOrder = async (orderParams: perpOrderParams) => {
 			};
 
 			const tx = await clearingHouse.openPosition(orderArgs, {
-				maxFeePerGas,
 				maxPriorityFeePerGas
 			});
 			const txResult = await tx.wait();
