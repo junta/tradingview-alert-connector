@@ -22,13 +22,15 @@ export const perpBuildOrderParams = async (alertMessage: AlertObject) => {
 			Number(alertMessage.price);
 	} else if (alertMessage.sizeUsd) {
 		orderSize = Number(alertMessage.sizeUsd) / Number(alertMessage.price);
-	} else if (
+	} else {
+		orderSize = Number(alertMessage.size);
+	}
+
+	if (
 		alertMessage.reverse &&
 		rootData[alertMessage.strategy].isFirstOrder == 'false'
 	) {
-		orderSize = alertMessage.size * 2;
-	} else {
-		orderSize = alertMessage.size;
+		orderSize = orderSize * 2;
 	}
 
 	const tickerSymbol = alertMessage.market.replace('_', '');
