@@ -16,7 +16,7 @@ export const perpBuildOrderParams = async (alertMessage: AlertObject) => {
 		const perp = await PerpetualConnector.build();
 		if (!perp || !perp.vault)
 			throw Error('Perpetual Protocol Vault is not connected');
-		const collateral = await perp.vault.getFreeCollateral();
+		const collateral = await perp.vault.getAccountValue();
 		orderSize =
 			(Number(collateral) * Number(alertMessage.sizeByLeverage)) /
 			Number(alertMessage.price);

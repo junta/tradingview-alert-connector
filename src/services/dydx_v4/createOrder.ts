@@ -7,7 +7,9 @@ import {
 	OrderSide,
 	OrderTimeInForce,
 	OrderType,
-	SubaccountClient
+	SubaccountClient,
+	IndexerConfig,
+	ValidatorConfig
 } from '@dydxprotocol/v4-client-js';
 import { deriveHDKeyFromEthereumSignature } from '@dydxprotocol/v4-client-js/build/src/lib/onboarding';
 import config = require('config');
@@ -15,15 +17,37 @@ import 'dotenv/config';
 import { ethers } from 'ethers';
 
 export const dydxV4CreateOrder = async () => {
-	const client = await CompositeClient.connect(Network.testnet());
+	const indexerConfig = new IndexerConfig(
+		'https://indexer.dydx.trade/',
+		'wss://indexer.dydx.trade/v4/ws'
+	);
+	const validatorConfig = new ValidatorConfig(
+		'https://dydx-mainnet-full-rpc.public.blastapi.io/',
+		'dydx-mainnet-1',
+		{
+			CHAINTOKEN_DENOM: 'adv4tnt',
+			USDC_DENOM:
+				'ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5',
+			USDC_GAS_DENOM: 'uusdc',
+			USDC_DECIMALS: 6,
+			CHAINTOKEN_DECIMALS: 18
+		},
+		undefined,
+		'Client Example'
+	);
+	const network = new Network('mainnet', indexerConfig, validatorConfig);
+	const client = await CompositeClient.connect(network);
 
 	const mnemonic = process.env.DYDX_V4_MNEMONIC;
 	const wallet = ethers.Wallet.fromMnemonic(mnemonic);
 
+	// testnet
+	// const chainId = 11155111;
+
 	const toSign = {
 		domain: {
-			name: 'dYdX V4',
-			chainId: 11155111
+			name: 'dYdX Chain',
+			chainId: 1
 		},
 		primaryType: 'dYdX',
 		types: {
@@ -65,9 +89,9 @@ export const dydxV4CreateOrder = async () => {
 	const market = 'TIA-USD'; // perpertual market id
 	const type = OrderType.MARKET; // order type
 	const side = OrderSide.BUY; // side of the order
-	const timeInForce = OrderTimeInForce.GTT; // UX TimeInForce
-	const execution = OrderExecution.IOC;
-	const price = 16.9; // price of 30,000;
+	const timeInForce = OrderTimeInForce.FOK; // UX TimeInForce
+	const execution = OrderExecution.DEFAULT;
+	const price = 17.92; // price of 30,000;
 	const size = 0.1; // subticks are calculated by the price of the order
 	const postOnly = false; // If true, order is post only
 	const reduceOnly = false; // if true, the order will only reduce the position size
@@ -80,12 +104,12 @@ export const dydxV4CreateOrder = async () => {
 		side,
 		price,
 		size,
-		clientId
-		// timeInForce,
-		// 60,
-		// execution,
-		// postOnly,
-		// reduceOnly,
-		// triggerPrice
+		clientId,
+		timeInForce,
+		60,
+		execution,
+		postOnly,
+		reduceOnly,
+		triggerPrice
 	);
 };
