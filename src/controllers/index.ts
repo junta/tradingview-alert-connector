@@ -9,12 +9,15 @@ import {
 	perpCreateOrder,
 	perpBuildOrderParams,
 	perpGetAccount,
-	perpExportOrder
+	perpExportOrder,
+	dydxV4CreateOrder
 } from '../services';
 import { gmxBuildOrderParams } from '../services/gmx/buildOrderParams';
 import { gmxCreateOrder } from '../services/gmx/createOrder';
 import { gmxGetAccount } from '../services/gmx/getAccount';
 import { gmxExportOrder } from '../services/gmx/exportOrder';
+import { dydxV4BuildOrderParams } from '../services/dydx_v4/buildOrderParams';
+import { dydxV4ExportOrder } from '../services/dydx_v4/exportOrder';
 
 const router: Router = express.Router();
 
@@ -52,6 +55,7 @@ router.post('/', async (req, res) => {
 
 	try {
 		let orderResult;
+		// TODO: add lowercase conversion
 		switch (req.body['exchange']) {
 			case 'perpetual': {
 				const orderParams = await perpBuildOrderParams(req.body);
@@ -71,6 +75,19 @@ router.post('/', async (req, res) => {
 				orderResult = await gmxCreateOrder(orderParams);
 				if (!orderResult) throw Error('Order is not executed');
 				await gmxExportOrder(
+					req.body['strategy'],
+					orderResult,
+					req.body['price'],
+					req.body['market']
+				);
+				break;
+			}
+			case 'dydxv4': {
+				const orderParams = await dydxV4BuildOrderParams(req.body);
+				if (!orderParams) return;
+				orderResult = await dydxV4CreateOrder(orderParams);
+				if (!orderResult) throw Error('Order is not executed');
+				await dydxV4ExportOrder(
 					req.body['strategy'],
 					orderResult,
 					req.body['price'],

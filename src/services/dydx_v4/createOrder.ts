@@ -4,7 +4,6 @@ import {
 	BECH32_PREFIX,
 	LocalWallet,
 	OrderExecution,
-	OrderSide,
 	OrderTimeInForce,
 	OrderType,
 	SubaccountClient,
@@ -15,8 +14,9 @@ import { deriveHDKeyFromEthereumSignature } from '@dydxprotocol/v4-client-js/bui
 import config = require('config');
 import 'dotenv/config';
 import { ethers } from 'ethers';
+import { dydxV4OrderParams } from '../../types';
 
-export const dydxV4CreateOrder = async () => {
+export const dydxV4CreateOrder = async (orderParams: dydxV4OrderParams) => {
 	const indexerConfig = new IndexerConfig(
 		'https://indexer.dydx.trade/',
 		'wss://indexer.dydx.trade/v4/ws'
@@ -85,31 +85,48 @@ export const dydxV4CreateOrder = async () => {
 	console.log('Address:', lw.address);
 
 	const subaccount = new SubaccountClient(lw, 0);
-	const clientId = 123; // set to a number, can be used by the client to identify the order
-	const market = 'TIA-USD'; // perpertual market id
-	const type = OrderType.MARKET; // order type
-	const side = OrderSide.BUY; // side of the order
-	const timeInForce = OrderTimeInForce.FOK; // UX TimeInForce
+	const clientId = generateRandomInt32();
+	const market = orderParams.market;
+	const type = OrderType.MARKET;
+	const side = orderParams.side;
+	const timeInForce = OrderTimeInForce.FOK;
 	const execution = OrderExecution.DEFAULT;
-	const price = 17.92; // price of 30,000;
-	const size = 0.1; // subticks are calculated by the price of the order
-	const postOnly = false; // If true, order is post only
-	const reduceOnly = false; // if true, the order will only reduce the position size
-	const triggerPrice = null; // required for conditional orders
+	const price = orderParams.price;
+	const size = orderParams.size; // subticks are calculated by the price of the order
+	const postOnly = false;
+	const reduceOnly = false;
+	const triggerPrice = null;
 
-	const tx = await client.placeOrder(
-		subaccount,
-		market,
-		type,
-		side,
-		price,
-		size,
-		clientId,
-		timeInForce,
-		60,
-		execution,
-		postOnly,
-		reduceOnly,
-		triggerPrice
-	);
+	try {
+		const tx = await client.placeOrder(
+			subaccount,
+			market,
+			type,
+			side,
+			price,
+			size,
+			clientId,
+			timeInForce,
+			10000,
+			execution,
+			postOnly,
+			reduceOnly,
+			triggerPrice
+		);
+		console.log(tx);
+		return {
+			side: orderParams.side,
+			size: orderParams.size,
+			price: orderParams.price,
+			market: orderParams.market,
+			clientId: clientId
+		};
+	} catch (e) {
+		console.error(e);
+	}
 };
+
+function generateRandomInt32(): number {
+	const maxInt32 = 2147483647;
+	return Math.floor(Math.random() * (maxInt32 + 1));
+}
