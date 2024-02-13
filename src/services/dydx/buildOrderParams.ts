@@ -69,6 +69,11 @@ export const dydxBuildOrderParams = async (alertMessage: AlertObject) => {
 			? (1 + (alertMessage.stopLimitPercent || 0) / 100) * latestPrice
 			: (1 - (alertMessage.stopLimitPercent || 0) / 100) * latestPrice;
 	console.log(latestPrice, triggerPrice);
+	const trailingPercent =
+		Number(alertMessage.trailingPercent) *
+		Number(alertMessage.order == 'buy' ? 1 : -1);
+	console.log(alertMessage.trailingPercent);
+
 	const orderParams: dydxOrderParams = {
 		market: market,
 		side: orderSide,
@@ -79,11 +84,16 @@ export const dydxBuildOrderParams = async (alertMessage: AlertObject) => {
 		price: price,
 		limitFee: config.get('Dydx.User.limitFee'),
 		expiration: dateStr,
-		trailingPercent: alertMessage.trailingPercent,
+		trailingPercent: trailingPercent.toString(),
 		triggerPrice: triggerPrice.toFixed(decimal).toString()
 	};
 	if (alertMessage.type !== OrderType.STOP_LIMIT) {
 		delete orderParams['triggerPrice'];
+		console.log('HERE');
+	}
+
+	if (!alertMessage.trailingPercent) {
+		delete orderParams['trailingPercent'];
 	}
 	console.log('orderParams for dydx', orderParams);
 	return orderParams;
