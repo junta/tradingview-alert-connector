@@ -2,7 +2,7 @@
 
 Tradingview-Alert-Connector is a free and noncustodial tool for you to Integrate tradingView alert and execute automated trading for perpetual futures DEXes.
 
-Currently supports [dYdX v3](https://dydx.exchange/), [Perpetual Protocol](https://perp.com/) and [GMX v2](https://app.gmx.io/#/trade/).
+Currently supports [dYdX v3](https://dydx.exchange), [dYdX v4](https://dydx.trade), [Perpetual Protocol v2](https://perp.com/) and [GMX v2](https://app.gmx.io/#/trade/).
 
 # Docs
 
@@ -10,10 +10,10 @@ https://tv-connector.gitbook.io/docs/
 
 # Video Tutorial
 
-For dYdX:
+dYdX v3:
 https://www.youtube.com/watch?v=I8hB2O2-xx4
 
-For Perpetual Protocol:
+Perpetual Protocol:
 https://youtu.be/YqrOZW_mnUM
 
 # Prerequisites
@@ -22,7 +22,7 @@ https://youtu.be/YqrOZW_mnUM
 
 https://www.tradingview.com/gopro/
 
-- dYdX or Perpetual Protocol account with collateral already in place
+- DEX(e.g. dYdX v4) account with collateral already in place
 
 # Installation
 
