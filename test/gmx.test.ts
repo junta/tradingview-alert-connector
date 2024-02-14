@@ -6,8 +6,7 @@ import {
 	gmxCreateOrder
 } from '../src/services/gmx/createOrder';
 import { gmxExportOrder } from '../src/services/gmx/exportOrder';
-import { decimalToFloat } from '../src/services/gmx/math';
-import { BigNumber, BigNumberish, ethers } from 'ethers';
+import { ethers } from 'ethers';
 import { gmxOrderParams, gmxOrderResult } from '../src/types';
 
 jest.setTimeout(40000);

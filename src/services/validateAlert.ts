@@ -27,9 +27,9 @@ export const validateAlert = async (
 
 	// check exchange
 	if (alertMessage.exchange) {
-		const validExchanges = ['dydx', 'perpetual', 'gmx'];
+		const validExchanges = ['dydx', 'perpetual', 'gmx', 'dydxv4'];
 		if (!validExchanges.includes(alertMessage.exchange)) {
-			console.error('Exchange name must be dydx or perpetual or gmx');
+			console.error('Exchange name must be dydx or perpetual or gmx or dydxv4');
 			return false;
 		}
 	}

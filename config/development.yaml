@@ -12,3 +12,9 @@ Perpetual:
 GMX:
   Network:
     host: http://127.0.0.1:8545
+DydxV4:
+  IndexerConfig:
+    httpsEndpoint: https://indexer.dydx.trade
+    wssEndpoint: wss://indexer.dydx.trade/v4/w
+  ValidatorConfig:
+    restEndpoint: https://dydx-mainnet-full-rpc.public.blastapi.io

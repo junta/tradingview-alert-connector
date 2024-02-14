@@ -6,6 +6,7 @@ import {
 } from '@dydxprotocol/v3-client';
 import { PositionSide } from '@perp/sdk-curie';
 import { gmxOrderType } from './services/gmx/constants';
+import { OrderSide as v4OrderSide } from '@dydxprotocol/v4-client-js';
 
 export type AlertObject = {
 	exchange: string;
@@ -31,6 +32,13 @@ export type dydxOrderParams = {
 	price: string;
 	limitFee: string;
 	expiration: string;
+};
+
+export type dydxV4OrderParams = {
+	market: string;
+	side: v4OrderSide;
+	size: number;
+	price: number;
 };
 
 export type perpOrderParams = {
