@@ -33,7 +33,7 @@ router.get('/', async (req, res) => {
 			dydxV4GetAccount()
 		]);
 
-	if (!dydxAccount && !perpAccount && !gmxAccount) {
+	if (!dydxAccount && !perpAccount && !gmxAccount && !dydxV4Account) {
 		res.send('Error on getting account data');
 	} else {
 		const message =
