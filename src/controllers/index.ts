@@ -40,7 +40,7 @@ router.get('/', async (req, res) => {
 			'dYdX v3 Account Ready:' +
 			dydxAccount +
 			', \n  dYdX v4 Account Ready:' +
-			dydxV4Account.isReady +
+			dydxV4Account?.isReady +
 			', \n   Perpetual Protocol Account Ready:' +
 			perpAccount +
 			', \n   GMX Account Ready:' +
