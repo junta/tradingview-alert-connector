@@ -19,6 +19,7 @@ export const dydxV4GetAccount = async () => {
 	try {
 		const client = new IndexerClient(indexerConfig);
 		const localWallet = await generateLocalWallet();
+		if (!localWallet) return;
 		const response = await client.account.getSubaccount(localWallet.address, 0);
 
 		console.log(
@@ -30,6 +31,6 @@ export const dydxV4GetAccount = async () => {
 			return { isReady: false, account: null };
 		}
 	} catch (error) {
-		console.error(error);
+		console.log(error);
 	}
 };

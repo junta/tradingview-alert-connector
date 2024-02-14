@@ -30,8 +30,10 @@ export const dydxV4BuildOrderParams = async (alertMessage: AlertObject) => {
 		orderSize = alertMessage.size;
 	}
 
+	const market = alertMessage.market.replace(/_/g, '-');
+
 	const orderParams: dydxV4OrderParams = {
-		market: alertMessage.market,
+		market,
 		side: orderSide,
 		size: Number(orderSize),
 		price: Number(alertMessage.price)
