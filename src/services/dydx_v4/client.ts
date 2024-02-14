@@ -46,49 +46,11 @@ export const generateLocalWallet = async () => {
 		console.log('DYDX_V4_MNEMONIC is not set as environment variable');
 		return;
 	}
-	const mnemonic = process.env.DYDX_V4_MNEMONIC;
-	const wallet = ethers.Wallet.fromMnemonic(mnemonic);
 
-	const name = process.env.NODE_ENV == 'production' ? 'dYdX Chain' : 'dYdX V4';
-	const chainId = process.env.NODE_ENV == 'production' ? 1 : 11155111;
-
-	const toSign = {
-		domain: {
-			name: name,
-			chainId: chainId
-		},
-		primaryType: 'dYdX',
-		types: {
-			EIP712Domain: [
-				{
-					name: 'name',
-					type: 'string'
-				},
-				{
-					name: 'chainId',
-					type: 'uint256'
-				}
-			],
-			dYdX: [
-				{
-					name: 'action',
-					type: 'string'
-				}
-			]
-		},
-		message: {
-			action: 'dYdX Chain Onboarding'
-		}
-	};
-
-	const signature = await wallet._signTypedData(
-		toSign.domain,
-		{ dYdX: toSign.types.dYdX },
-		toSign.message
+	const localWallet = await LocalWallet.fromMnemonic(
+		process.env.DYDX_V4_MNEMONIC,
+		BECH32_PREFIX
 	);
-	const k = deriveHDKeyFromEthereumSignature(signature);
-
-	const localWallet = await LocalWallet.fromMnemonic(k.mnemonic, BECH32_PREFIX);
 	console.log('Address:', localWallet.address);
 
 	return localWallet;
