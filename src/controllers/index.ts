@@ -97,7 +97,9 @@ router.get('/debug-sentry', function mainHandler(req, res) {
 router.get('/orders', async function mainHandler(req, res) {
 	try {
 		const result = await getOrders();
-		res.json(result);
+		if (!result) res.json([]);
+		else res.json(result);
+
 	} catch (error) {
 		res.sendStatus(400);
 	}
@@ -116,7 +118,7 @@ router.get('/fills', async function mainHandler(req, res) {
 	try {
 		const result = await getFills();
 
-		if (!result) res.json('No Fills found');
+		if (!result) res.json([]);
 		else res.json(result);
 	} catch (error) {
 		res.sendStatus(400);

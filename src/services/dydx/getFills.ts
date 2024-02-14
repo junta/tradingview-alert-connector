@@ -3,14 +3,19 @@ import { FillResponseObject } from '@dydxprotocol/v3-client';
 import { _sleep } from '../../helper';
 
 export const getFills = async (): Promise<FillResponseObject[]> => {
-	// const createdBeforeOrAt = new Date(
-	// 	Date.now() - 24 * 60 * 60 * 1000
-	// ).toISOString();
+	const createdBeforeOrAt = new Date(
+		Date.now() - 24 * 60 * 60 * 1000
+	).toISOString();
 
 	const connector = await DYDXConnector.build();
 	const response = await connector.client.private.getFills({
-		limit: 100
+		createdBeforeOrAt: new Date(Date.now()).toISOString()
 	});
-
-	return response.fills;
+	const result = response.fills.filter((res) => {
+		if (new Date(res.createdAt) >= new Date(createdBeforeOrAt)) {
+			return res;
+		}
+	});
+	
+	return result;
 };
