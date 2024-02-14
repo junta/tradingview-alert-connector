@@ -4,6 +4,8 @@ export * from './dydx/getAccount';
 export * from './dydx/getOrder';
 export * from './dydx/createOrder';
 export * from './dydx/buildOrderParams';
+export * from './dydx/getFills';
+export * from './dydx/getOrders';
 export * from './perp/client';
 export * from './perp/createOrder';
 export * from './perp/buildOrderParams';
