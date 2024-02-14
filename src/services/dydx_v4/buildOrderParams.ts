@@ -1,7 +1,6 @@
-import config = require('config');
 import { AlertObject, dydxV4OrderParams } from '../../types';
 import 'dotenv/config';
-import { getDecimalPointLength, getStrategiesDB } from '../../helper';
+import { getStrategiesDB } from '../../helper';
 import { OrderSide } from '@dydxprotocol/v4-client-js';
 import { dydxV4GetAccount } from './getAccount';
 

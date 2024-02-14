@@ -42,6 +42,10 @@ export const dydxV4Client = async () => {
 };
 
 export const generateLocalWallet = async () => {
+	if (!process.env.DYDX_V4_MNEMONIC) {
+		console.error('DYDX_V4_MNEMONIC is not set as environment variable');
+		return;
+	}
 	const mnemonic = process.env.DYDX_V4_MNEMONIC;
 	const wallet = ethers.Wallet.fromMnemonic(mnemonic);
 

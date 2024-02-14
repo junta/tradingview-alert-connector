@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { dydxV4Client, generateLocalWallet } from './client';
+import { generateLocalWallet } from './client';
 import {
 	IndexerClient,
 	IndexerConfig,
