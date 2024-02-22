@@ -20,6 +20,7 @@ export type AlertObject = {
 	position: string;
 	reverse: boolean;
 	passphrase?: string;
+	collateral?: string;
 };
 
 export type dydxOrderParams = {
@@ -54,6 +55,7 @@ export type gmxOrderParams = {
 	isLong: boolean;
 	sizeUsd: number;
 	price: number;
+	collateral?: string;
 };
 
 export type gmxOrderResult = {

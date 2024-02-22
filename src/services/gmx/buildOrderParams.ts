@@ -1,7 +1,7 @@
 import { AlertObject, gmxOrderParams } from '../../types';
 import { getStrategiesDB } from '../../helper';
 import 'dotenv/config';
-import { gmxTokenMap } from './constants';
+import { gmxTokenDecimals, gmxGMTokenMap } from './constants';
 
 export const gmxBuildOrderParams = async (alertMessage: AlertObject) => {
 	const [db, rootData] = getStrategiesDB();
@@ -34,17 +34,28 @@ export const gmxBuildOrderParams = async (alertMessage: AlertObject) => {
 		return;
 	}
 
-	const market = gmxTokenMap.get(alertMessage.market);
+	const market = gmxGMTokenMap.get(alertMessage.market);
 	if (!market) {
 		console.error(`Market: ${alertMessage.market} is not supported`);
 		return;
+	}
+
+	if (alertMessage.collateral) {
+		const collateral = gmxTokenDecimals.get(alertMessage.collateral);
+		if (!collateral) {
+			console.error(
+				`Collateral: ${alertMessage.collateral} is not supported/found`
+			);
+			return;
+		}
 	}
 
 	const orderParams: gmxOrderParams = {
 		marketAddress: market,
 		isLong,
 		sizeUsd: orderSize,
-		price: alertMessage.price
+		price: alertMessage.price,
+		collateral: alertMessage.collateral
 	};
 	console.log('orderParams for GMX', orderParams);
 	return orderParams;

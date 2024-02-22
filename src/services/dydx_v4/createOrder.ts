@@ -45,7 +45,7 @@ export const dydxV4CreateOrder = async (orderParams: dydxV4OrderParams) => {
 				reduceOnly,
 				triggerPrice
 			);
-			console.log(tx);
+			console.log('Transaction Result: ', tx);
 			return {
 				side: orderParams.side,
 				size: orderParams.size,

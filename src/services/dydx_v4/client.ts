@@ -7,9 +7,7 @@ import {
 	SubaccountClient,
 	ValidatorConfig
 } from '@dydxprotocol/v4-client-js';
-import { deriveHDKeyFromEthereumSignature } from '@dydxprotocol/v4-client-js/build/src/lib/onboarding';
 import config from 'config';
-import { ethers } from 'ethers';
 
 export const dydxV4Client = async () => {
 	const indexerConfig = new IndexerConfig(

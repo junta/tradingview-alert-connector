@@ -1,3 +1,4 @@
+import { AlertObject } from './../../types';
 import { ExchangeRouterAbi } from './abi/exchangeRounter';
 import { ethers } from 'ethers';
 import {
@@ -8,8 +9,15 @@ import {
 import { erc20Abi } from './abi/erc20';
 import { getGmxClient } from './client';
 import { ReaderAbi } from './abi/reader';
-import { BASE_DECIMAL, gmxOrderType } from './constants';
+import {
+	BASE_DECIMAL,
+	gmxOrderType,
+	gmxTokenDecimals,
+	gmxGMTokenMap,
+	gmxTokenAddresses
+} from './constants';
 import { _sleep } from '../../helper';
+import axios from 'axios';
 
 const exchangeRounter = '0x7C68C7866A64FA2160F78EEaE12217FFbf871fa8';
 const transferRouter = '0x7452c558d45f8afC8c83dAe62C3f8A5BE19c71f6';
@@ -70,14 +78,23 @@ export const gmxCreateOrder = async (orderParams: gmxOrderParams) => {
 			orderParams.price
 		);
 
+		let swapPath = [];
+		if (orderParams.collateral && orderType == gmxOrderType.MarketIncrease) {
+			const tokenMarket = gmxGMTokenMap.get(orderParams.collateral + '_USD');
+			swapPath = [tokenMarket];
+		}
+
 		const createOrderParam = {
 			addresses: {
 				receiver: signer.address,
 				callbackContract: '0x0000000000000000000000000000000000000000',
 				uiFeeReceiver: '0x0000000000000000000000000000000000000000',
 				market: orderParams.marketAddress,
-				initialCollateralToken: usdc,
-				swapPath: []
+				initialCollateralToken:
+					orderParams.collateral && orderType == gmxOrderType.MarketIncrease
+						? gmxTokenAddresses.get(orderParams.collateral)
+						: usdc,
+				swapPath
 			},
 			numbers: {
 				sizeDeltaUsd,
@@ -113,22 +130,37 @@ export const gmxCreateOrder = async (orderParams: gmxOrderParams) => {
 
 		// when MarketIncrease, calculate collateral amount, approve, sentToken
 		if (orderType == gmxOrderType.MarketIncrease) {
-			let sendCollateralAmount =
+			const sendUsdAmount =
 				orderParams.sizeUsd / Number(process.env.GMX_LEVERAGE);
-			if (sendCollateralAmount < 2) throw Error("Can't send less than 2 USD");
-			sendCollateralAmount = Math.ceil(sendCollateralAmount * 100) / 100;
-			const parsedSendCollateralAmount = ethers.utils.parseUnits(
-				String(sendCollateralAmount),
-				usdcDecimal
+			if (sendUsdAmount < 2) throw Error("Can't send less than 2 USD");
+
+			const collateralPrice = await getCollateralPrice(orderParams.collateral);
+			const sendAmount = orderParams.collateral
+				? sendUsdAmount / collateralPrice
+				: sendUsdAmount;
+
+			const decimal = orderParams.collateral
+				? gmxTokenDecimals.get(orderParams.collateral)
+				: usdcDecimal;
+
+			const scaler = Math.pow(10, decimal);
+
+			const sendCollateralAmount = Math.ceil(sendAmount * scaler) / scaler;
+
+			const parsedSendAmount = ethers.utils.parseUnits(
+				sendCollateralAmount.toString(),
+				decimal
 			);
 
-			await checkAndApprove(parsedSendCollateralAmount);
+			await checkAndApprove(parsedSendAmount, orderParams.collateral);
 
 			multiCallParams.push(
 				gmxContract.interface.encodeFunctionData('sendTokens', [
-					usdc,
+					orderParams.collateral
+						? gmxTokenAddresses.get(orderParams.collateral)
+						: usdc,
 					orderVault,
-					parsedSendCollateralAmount
+					parsedSendAmount
 				])
 			);
 		}
@@ -175,8 +207,12 @@ export const gmxCreateOrder = async (orderParams: gmxOrderParams) => {
 	}
 };
 
-export const checkAndApprove = async (amount) => {
-	const usdcContract = new ethers.Contract(usdc, erc20Abi, signer);
+export const checkAndApprove = async (amount, collateral?) => {
+	// native currency, no need to approve
+	if (collateral && collateral === 'ETH') return;
+
+	const token = collateral ? gmxTokenAddresses.get(collateral) : usdc;
+	const usdcContract = new ethers.Contract(token, erc20Abi, signer);
 	try {
 		const allowance = await usdcContract.allowance(
 			signer.address,
@@ -185,14 +221,14 @@ export const checkAndApprove = async (amount) => {
 
 		if (allowance.lt(amount)) {
 			const tx = await usdcContract.approve(transferRouter, amount);
-			console.log('Approving USDC, TxHash: ', tx.hash);
+			console.log('Approving token: ', token, 'TxHash: ', tx.hash);
 			await tx.wait();
 			console.log('Approved');
 		} else {
 			console.log('Enough allowance');
 		}
 	} catch (error) {
-		console.error('An error occurred while Approving USDC:', error);
+		console.error('An error occurred while Approving token:', error);
 	}
 };
 
@@ -247,4 +283,16 @@ export const getOrderTypeAndPosition = async (
 
 export const getAcceptablePrice = (isLong: boolean, price: number) => {
 	return isLong ? ethers.constants.MaxUint256 : 1;
+};
+
+export const getCollateralPrice = async (
+	collateral: string
+): Promise<number> => {
+	// USDC case
+	if (!collateral) return 1;
+	const price = await axios.get(
+		`https://arbitrum-api.gmxinfra.io/prices/candles?tokenSymbol=${collateral}&period=1m`
+	);
+	// fetch latest close price
+	return price?.data['candles'][0]?.at(-1) ?? 1;
 };

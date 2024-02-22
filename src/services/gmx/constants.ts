@@ -1,4 +1,4 @@
-export const gmxTokenMap = new Map([
+export const gmxGMTokenMap = new Map([
 	['BTC_USD', '0x47c031236e19d024b42f8AE6780E44A573170703'],
 	['ETH_USD', '0x70d95587d40A2caf56bd97485aB3Eec10Bee6336'],
 	['SOL_USD', '0x09400D9DB990D5ed3f35D7be61DfAEB900Af03C9'],
@@ -7,7 +7,41 @@ export const gmxTokenMap = new Map([
 	['DOGE_USD', '0x6853EA96FF216fAb11D2d930CE3C508556A4bdc4'],
 	['XRP_USD', '0x0CCB4fAa6f1F1B30911619f1184082aB4E25813c'],
 	['UNI_USD', '0xc7Abb2C5f3BF3CEB389dF0Eecd6120D451170B50'],
-	['LTC_USD', '0xD9535bB5f58A1a75032416F2dFe7880C30575a41']
+	['LTC_USD', '0xD9535bB5f58A1a75032416F2dFe7880C30575a41'],
+	['WETH_USD', '0x70d95587d40A2caf56bd97485aB3Eec10Bee6336'],
+	['DAI_USD', '0xe2fEDb9e6139a182B98e7C2688ccFa3e9A53c665'],
+	['USDC.e_USD', '0x9C2433dFD71096C435Be9465220BB2B189375eA7'],
+	['BNB_USD', '0x2d340912Aa47e33c90Efb078e69E70EFe2B34b9B'],
+	['USDT_USD', '0xB686BcB112660343E6d15BDb65297e110C8311c4']
+]);
+
+export const gmxTokenDecimals = new Map([
+	['BTC', 8],
+	['ETH', 18],
+	['SOL', 9],
+	['ARB', 18],
+	['LINK', 18],
+	['UNI', 18],
+	['WETH', 18],
+	['DAI', 6],
+	['USDC.e', 6],
+	['BNB', 18],
+	['USDT', 6],
+	['USDC', 6]
+]);
+
+export const gmxTokenAddresses = new Map([
+	['BTC', '0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f'],
+	['SOL', '0x2bcc6d6cdbbdc0a4071e48bb3b969b06b3330c07'],
+	['ARB', '0x912ce59144191c1204e64559fe8253a0e49e6548'],
+	['LINK', '0xf97f4df75117a78c1a5a0dbb814af92458539fb4'],
+	['UNI', '0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0'],
+	['WETH', '0x82af49447d8a07e3bd95bd0d56f35241523fbab1'],
+	['DAI', '0xda10009cbd5d07dd0cecc66161fc93d7c9000da1'],
+	['USDC.e', '0xff970a61a04b1ca14834a43f5de4533ebddb5cc8'],
+	['BNB', '0xa9004A5421372E1D83fB1f85b0fc986c912f91f3'],
+	['USDT', '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9'],
+	['USDC', '0xaf88d065e77c8cC2239327C5EDb3A432268e5831']
 ]);
 
 export enum gmxOrderType {
