@@ -1,33 +1,34 @@
-import { gmxTokenMap } from '../src/services/gmx/constants';
 import {
 	checkAndApprove,
 	getAcceptablePrice,
+	getGasPrice,
 	getOrderTypeAndPosition,
 	gmxCreateOrder
 } from '../src/services/gmx/createOrder';
 import { gmxExportOrder } from '../src/services/gmx/exportOrder';
 import { ethers } from 'ethers';
 import { gmxOrderParams, gmxOrderResult } from '../src/types';
+import { gmxGMTokenMap } from '../src/services/gmx/constants';
 
 jest.setTimeout(40000);
 
 describe('getOrderType', () => {
 	it('should return marketIncrease when no position', async () => {
 		const { orderType, hasLongPosition, positionSizeUsd, collateralAmount } =
-			await getOrderTypeAndPosition(gmxTokenMap.get('BTC_USD')!, true);
+			await getOrderTypeAndPosition(gmxGMTokenMap.get('BTC_USD')!, true);
 
 		expect(orderType).toEqual(2);
 	});
 
 	it('should return marketIncrease when short position and sell order', async () => {
 		const { orderType, hasLongPosition, positionSizeUsd, collateralAmount } =
-			await getOrderTypeAndPosition(gmxTokenMap.get('XRP_USD')!, false);
+			await getOrderTypeAndPosition(gmxGMTokenMap.get('XRP_USD')!, false);
 		expect(orderType).toEqual(2);
 	});
 
 	it('should return marketDecrease when short position and buy order', async () => {
 		const { orderType, hasLongPosition, positionSizeUsd, collateralAmount } =
-			await getOrderTypeAndPosition(gmxTokenMap.get('XRP_USD')!, true);
+			await getOrderTypeAndPosition(gmxGMTokenMap.get('XRP_USD')!, true);
 		expect(orderType).toEqual(4);
 	});
 });
@@ -66,7 +67,7 @@ describe('createOrder', () => {
 	// decrease order
 	it('should execute doge decrease order', async () => {
 		const orderParams: gmxOrderParams = {
-			marketAddress: gmxTokenMap.get('DOGE_USD')!,
+			marketAddress: gmxGMTokenMap.get('DOGE_USD')!,
 			isLong: false,
 			sizeUsd: 2.1,
 			price: 0.083
@@ -76,7 +77,7 @@ describe('createOrder', () => {
 
 	it('should execute BTC new position order', async () => {
 		const orderParams: gmxOrderParams = {
-			marketAddress: gmxTokenMap.get('BTC_USD')!,
+			marketAddress: gmxGMTokenMap.get('BTC_USD')!,
 			isLong: false,
 			sizeUsd: 2.1,
 			price: 0.083
@@ -86,7 +87,7 @@ describe('createOrder', () => {
 
 	it('should execute order', async () => {
 		const orderParams: gmxOrderParams = {
-			marketAddress: gmxTokenMap.get('XRP_USD')!,
+			marketAddress: gmxGMTokenMap.get('XRP_USD')!,
 			isLong: true,
 			sizeUsd: 2.1,
 			price: 0.573
@@ -104,5 +105,12 @@ describe('export order', () => {
 			isLong: false
 		} as gmxOrderResult;
 		await gmxExportOrder('test_strategy', mockOrderResponse, 0.083, 'DOGE_USD');
+	});
+});
+
+describe('getGasPrice', () => {
+	it('should get gas price', async () => {
+		const gas = await getGasPrice();
+		console.log(gas);
 	});
 });

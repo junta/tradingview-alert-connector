@@ -30,7 +30,6 @@ const usdcDecimal = 6;
 const myReferralCode =
 	'0x74765f616c6572745f636f6e6e6563746f720000000000000000000000000000';
 
-const executionFee = ethers.utils.parseEther('0.0015675');
 const signer = getGmxClient();
 
 export const gmxCreateOrder = async (orderParams: gmxOrderParams) => {
@@ -78,16 +77,17 @@ export const gmxCreateOrder = async (orderParams: gmxOrderParams) => {
 			orderParams.price
 		);
 
+		const executionFee = await getExecutionFee();
+
 		const createOrderParam = {
 			addresses: {
 				receiver: signer.address,
 				callbackContract: '0x0000000000000000000000000000000000000000',
 				uiFeeReceiver: '0x0000000000000000000000000000000000000000',
 				market: orderParams.marketAddress,
-				initialCollateralToken:
-					orderParams.collateral && orderType == gmxOrderType.MarketIncrease
-						? gmxTokenAddresses.get(orderParams.collateral)
-						: usdc,
+				initialCollateralToken: orderParams.collateral
+					? gmxTokenAddresses.get(orderParams.collateral)
+					: usdc,
 				swapPath: []
 			},
 			numbers: {
@@ -290,3 +290,21 @@ export const getCollateralPrice = async (
 	// fetch latest close price
 	return price?.data['candles'][0]?.at(-1) ?? 1;
 };
+
+export const getGasPrice = async () => {
+	let gasPrice = await signer.getGasPrice();
+
+	// add 10% as buffer
+	const buffer = gasPrice.mul(1000).div(10000);
+	gasPrice = gasPrice.add(buffer);
+	return gasPrice;
+};
+
+export async function getExecutionFee() {
+	const adjustedGasLimit = ethers.BigNumber.from('10565829');
+
+	const gasPrice = await getGasPrice();
+	const feeTokenAmount = adjustedGasLimit.mul(gasPrice);
+
+	return feeTokenAmount;
+}
