@@ -27,7 +27,7 @@ export const dydxV4CreateOrder = async (orderParams: dydxV4OrderParams) => {
 	const reduceOnly = false;
 	const triggerPrice = null;
 	let count = 0;
-	const maxTries = 3;
+	const maxTries = 5;
 	while (count <= maxTries) {
 		try {
 			const tx = await client.placeOrder(
