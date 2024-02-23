@@ -78,12 +78,6 @@ export const gmxCreateOrder = async (orderParams: gmxOrderParams) => {
 			orderParams.price
 		);
 
-		let swapPath = [];
-		if (orderParams.collateral && orderType == gmxOrderType.MarketIncrease) {
-			const tokenMarket = gmxGMTokenMap.get(orderParams.collateral + '_USD');
-			swapPath = [tokenMarket];
-		}
-
 		const createOrderParam = {
 			addresses: {
 				receiver: signer.address,
@@ -94,7 +88,7 @@ export const gmxCreateOrder = async (orderParams: gmxOrderParams) => {
 					orderParams.collateral && orderType == gmxOrderType.MarketIncrease
 						? gmxTokenAddresses.get(orderParams.collateral)
 						: usdc,
-				swapPath
+				swapPath: []
 			},
 			numbers: {
 				sizeDeltaUsd,
