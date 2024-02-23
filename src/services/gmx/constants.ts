@@ -32,6 +32,7 @@ export const gmxTokenDecimals = new Map([
 
 export const gmxTokenAddresses = new Map([
 	['BTC', '0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f'],
+	['ETH', '0x82af49447d8a07e3bd95bd0d56f35241523fbab1'],
 	['SOL', '0x2bcc6d6cdbbdc0a4071e48bb3b969b06b3330c07'],
 	['ARB', '0x912ce59144191c1204e64559fe8253a0e49e6548'],
 	['LINK', '0xf97f4df75117a78c1a5a0dbb814af92458539fb4'],
