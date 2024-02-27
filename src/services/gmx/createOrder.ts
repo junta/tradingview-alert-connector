@@ -18,6 +18,7 @@ import {
 } from './constants';
 import { _sleep } from '../../helper';
 import axios from 'axios';
+import { dataStoreAbi } from './abi/dataStore';
 
 const exchangeRounter = '0x7C68C7866A64FA2160F78EEaE12217FFbf871fa8';
 const transferRouter = '0x7452c558d45f8afC8c83dAe62C3f8A5BE19c71f6';
@@ -301,7 +302,12 @@ export const getGasPrice = async () => {
 };
 
 export async function getExecutionFee() {
-	const adjustedGasLimit = ethers.BigNumber.from('10565829');
+	const readerContract = new ethers.Contract(dataStore, dataStoreAbi, signer);
+	const baseGasLimit = await readerContract.getUint("0xb240624f82b02b1a8e07fd5d67821e9664f273e0dc86415a33c1f3f444c81db4")
+	
+	// increaseOrderGasLimitKey
+	const estimatedGasLimit =  await readerContract.getUint("0x983e0a7f5307213e84497f2543331fe5e404db14ddf98f98dc956e0ee3ab6875")
+	const adjustedGasLimit = baseGasLimit.add(estimatedGasLimit);
 
 	const gasPrice = await getGasPrice();
 	const feeTokenAmount = adjustedGasLimit.mul(gasPrice);
