@@ -39,6 +39,11 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
 	console.log('Recieved Tradingview strategy alert:', req.body);
 
+	if (process.env.APP_API_KEY !== req.header('app-api-key')) {
+		res.sendStatus(401);
+		return;
+	}
+
 	const validated = await validateAlert(req.body);
 	if (!validated) {
 		res.status(400).send('Error. alert message is not valid');
@@ -99,7 +104,6 @@ router.get('/orders', async function mainHandler(req, res) {
 		const result = await getOrders();
 		if (!result) res.json([]);
 		else res.json(result);
-
 	} catch (error) {
 		res.sendStatus(400);
 	}
