@@ -22,17 +22,11 @@ router.get('/', async (req, res) => {
 	console.log('Recieved GET request.');
 
 	const dydxAccount = await dydxGetAccount();
-	const perpAccount = await perpGetAccount();
-
+	
 	if (!dydxAccount) {
 		res.send('Error on getting account data');
 	} else {
-		const message =
-			`dYdX Account Read (${process.env.ETH_ADDRESS}): ` +
-			dydxAccount +
-			'\n  Perpetual Protocol Account Ready: ' +
-			perpAccount;
-		res.send(message);
+		res.json(dydxAccount);
 	}
 });
 
