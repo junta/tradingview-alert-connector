@@ -1,23 +1,9 @@
 import 'dotenv/config';
-import { generateLocalWallet } from './client';
-import {
-	IndexerClient,
-	IndexerConfig,
-	Network
-} from '@dydxprotocol/v4-client-js';
-import config from 'config';
+import { dydxV4IndexerClient, generateLocalWallet } from './client';
 
 export const dydxV4GetAccount = async () => {
-	const mainnetIndexerConfig = new IndexerConfig(
-		config.get('DydxV4.IndexerConfig.httpsEndpoint'),
-		config.get('DydxV4.IndexerConfig.wssEndpoint')
-	);
-	const indexerConfig =
-		process.env.NODE_ENV !== 'production'
-			? Network.testnet().indexerConfig
-			: mainnetIndexerConfig;
 	try {
-		const client = new IndexerClient(indexerConfig);
+		const client = dydxV4IndexerClient();
 		const localWallet = await generateLocalWallet();
 		if (!localWallet) return;
 		const response = await client.account.getSubaccount(localWallet.address, 0);

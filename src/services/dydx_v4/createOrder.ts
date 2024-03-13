@@ -5,13 +5,17 @@ import {
 	OrderType
 } from '@dydxprotocol/v4-client-js';
 import { dydxV4OrderParams } from '../../types';
-import { dydxV4Client } from './client';
+import {
+	dydxV4Client,
+	dydxV4IndexerClient,
+	generateLocalWallet
+} from './client';
 import { _sleep } from '../../helper';
+import 'dotenv/config';
 
 export const dydxV4CreateOrder = async (orderParams: dydxV4OrderParams) => {
 	const { client, subaccount } = await dydxV4Client();
 
-	const clientId = generateRandomInt32();
 	const market = orderParams.market;
 	const type = OrderType.MARKET;
 	const side = orderParams.side;
@@ -30,6 +34,9 @@ export const dydxV4CreateOrder = async (orderParams: dydxV4OrderParams) => {
 	const maxTries = 5;
 	while (count <= maxTries) {
 		try {
+			const clientId = generateRandomInt32();
+			console.log('Client ID: ', clientId);
+
 			const tx = await client.placeOrder(
 				subaccount,
 				market,
@@ -46,6 +53,11 @@ export const dydxV4CreateOrder = async (orderParams: dydxV4OrderParams) => {
 				triggerPrice
 			);
 			console.log('Transaction Result: ', tx);
+			await _sleep(2000);
+
+			const isFilled = await isDyDxV4OrderFilled(String(clientId));
+			if (!isFilled) throw new Error('Order is not found/filled');
+
 			return {
 				side: orderParams.side,
 				size: orderParams.size,
@@ -66,3 +78,32 @@ function generateRandomInt32(): number {
 	const maxInt32 = 2147483647;
 	return Math.floor(Math.random() * (maxInt32 + 1));
 }
+
+export const getDyDxV4Orders = async () => {
+	const client = dydxV4IndexerClient();
+	const localWallet = await generateLocalWallet();
+	if (!localWallet) return;
+
+	return await client.account.getSubaccountOrders(localWallet.address, 0);
+};
+
+export const isDyDxV4OrderFilled = async (
+	clientId: string
+): Promise<boolean> => {
+	const client = dydxV4IndexerClient();
+	const localWallet = await generateLocalWallet();
+	if (!localWallet) return;
+
+	const orders = await client.account.getSubaccountOrders(
+		localWallet.address,
+		0
+	);
+	const order = orders.find((order) => {
+		return order.clientId == clientId;
+	});
+	if (!order) return false;
+
+	console.log('dYdX v4 Order ID: ', order.id);
+
+	return order.status == 'FILLED';
+};

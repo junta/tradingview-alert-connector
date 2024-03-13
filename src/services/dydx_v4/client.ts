@@ -1,6 +1,7 @@
 import {
 	BECH32_PREFIX,
 	CompositeClient,
+	IndexerClient,
 	IndexerConfig,
 	LocalWallet,
 	Network,
@@ -10,10 +11,6 @@ import {
 import config from 'config';
 
 export const dydxV4Client = async () => {
-	const indexerConfig = new IndexerConfig(
-		config.get('DydxV4.IndexerConfig.httpsEndpoint'),
-		config.get('DydxV4.IndexerConfig.wssEndpoint')
-	);
 	const validatorConfig = new ValidatorConfig(
 		config.get('DydxV4.ValidatorConfig.restEndpoint'),
 		'dydx-mainnet-1',
@@ -30,7 +27,7 @@ export const dydxV4Client = async () => {
 	);
 	const network =
 		process.env.NODE_ENV == 'production'
-			? new Network('mainnet', indexerConfig, validatorConfig)
+			? new Network('mainnet', getIndexerConfig(), validatorConfig)
 			: Network.testnet();
 	const client = await CompositeClient.connect(network);
 
@@ -49,7 +46,23 @@ export const generateLocalWallet = async () => {
 		process.env.DYDX_V4_MNEMONIC,
 		BECH32_PREFIX
 	);
-	console.log('Address:', localWallet.address);
+	console.log('dYdX v4 Address:', localWallet.address);
 
 	return localWallet;
+};
+
+export const dydxV4IndexerClient = () => {
+	const mainnetIndexerConfig = getIndexerConfig();
+	const indexerConfig =
+		process.env.NODE_ENV !== 'production'
+			? Network.testnet().indexerConfig
+			: mainnetIndexerConfig;
+	return new IndexerClient(indexerConfig);
+};
+
+export const getIndexerConfig = () => {
+	return new IndexerConfig(
+		config.get('DydxV4.IndexerConfig.httpsEndpoint'),
+		config.get('DydxV4.IndexerConfig.wssEndpoint')
+	);
 };
