@@ -4,6 +4,7 @@ import { getGmxClient } from './client';
 export const gmxGetAccount = async () => {
 	try {
 		const signer = getGmxClient();
+		if (!signer) return false;
 		const balance = await signer.getBalance();
 		console.log(
 			'GMX(Arbitrum) ETH balance: ',
