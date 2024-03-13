@@ -10,6 +10,7 @@
 		"start:dev": "tsc && NODE_ENV=development tsc-watch --onSuccess \"ts-node dist/index.js\"",
 		"decode": "ts-node scripts/decode.ts",
 		"test": "jest",
+		"test:prod": "NODE_ENV=production jest",
 		"ngrok": "ngrok http 3000",
 		"ngrok:docker": "ngrok http 80"
 	},

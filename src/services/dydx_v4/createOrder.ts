@@ -56,7 +56,10 @@ export const dydxV4CreateOrder = async (orderParams: dydxV4OrderParams) => {
 			await _sleep(2000);
 
 			const isFilled = await isDyDxV4OrderFilled(String(clientId));
-			if (!isFilled) throw new Error('Order is not found/filled');
+			if (!isFilled)
+				throw new Error(
+					'Order is not found/filled. Retry again, count: ' + count
+				);
 
 			return {
 				side: orderParams.side,
@@ -90,14 +93,8 @@ export const getDyDxV4Orders = async () => {
 export const isDyDxV4OrderFilled = async (
 	clientId: string
 ): Promise<boolean> => {
-	const client = dydxV4IndexerClient();
-	const localWallet = await generateLocalWallet();
-	if (!localWallet) return;
+	const orders = await getDyDxV4Orders();
 
-	const orders = await client.account.getSubaccountOrders(
-		localWallet.address,
-		0
-	);
 	const order = orders.find((order) => {
 		return order.clientId == clientId;
 	});
