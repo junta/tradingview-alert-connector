@@ -1,4 +1,3 @@
-import { AlertObject } from './../../types';
 import { ExchangeRouterAbi } from './abi/exchangeRounter';
 import { ethers } from 'ethers';
 import {
@@ -13,7 +12,6 @@ import {
 	BASE_DECIMAL,
 	gmxOrderType,
 	gmxTokenDecimals,
-	gmxGMTokenMap,
 	gmxTokenAddresses
 } from './constants';
 import { _sleep } from '../../helper';
@@ -303,10 +301,14 @@ export const getGasPrice = async () => {
 
 export async function getExecutionFee() {
 	const readerContract = new ethers.Contract(dataStore, dataStoreAbi, signer);
-	const baseGasLimit = await readerContract.getUint("0xb240624f82b02b1a8e07fd5d67821e9664f273e0dc86415a33c1f3f444c81db4")
-	
+	const baseGasLimit = await readerContract.getUint(
+		'0xb240624f82b02b1a8e07fd5d67821e9664f273e0dc86415a33c1f3f444c81db4'
+	);
+
 	// increaseOrderGasLimitKey
-	const estimatedGasLimit =  await readerContract.getUint("0x983e0a7f5307213e84497f2543331fe5e404db14ddf98f98dc956e0ee3ab6875")
+	const estimatedGasLimit = await readerContract.getUint(
+		'0x983e0a7f5307213e84497f2543331fe5e404db14ddf98f98dc956e0ee3ab6875'
+	);
 	const adjustedGasLimit = baseGasLimit.add(estimatedGasLimit);
 
 	const gasPrice = await getGasPrice();

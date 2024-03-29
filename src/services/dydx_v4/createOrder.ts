@@ -46,14 +46,14 @@ export const dydxV4CreateOrder = async (orderParams: dydxV4OrderParams) => {
 				size,
 				clientId,
 				timeInForce,
-				60000, // 1 minute
+				120000, // 2 minute
 				execution,
 				postOnly,
 				reduceOnly,
 				triggerPrice
 			);
 			console.log('Transaction Result: ', tx);
-			await _sleep(10000);
+			await _sleep(20000);
 
 			const isFilled = await isDyDxV4OrderFilled(String(clientId));
 			if (!isFilled)
@@ -70,6 +70,7 @@ export const dydxV4CreateOrder = async (orderParams: dydxV4OrderParams) => {
 			};
 		} catch (error) {
 			console.error(error);
+			console.log('Retry again, count: ' + count);
 			count++;
 
 			await _sleep(5000);
