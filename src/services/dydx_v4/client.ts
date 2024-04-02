@@ -15,21 +15,25 @@ export const dydxV4Client = async () => {
 		config.get('DydxV4.ValidatorConfig.restEndpoint'),
 		'dydx-mainnet-1',
 		{
-			CHAINTOKEN_DENOM: 'adv4tnt',
+			CHAINTOKEN_DENOM: 'adydx',
+			CHAINTOKEN_DECIMALS: 18,
 			USDC_DENOM:
 				'ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5',
 			USDC_GAS_DENOM: 'uusdc',
-			USDC_DECIMALS: 6,
-			CHAINTOKEN_DECIMALS: 18
-		},
-		undefined,
-		'Client Example'
+			USDC_DECIMALS: 6
+		}
 	);
 	const network =
 		process.env.NODE_ENV == 'production'
 			? new Network('mainnet', getIndexerConfig(), validatorConfig)
 			: Network.testnet();
-	const client = await CompositeClient.connect(network);
+	let client;
+	try {
+		client = await CompositeClient.connect(network);
+	} catch (e) {
+		console.error(e);
+		throw new Error('Failed to connect to dYdX v4 client');
+	}
 
 	const localWallet = await generateLocalWallet();
 	const subaccount = new SubaccountClient(localWallet, 0);
