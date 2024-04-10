@@ -32,6 +32,7 @@ export const dydxV4CreateOrder = async (orderParams: dydxV4OrderParams) => {
 	const triggerPrice = null;
 	let count = 0;
 	const maxTries = 3;
+	const fillWaitTime = 60000; // 1 minute
 	while (count <= maxTries) {
 		try {
 			const clientId = generateRandomInt32();
@@ -53,7 +54,7 @@ export const dydxV4CreateOrder = async (orderParams: dydxV4OrderParams) => {
 				triggerPrice
 			);
 			console.log('Transaction Result: ', tx);
-			await _sleep(20000);
+			await _sleep(fillWaitTime);
 
 			const isFilled = await isDyDxV4OrderFilled(String(clientId));
 			if (!isFilled)
