@@ -16,6 +16,7 @@ export const gmxGMTokenMap = new Map([
 	['NEAR_USD', '0x63Dc80EE90F26363B3FCD609007CC9e14c8991BE'],
 	['AAVE_USD', '0x1CbBa6346F110c8A5ea739ef2d1eb182990e4EB2'],
 	['ATOM_USD', '0x248C35760068cE009a13076D573ed3497A47bCD4'],
+	['OP_USD', '0x4fDd333FF9cA409df583f306B6F5a7fFdE790739']
 ]);
 
 export const gmxTokenDecimals = new Map([
@@ -30,7 +31,8 @@ export const gmxTokenDecimals = new Map([
 	['USDC.e', 6],
 	['BNB', 18],
 	['USDT', 6],
-	['USDC', 6]
+	['USDC', 6],
+	['OP', 18]
 ]);
 
 export const gmxTokenAddresses = new Map([
@@ -45,7 +47,8 @@ export const gmxTokenAddresses = new Map([
 	['USDC.e', '0xff970a61a04b1ca14834a43f5de4533ebddb5cc8'],
 	['BNB', '0xa9004A5421372E1D83fB1f85b0fc986c912f91f3'],
 	['USDT', '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9'],
-	['USDC', '0xaf88d065e77c8cC2239327C5EDb3A432268e5831']
+	['USDC', '0xaf88d065e77c8cC2239327C5EDb3A432268e5831'],
+	['OP', '0xaC800FD6159c2a2CB8fC31EF74621eB430287a5A']
 ]);
 
 export enum gmxOrderType {
