@@ -14,3 +14,5 @@ export * from './perp/exportOrder';
 export * from './dydx/exportOrder';
 export * from './validateAlert';
 export * from './checkAfterPosition';
+export * from './dydx/historicalPnl';
+

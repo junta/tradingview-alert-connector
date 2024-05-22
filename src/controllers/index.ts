@@ -12,7 +12,8 @@ import {
 	perpExportOrder,
 	getOrder,
 	getFills,
-	getOrders
+	getOrders,
+	historicalPnl
 } from '../services';
 import { cancelOrder } from '../services/dydx/cancleOrder';
 
@@ -32,11 +33,6 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
 	console.log('Recieved Tradingview strategy alert:', req.body);
-
-	if (process.env.APP_API_KEY !== req.header('app-api-key')) {
-		res.sendStatus(401);
-		return;
-	}
 
 	const validated = await validateAlert(req.body);
 	if (!validated) {
@@ -126,6 +122,15 @@ router.get('/fills', async function mainHandler(req, res) {
 router.delete('/order/:id', async function mainHandler(req, res) {
 	try {
 		const result = await cancelOrder(req.params['id']);
+		res.json(result);
+	} catch (error) {
+		res.sendStatus(400);
+	}
+});
+
+router.get('/pnl', async function mainHandler(req, res) {
+	try {
+		const result = await historicalPnl();
 		res.json(result);
 	} catch (error) {
 		res.sendStatus(400);
