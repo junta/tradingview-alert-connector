@@ -16,6 +16,7 @@ import {
 	historicalPnl
 } from '../services';
 import { cancelOrder } from '../services/dydx/cancleOrder';
+import { auth } from '../helper';
 
 const router: Router = express.Router();
 
@@ -31,7 +32,7 @@ router.get('/', async (req, res) => {
 	}
 });
 
-router.post('/', async (req, res) => {
+router.post('/', auth, async (req, res) => {
 	console.log('Recieved Tradingview strategy alert:', req.body);
 
 	const validated = await validateAlert(req.body);
@@ -119,7 +120,7 @@ router.get('/fills', async function mainHandler(req, res) {
 	}
 });
 
-router.delete('/order/:id', async function mainHandler(req, res) {
+router.delete('/order/:id', auth, async function mainHandler(req, res) {
 	try {
 		const result = await cancelOrder(req.params['id']);
 		res.json(result);
