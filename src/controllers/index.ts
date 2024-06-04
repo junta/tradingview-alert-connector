@@ -1,51 +1,32 @@
 import express, { Router } from 'express';
-import {
-	dydxCreateOrder,
-	dydxGetAccount,
-	dydxBuildOrderParams,
-	dydxExportOrder,
-	validateAlert,
-	checkAfterPosition,
-	perpCreateOrder,
-	perpBuildOrderParams,
-	perpGetAccount,
-	perpExportOrder,
-	dydxV4CreateOrder
-} from '../services';
-import { gmxBuildOrderParams } from '../services/gmx/buildOrderParams';
-import { gmxCreateOrder } from '../services/gmx/createOrder';
-import { gmxGetAccount } from '../services/gmx/getAccount';
-import { gmxExportOrder } from '../services/gmx/exportOrder';
-import { dydxV4BuildOrderParams } from '../services/dydx_v4/buildOrderParams';
-import { dydxV4ExportOrder } from '../services/dydx_v4/exportOrder';
-import { dydxV4GetAccount } from '../services/dydx_v4/getAccount';
+import { validateAlert } from '../services';
+import { DexRegistry } from '../services/dexRegistry';
 
 const router: Router = express.Router();
 
 router.get('/', async (req, res) => {
-	console.log('Recieved GET request.');
+	console.log('Received GET request.');
 
-	const [dydxAccount, perpAccount, gmxAccount, dydxV4Account] =
-		await Promise.all([
-			dydxGetAccount(),
-			perpGetAccount(),
-			gmxGetAccount(),
-			dydxV4GetAccount()
-		]);
+	const dexRegistry = new DexRegistry();
+	const dexNames = ['dydxv3', 'dydxv4', 'perpetual', 'gmx', 'bluefin'];
+	const dexClients = dexNames.map((name) => dexRegistry.getDex(name));
 
-	if (!dydxAccount && !perpAccount && !gmxAccount && !dydxV4Account) {
-		res.send('Error on getting account data');
-	} else {
-		const message =
-			'dYdX v3 Account Ready:' +
-			dydxAccount +
-			', \n  dYdX v4 Account Ready:' +
-			dydxV4Account?.isReady +
-			', \n   Perpetual Protocol Account Ready:' +
-			perpAccount +
-			', \n   GMX Account Ready:' +
-			gmxAccount;
+	try {
+		const accountStatuses = await Promise.all(
+			dexClients.map((client) => client.getIsAccountReady())
+		);
+
+		const message = {
+			dYdX_v3: accountStatuses[0], // dydxv3
+			dYdX_v4: accountStatuses[1], // dydxv4
+			PerpetualProtocol: accountStatuses[2], // perpetual
+			GMX: accountStatuses[3], // gmx
+			Bluefin: accountStatuses[4] // bluefin
+		};
 		res.send(message);
+	} catch (error) {
+		console.error('Failed to get account readiness:', error);
+		res.status(500).send('Internal server error');
 	}
 });
 
@@ -58,61 +39,19 @@ router.post('/', async (req, res) => {
 		return;
 	}
 
-	try {
-		let orderResult;
+	// set dydxv3 by default for backwards compatibility
+	const exchange = req.body['exchange']?.toLowerCase() || 'dydxv3';
 
-		const exchange = req.body['exchange'].toLowerCase();
-		switch (exchange) {
-			case 'perpetual': {
-				const orderParams = await perpBuildOrderParams(req.body);
-				if (!orderParams) return;
-				orderResult = await perpCreateOrder(orderParams);
-				await perpExportOrder(
-					req.body['strategy'],
-					orderResult,
-					req.body['price'],
-					req.body['market']
-				);
-				break;
-			}
-			case 'gmx': {
-				const orderParams = await gmxBuildOrderParams(req.body);
-				if (!orderParams) return;
-				orderResult = await gmxCreateOrder(orderParams);
-				if (!orderResult) throw Error('Order is not executed');
-				await gmxExportOrder(
-					req.body['strategy'],
-					orderResult,
-					req.body['price'],
-					req.body['market']
-				);
-				break;
-			}
-			case 'dydxv4': {
-				const orderParams = await dydxV4BuildOrderParams(req.body);
-				if (!orderParams) return;
-				orderResult = await dydxV4CreateOrder(orderParams);
-				if (!orderResult) throw Error('Order is not executed');
-				await dydxV4ExportOrder(
-					req.body['strategy'],
-					orderResult,
-					req.body['price'],
-					req.body['market']
-				);
-				break;
-			}
-			default: {
-				const orderParams = await dydxBuildOrderParams(req.body);
-				if (!orderParams) return;
-				orderResult = await dydxCreateOrder(orderParams);
-				if (!orderResult) throw Error('Order is not executed');
-				await dydxExportOrder(
-					req.body['strategy'],
-					orderResult.order,
-					req.body['price']
-				);
-			}
-		}
+	const dexClient = new DexRegistry().getDex(exchange);
+
+	if (!dexClient) {
+		res.send(`Error. Exchange: ${exchange} is not supported`);
+		return;
+	}
+
+	try {
+		const result = await dexClient.placeOrder(req.body);
+
 		res.send('OK');
 		// checkAfterPosition(req.body);
 	} catch (e) {
