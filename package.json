@@ -34,12 +34,12 @@
 		"express": "^4.17.3",
 		"helmet": "^5.0.2",
 		"js-yaml": "^4.1.0",
-		"ngrok": "^4.3.0",
 		"node-json-db": "^1.4.1",
-		"ts-node": "^10.5.0",
 		"typescript": "^5.1.6"
 	},
 	"devDependencies": {
+		"ts-node": "^10.5.0",
+		"ngrok": "^4.3.0",
 		"@types/jest": "^29.5.11",
 		"@typescript-eslint/eslint-plugin": "^5.13.0",
 		"@typescript-eslint/parser": "^5.13.0",

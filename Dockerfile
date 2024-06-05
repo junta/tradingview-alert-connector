@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY ./package.json ./
 
-RUN npm install --force
+RUN npm install --production --force
 
 COPY . .
 
