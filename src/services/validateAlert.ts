@@ -1,7 +1,6 @@
 import { AlertObject } from '../types';
-import { Market } from '@dydxprotocol/v3-client';
-import DYDXConnector from './dydx/client';
 import { getStrategiesDB } from '../helper';
+import { DexRegistry } from './dexRegistry';
 
 export const validateAlert = async (
 	alertMessage: AlertObject
@@ -27,7 +26,7 @@ export const validateAlert = async (
 
 	// check exchange
 	if (alertMessage.exchange) {
-		const validExchanges = ['dydx', 'perpetual', 'gmx', 'dydxv4'];
+		const validExchanges = new DexRegistry().getAllDexKeys();
 		if (!validExchanges.includes(alertMessage.exchange)) {
 			console.error('Exchange name must be dydx or perpetual or gmx or dydxv4');
 			return false;
@@ -64,31 +63,6 @@ export const validateAlert = async (
 			'Reverse field of tradingview alert is not correct. Must be true or false.'
 		);
 		return false;
-	}
-
-	// check market if exchange is dydx
-	if (!alertMessage.exchange || alertMessage.exchange == 'dydx') {
-		const market = Market[alertMessage.market as keyof typeof Market];
-		if (!market) {
-			console.error('Market field of tradingview alert is not correct.');
-			return false;
-		}
-
-		const connector = await DYDXConnector.build();
-
-		const markets = await connector.client.public.getMarkets(market);
-		// console.log('markets', markets);
-
-		const minOrderSize = parseFloat(markets.markets[market].minOrderSize);
-
-		// check order size is greater than mininum order size
-		if (alertMessage.size && alertMessage.size < minOrderSize) {
-			console.error(
-				'Order size of this strategy must be greater than mininum order size:',
-				minOrderSize
-			);
-			return false;
-		}
 	}
 
 	const [db, rootData] = getStrategiesDB();

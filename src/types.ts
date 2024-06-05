@@ -70,3 +70,9 @@ export type GmxPositionResponse = {
 	positionSizeUsd?: number;
 	collateralAmount?: number;
 };
+
+export interface OrderResult {
+	size: number;
+	side: string;
+	orderId: string;
+}
