@@ -9,7 +9,6 @@ import { constants, utils, Contract, Wallet } from 'ethers';
 import { big2BigNumberAndScaleUp } from '@perp/sdk-curie';
 import { clearingHouseAbi } from './abi/clearingHouse';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
-import { getStrategiesDB } from '../../helper';
 import { PositionSide } from '@perp/sdk-curie';
 import { AlertObject, OrderResult, perpOrderParams } from '../../types';
 

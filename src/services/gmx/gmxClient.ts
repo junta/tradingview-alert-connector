@@ -44,15 +44,13 @@ export class GmxClient extends AbstractDexClient {
 
 	getClient = () => {
 		if (!process.env.GMX_PRIVATE_KEY) {
-			console.error(
-				'GMX_PRIVATE_KEY for GMX is not set as environment variable'
-			);
+			console.log('GMX_PRIVATE_KEY for GMX is not set as environment variable');
 			return;
 		}
 
 		// TODO: set 1x leverage by default
 		if (!process.env.GMX_LEVERAGE) {
-			console.error('GMX_LEVERAGE for GMX is not set as environment variable');
+			console.log('GMX_LEVERAGE for GMX is not set as environment variable');
 			return;
 		}
 

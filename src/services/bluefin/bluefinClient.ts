@@ -18,7 +18,7 @@ export class BluefinDexClient extends AbstractDexClient {
 
 	getClient(): BluefinClient {
 		if (!process.env.BLUEFIN_MNEMONIC) {
-			console.error('BLUEFIN_MNEMONIC is not set as environment variable');
+			console.log('BLUEFIN_MNEMONIC is not set as environment variable');
 			return;
 		}
 
