@@ -14,8 +14,7 @@ describe('Bluefin', () => {
 			order: 'buy',
 			position: 'long',
 			price: 0.16,
-			exchange: 'bluefin',
-			passphrase: 'ibuki8918'
+			exchange: 'bluefin'
 		};
 
 		const order = await client.placeOrder(alertMessage);
