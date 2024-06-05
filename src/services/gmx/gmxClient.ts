@@ -50,6 +50,7 @@ export class GmxClient extends AbstractDexClient {
 			return;
 		}
 
+		// TODO: set 1x leverage by default
 		if (!process.env.GMX_LEVERAGE) {
 			console.error('GMX_LEVERAGE for GMX is not set as environment variable');
 			return;
@@ -57,8 +58,8 @@ export class GmxClient extends AbstractDexClient {
 
 		const GMX_LEVERAGE = Number(process.env.GMX_LEVERAGE);
 
-		if (GMX_LEVERAGE < 1.1 || GMX_LEVERAGE > 50) {
-			console.error('GMX_LEVERAGE must be between 1.1 and 50');
+		if (GMX_LEVERAGE < 0.1 || GMX_LEVERAGE > 100) {
+			console.error('GMX_LEVERAGE must be between 1.1 and 100');
 			return;
 		}
 
@@ -104,6 +105,7 @@ export class GmxClient extends AbstractDexClient {
 
 		orderSize = doubleSizeIfReverseOrder(alertMessage, orderSize);
 
+		// TODO: send order with minimum amount instead of throwing error
 		if (orderSize < 2) {
 			console.error('Order size must be greater than 2 USD');
 			return;
@@ -125,6 +127,7 @@ export class GmxClient extends AbstractDexClient {
 			}
 		}
 
+		// TODO: set USDC collateral by default
 		const orderParams: gmxOrderParams = {
 			marketAddress: market,
 			isLong,
@@ -199,7 +202,7 @@ export class GmxClient extends AbstractDexClient {
 			orderParams.price
 		);
 
-		const executionFee = await this.getExecutionFee();
+		const executionFee = await this.getExecutionFee(positionResponse.orderType);
 
 		const createOrderParam = {
 			addresses: {
@@ -286,8 +289,7 @@ export class GmxClient extends AbstractDexClient {
 		multiCallParams.push(createOrderData);
 
 		const tx = await gmxContract.multicall(multiCallParams, {
-			value: executionFee,
-			gasLimit: 20000000
+			value: executionFee
 		});
 		console.log('Order created successfully:', tx);
 
@@ -404,7 +406,7 @@ export class GmxClient extends AbstractDexClient {
 	};
 
 	private getAcceptablePrice = (isLong: boolean, price: number) => {
-		return isLong ? ethers.constants.MaxUint256 : 1;
+		return isLong ? ethers.constants.MaxUint256 : ethers.BigNumber.from('0x00');
 	};
 
 	private getCollateralPrice = async (collateral: string): Promise<number> => {
@@ -426,7 +428,7 @@ export class GmxClient extends AbstractDexClient {
 		return gasPrice;
 	};
 
-	private async getExecutionFee() {
+	private async getExecutionFee(orderType: gmxOrderType) {
 		const readerContract = new ethers.Contract(
 			dataStore,
 			dataStoreAbi,
@@ -436,11 +438,21 @@ export class GmxClient extends AbstractDexClient {
 			'0xb240624f82b02b1a8e07fd5d67821e9664f273e0dc86415a33c1f3f444c81db4'
 		);
 
-		// increaseOrderGasLimitKey
-		const estimatedGasLimit = await readerContract.getUint(
-			'0x983e0a7f5307213e84497f2543331fe5e404db14ddf98f98dc956e0ee3ab6875'
-		);
-		const adjustedGasLimit = baseGasLimit.add(estimatedGasLimit);
+		const increaseOrderGasLimitKey =
+			'0x983e0a7f5307213e84497f2543331fe5e404db14ddf98f98dc956e0ee3ab6875';
+		const decreaseOrderGasLimitKey =
+			'0xfce7a3444b72c2d30987163c1f2e6c00cffa03bf0b6ca2f077e8db006b4cae8b';
+		const orderGasLimitKey =
+			orderType == gmxOrderType.MarketIncrease
+				? increaseOrderGasLimitKey
+				: decreaseOrderGasLimitKey;
+
+		const estimatedGasLimit = await readerContract.getUint(orderGasLimitKey);
+
+		const adjustedGasLimit = baseGasLimit
+			.add(estimatedGasLimit)
+			.mul(12)
+			.div(10);
 
 		const gasPrice = await this.getGasPrice();
 		const feeTokenAmount = adjustedGasLimit.mul(gasPrice);
