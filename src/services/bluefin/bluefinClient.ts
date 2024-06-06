@@ -23,12 +23,16 @@ export class BluefinDexClient extends AbstractDexClient {
 		}
 
 		// TODO: try to import it by private key that is started with sui...
-		return new BluefinClient(
-			true,
-			Networks.PRODUCTION_SUI,
-			process.env.BLUEFIN_MNEMONIC,
-			'ED25519'
-		);
+		try {
+			return new BluefinClient(
+				true,
+				Networks.PRODUCTION_SUI,
+				process.env.BLUEFIN_MNEMONIC,
+				'ED25519'
+			);
+		} catch (e) {
+			console.error(e);		
+		}
 	}
 
 	async getSubAccount() {

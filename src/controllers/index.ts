@@ -5,6 +5,10 @@ import { DexRegistry } from '../services/dexRegistry';
 const router: Router = express.Router();
 
 router.get('/', async (req, res) => {
+	res.send('OK');
+});
+
+router.get('/accounts', async (req, res) => {
 	console.log('Received GET request.');
 
 	const dexRegistry = new DexRegistry();
