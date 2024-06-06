@@ -74,11 +74,16 @@ export class BluefinDexClient extends AbstractDexClient {
 				alertMessage.order == 'buy' ? ORDER_SIDE.BUY : ORDER_SIDE.SELL;
 			const symbol = alertMessage.market.replace('_USD', '-PERP');
 
-			// Use 10x leverage by default
-			const selectedLeverage =
+			let selectedLeverage =
 				subAccount.accountDataByMarket.find(
 					(market) => market.symbol === symbol
-				)?.selectedLeverage || '10000000000000000000';
+				)?.selectedLeverage;
+			
+
+			// Use default leverage
+			if (!selectedLeverage) {
+				selectedLeverage = (symbol == 'BTC-PERP' || symbol == 'ETH-PERP') ? '3000000000000000000' : '10000000000000000000' ;	
+			}
 
 			const leverage = parseInt(selectedLeverage, 10) / 1e18;
 
