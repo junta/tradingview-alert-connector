@@ -26,4 +26,15 @@ describe('Bluefin', () => {
 		const order = await client.getIsAccountReady();
 		console.log(order);
 	});
+	it('should adjustOrderSize ETH', async () => {
+		const client = new BluefinDexClient();
+		const result = await client.adjustOrderSize(0.043544, 'ETH-PERP');
+		console.log(result);
+	});
+
+	it('should adjustOrderSize TIA', async () => {
+		const client = new BluefinDexClient();
+		const result = await client.adjustOrderSize(32.46, 'TIA-PERP');
+		console.log(result);
+	});
 });

@@ -31,7 +31,7 @@ export class BluefinDexClient extends AbstractDexClient {
 				'ED25519'
 			);
 		} catch (e) {
-			console.error(e);		
+			console.error(e);
 		}
 	}
 
@@ -55,34 +55,41 @@ export class BluefinDexClient extends AbstractDexClient {
 		try {
 			const subAccount = await this.getSubAccount();
 
+			const symbol = alertMessage.market.replace('_USD', '-PERP');
+
 			let orderSize: number;
-			// if (alertMessage.sizeByLeverage) {
-			// 	orderSize =
-			// 		(Number(subAccount.accountValue) *
-			// 			Number(alertMessage.sizeByLeverage)) /
-			// 		alertMessage.price;
-			// } else if (alertMessage.sizeUsd) {
-			// 	orderSize = Number(alertMessage.sizeUsd) / alertMessage.price;
-			// } else {
-			// 	orderSize = alertMessage.size;
-			// }
-			orderSize = alertMessage.size;
+			if (alertMessage.sizeByLeverage) {
+				const account = await this.getSubAccount();
+
+				const rawOrderSize =
+					((Number(account.accountValue) / 1e18) *
+						alertMessage.sizeByLeverage) /
+					alertMessage.price;
+				orderSize = await this.adjustOrderSize(rawOrderSize, symbol);
+			} else if (alertMessage.sizeUsd) {
+				orderSize = await this.adjustOrderSize(
+					alertMessage.sizeUsd / alertMessage.price,
+					symbol
+				);
+			} else {
+				orderSize = alertMessage.size;
+			}
 
 			orderSize = doubleSizeIfReverseOrder(alertMessage, orderSize);
 
 			const side =
 				alertMessage.order == 'buy' ? ORDER_SIDE.BUY : ORDER_SIDE.SELL;
-			const symbol = alertMessage.market.replace('_USD', '-PERP');
 
-			let selectedLeverage =
-				subAccount.accountDataByMarket.find(
-					(market) => market.symbol === symbol
-				)?.selectedLeverage;
-			
+			let selectedLeverage = subAccount.accountDataByMarket.find(
+				(market) => market.symbol === symbol
+			)?.selectedLeverage;
 
 			// Use default leverage
 			if (!selectedLeverage) {
-				selectedLeverage = (symbol == 'BTC-PERP' || symbol == 'ETH-PERP') ? '3000000000000000000' : '10000000000000000000' ;	
+				selectedLeverage =
+					symbol == 'BTC-PERP' || symbol == 'ETH-PERP'
+						? '3000000000000000000'
+						: '10000000000000000000';
 			}
 
 			const leverage = parseInt(selectedLeverage, 10) / 1e18;
@@ -126,5 +133,24 @@ export class BluefinDexClient extends AbstractDexClient {
 		if (!subAccount) return false;
 		console.log('Bluefin account: ' + JSON.stringify(subAccount, null, 2));
 		return Number(subAccount.accountValue) > 0;
+	}
+
+	async adjustOrderSize(orderSize: number, symbol: string): Promise<number> {
+		try {
+			const resp = await this.client.getExchangeInfo(symbol);
+
+			const minOrderSizeNumber = Number(resp.data.minOrderSize) / 10 ** 18;
+
+			// Calculate adjusted order size by rounding down to the nearest multiple of minOrderSize
+			const adjustedOrderSizeNumber =
+				Math.floor(orderSize / minOrderSizeNumber) * minOrderSizeNumber;
+
+			// Convert the adjusted order size to a string with a fixed number of decimal places
+			const adjustedOrderSizeString = adjustedOrderSizeNumber.toFixed(18);
+
+			return parseFloat(adjustedOrderSizeString);
+		} catch (e) {
+			console.error(e);
+		}
 	}
 }

@@ -42,7 +42,7 @@ router.post('/', async (req, res) => {
 		res.send('Error. alert message is not valid');
 		return;
 	}
-
+		
 	// set dydxv3 by default for backwards compatibility
 	const exchange = req.body['exchange']?.toLowerCase() || 'dydxv3';
 
@@ -52,6 +52,8 @@ router.post('/', async (req, res) => {
 		res.send(`Error. Exchange: ${exchange} is not supported`);
 		return;
 	}
+
+	// TODO: add check if dex client isReady 
 
 	try {
 		const result = await dexClient.placeOrder(req.body);
