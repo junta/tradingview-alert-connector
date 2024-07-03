@@ -22,6 +22,7 @@ export type AlertObject = {
 	trailingPercent?: string;
 	expirationDays?: number;
 	stopLimitPercent?: number;
+	leverage: string;
 };
 
 export type dydxOrderParams = {
