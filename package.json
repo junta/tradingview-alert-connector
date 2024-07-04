@@ -22,8 +22,8 @@
 		"@sentry/tracing": "^6.18.2",
 		"@types/config": "^0.0.41",
 		"@types/express": "^4.17.13",
-		"@types/node": "^17.0.21",
 		"config": "^3.3.7",
+		"crypto-js": "^4.2.0",
 		"dotenv": "^16.0.0",
 		"ethers": "^5.7.2",
 		"express": "^4.17.3",
@@ -35,6 +35,8 @@
 		"typescript": "^4.5.5"
 	},
 	"devDependencies": {
+		"@types/crypto-js": "^4.2.2",
+		"@types/node": "^20.12.12",
 		"@typescript-eslint/eslint-plugin": "^5.13.0",
 		"@typescript-eslint/parser": "^5.13.0",
 		"eslint": "^8.10.0",

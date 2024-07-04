@@ -13,7 +13,7 @@ export const dydxGetAccount = async () => {
 		if (Number(account.account.freeCollateral) == 0) {
 			return false;
 		} else {
-			return true;
+			return account;
 		}
 	} catch (error) {
 		console.error(error);

@@ -3,6 +3,7 @@ import { Config } from 'node-json-db/dist/lib/JsonDBConfig';
 import config = require('config');
 import Big from 'big.js';
 import { BigNumber } from 'ethers';
+import CryptoJS from 'crypto-js';
 
 export const _sleep = (ms: number) =>
 	new Promise((resolve) => setTimeout(resolve, ms));
@@ -35,4 +36,19 @@ export function bigNumber2BigAndScaleDown(
 
 function scaleDownDecimals(number: Big, decimals: number) {
 	return number.div(new Big(10).pow(decimals));
+}
+
+export function auth(req, res, next) {
+	try {
+
+		const bytes = CryptoJS.AES.decrypt(req.header('AUTH_KEY'), process.env.AES_KEY);
+		const message = bytes.toString(CryptoJS.enc.Utf8);
+		if (message === process.env.AUTH_MESSAGE) {
+			next();
+		} else {
+			res.sendStatus(403);
+		}
+	} catch {
+		res.sendStatus(403);
+	}
 }

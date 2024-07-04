@@ -30,6 +30,7 @@ export const dydxBuildOrderParams = async (alertMessage: AlertObject) => {
 		alertMessage.order == 'buy' ? OrderSide.BUY : OrderSide.SELL;
 
 	const latestPrice = parseFloat(marketsData.markets[market].oraclePrice);
+	const leverage = parseFloat(alertMessage.leverage);
 	console.log('latestPrice', latestPrice);
 
 	let orderSize: number;
@@ -66,8 +67,10 @@ export const dydxBuildOrderParams = async (alertMessage: AlertObject) => {
 	const price = minPrice.toFixed(decimal);
 	const triggerPrice =
 		alertMessage.order == 'buy'
-			? (1 + (alertMessage.stopLimitPercent || 0) / 100) * latestPrice
-			: (1 - (alertMessage.stopLimitPercent || 0) / 100) * latestPrice;
+			? (1 + (alertMessage.stopLimitPercent || 0) / (100 * leverage)) *
+			  latestPrice
+			: (1 - (alertMessage.stopLimitPercent || 0) / (100 * leverage)) *
+			  latestPrice;
 	console.log(latestPrice, triggerPrice);
 	const trailingPercent =
 		Number(alertMessage.trailingPercent) *
