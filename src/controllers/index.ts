@@ -1,22 +1,19 @@
 import express, { Router } from 'express';
+import { auth } from '../helper';
 import {
+	dydxBuildOrderParams,
 	dydxCreateOrder,
 	dydxGetAccount,
-	dydxBuildOrderParams,
-	dydxExportOrder,
-	validateAlert,
-	checkAfterPosition,
-	perpCreateOrder,
-	perpBuildOrderParams,
-	perpGetAccount,
-	perpExportOrder,
-	getOrder,
 	getFills,
+	getOrder,
 	getOrders,
-	historicalPnl
+	historicalPnl,
+	perpBuildOrderParams,
+	perpCreateOrder,
+	perpExportOrder,
+	validateAlert
 } from '../services';
 import { cancelOrder } from '../services/dydx/cancleOrder';
-import { auth } from '../helper';
 
 const router: Router = express.Router();
 
@@ -24,7 +21,7 @@ router.get('/', async (req, res) => {
 	console.log('Recieved GET request.');
 
 	const dydxAccount = await dydxGetAccount();
-	
+
 	if (!dydxAccount) {
 		res.send('Error on getting account data');
 	} else {
@@ -84,10 +81,6 @@ router.post('/', auth, async (req, res) => {
 
 		res.sendStatus(400);
 	}
-});
-
-router.get('/debug-sentry', function mainHandler(req, res) {
-	throw new Error('My first Sentry error!');
 });
 
 router.get('/orders', async function mainHandler(req, res) {

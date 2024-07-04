@@ -46,3 +46,9 @@ export type perpOrderParams = {
 	isAmountInputBase: boolean;
 	referralCode: string;
 };
+
+export type HealthCheck = {
+	status: 'OK' | 'ERROR';
+	message: string;
+	error?: string;
+};
