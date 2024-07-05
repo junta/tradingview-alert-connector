@@ -1,16 +1,17 @@
 import express, { Router } from 'express';
+import { auth } from '../helper';
 import {
+	dydxBuildOrderParams,
 	dydxCreateOrder,
 	dydxGetAccount,
-	dydxBuildOrderParams,
-	dydxExportOrder,
-	validateAlert,
-	checkAfterPosition,
-	perpCreateOrder,
+	getFills,
+	getOrder,
+	getOrders,
+	historicalPnl,
 	perpBuildOrderParams,
-	perpGetAccount,
+	perpCreateOrder,
 	perpExportOrder,
-	getOrder
+	validateAlert
 } from '../services';
 import { cancelOrder } from '../services/dydx/cancleOrder';
 
@@ -20,21 +21,15 @@ router.get('/', async (req, res) => {
 	console.log('Recieved GET request.');
 
 	const dydxAccount = await dydxGetAccount();
-	const perpAccount = await perpGetAccount();
 
 	if (!dydxAccount) {
 		res.send('Error on getting account data');
 	} else {
-		const message =
-			`dYdX Account Read (${process.env.ETH_ADDRESS}): ` +
-			dydxAccount +
-			'\n  Perpetual Protocol Account Ready: ' +
-			perpAccount;
-		res.send(message);
+		res.json(dydxAccount);
 	}
 });
 
-router.post('/', async (req, res) => {
+router.post('/', auth, async (req, res) => {
 	console.log('Recieved Tradingview strategy alert:', req.body);
 
 	const validated = await validateAlert(req.body);
@@ -88,8 +83,14 @@ router.post('/', async (req, res) => {
 	}
 });
 
-router.get('/debug-sentry', function mainHandler(req, res) {
-	throw new Error('My first Sentry error!');
+router.get('/orders', async function mainHandler(req, res) {
+	try {
+		const result = await getOrders();
+		if (!result) res.json([]);
+		else res.json(result);
+	} catch (error) {
+		res.sendStatus(400);
+	}
 });
 
 router.get('/order/:id', async function mainHandler(req, res) {
@@ -101,9 +102,29 @@ router.get('/order/:id', async function mainHandler(req, res) {
 	}
 });
 
-router.delete('/order/:id', async function mainHandler(req, res) {
+router.get('/fills', async function mainHandler(req, res) {
+	try {
+		const result = await getFills();
+
+		if (!result) res.json([]);
+		else res.json(result);
+	} catch (error) {
+		res.sendStatus(400);
+	}
+});
+
+router.delete('/order/:id', auth, async function mainHandler(req, res) {
 	try {
 		const result = await cancelOrder(req.params['id']);
+		res.json(result);
+	} catch (error) {
+		res.sendStatus(400);
+	}
+});
+
+router.get('/pnl', async function mainHandler(req, res) {
+	try {
+		const result = await historicalPnl();
 		res.json(result);
 	} catch (error) {
 		res.sendStatus(400);

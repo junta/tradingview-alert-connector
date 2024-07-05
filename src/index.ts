@@ -5,6 +5,7 @@ import * as Tracing from '@sentry/tracing';
 import { CaptureConsole as CaptureConsoleIntegration } from '@sentry/integrations';
 import helmet from 'helmet';
 import 'dotenv/config';
+import health from './controllers/health';
 
 const app: express.Express = express();
 const port = process.env.PORT || 3000;
@@ -42,6 +43,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use('/', controller);
+app.use('/health', health);
 
 if (process.env.SENTRY_DNS) {
 	app.use(Sentry.Handlers.errorHandler());

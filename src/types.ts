@@ -22,6 +22,7 @@ export type AlertObject = {
 	trailingPercent?: string;
 	expirationDays?: number;
 	stopLimitPercent?: number;
+	leverage: string;
 };
 
 export type dydxOrderParams = {
@@ -44,4 +45,10 @@ export type perpOrderParams = {
 	amountInput: number;
 	isAmountInputBase: boolean;
 	referralCode: string;
+};
+
+export type HealthCheck = {
+	status: 'OK' | 'ERROR';
+	message: string;
+	error?: string;
 };
