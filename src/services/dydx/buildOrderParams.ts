@@ -12,6 +12,7 @@ import { getDecimalPointLength, getStrategiesDB } from '../../helper';
 
 export const dydxBuildOrderParams = async (alertMessage: AlertObject) => {
 	const [db, rootData] = getStrategiesDB();
+	console.log('TCL: dydxBuildOrderParams -> rootData]', rootData);
 
 	// set expiration datetime. must be more than 1 minute from current datetime
 	const date = new Date();
@@ -21,6 +22,7 @@ export const dydxBuildOrderParams = async (alertMessage: AlertObject) => {
 	const dateStr = date.toJSON();
 
 	const connector = await DYDXConnector.build();
+	console.log('TCL: dydxBuildOrderParams -> connector', connector);
 
 	const market = Market[alertMessage.market as keyof typeof Market];
 	const marketsData = await connector.client.public.getMarkets(market);
@@ -30,7 +32,9 @@ export const dydxBuildOrderParams = async (alertMessage: AlertObject) => {
 		alertMessage.order == 'buy' ? OrderSide.BUY : OrderSide.SELL;
 
 	const latestPrice = parseFloat(marketsData.markets[market].oraclePrice);
+	console.log("TCL: dydxBuildOrderParams -> alertMessage.leverage", alertMessage.leverage)
 	const leverage = parseFloat(alertMessage.leverage);
+	console.log("TCL: dydxBuildOrderParams -> leverage", leverage)
 	console.log('latestPrice', latestPrice);
 
 	let orderSize: number;
@@ -67,9 +71,11 @@ export const dydxBuildOrderParams = async (alertMessage: AlertObject) => {
 	const price = minPrice.toFixed(decimal);
 	const triggerPrice =
 		alertMessage.order == 'buy'
-			? (1 + (alertMessage.stopLimitPercent || 0) / (100 * leverage)) *
+			? ((alertMessage.stopLimitPercent || 0) * latestPrice) /
+					(100 * leverage) +
 			  latestPrice
-			: (1 - (alertMessage.stopLimitPercent || 0) / (100 * leverage)) *
+			: ((alertMessage.stopLimitPercent || 0) * latestPrice) /
+					(100 * leverage) -
 			  latestPrice;
 	console.log(latestPrice, triggerPrice);
 	const trailingPercent =
