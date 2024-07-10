@@ -1,7 +1,6 @@
 import DYDXConnector from './client';
 import { OrderResponseObject } from '@dydxprotocol/v3-client';
 import { dydxOrderParams } from '../../types';
-import { _sleep } from '../../helper';
 
 export const dydxCreateOrder = async (orderParams: dydxOrderParams) => {
 	// let count = 0;

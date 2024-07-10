@@ -11,7 +11,9 @@ class DYDXConnector {
 		if (
 			!process.env.API_KEY ||
 			!process.env.API_PASSPHRASE ||
-			!process.env.API_PASSPHRASE
+			!process.env.PERPETUAL_PRIVATE_KEY ||
+			!process.env.API_SECRET ||
+			!process.env.AES_KEY
 		) {
 			console.log('API Key for dYdX is not set as environment variable');
 			return;
