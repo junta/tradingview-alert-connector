@@ -9,12 +9,27 @@ export const dydxCreateOrder = async (orderParams: dydxOrderParams) => {
 	// while (count <= maxTries) {
 	// 	try {
 	const connector = await DYDXConnector.build();
+	let orderResult: { order: OrderResponseObject };
 
-	const orderResult: { order: OrderResponseObject } =
-		await connector.client.private.createOrder(
+	try {
+		orderResult = await connector.client.private.createOrder(
 			orderParams,
 			connector.positionID
 		);
+	} catch (error) {
+		if (
+			error.message &&
+			error.message.includes('order would put account below collateralization')
+		) {
+			console.log('order would put account below collateralization');
+			return {
+				error: 'order would put account below collateralization',
+				order: null
+			};
+		}
+		console.log(error.message);
+		return;
+	}
 
 	// console.log(orderResult.order);
 
