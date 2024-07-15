@@ -5,9 +5,9 @@
 	"homepage": "https://tv-connector.gitbook.io/docs/",
 	"main": "index.js",
 	"scripts": {
-		"start": "tsc && NODE_ENV=production ts-node dist/index.js",
-		"start:test": "tsc && NODE_ENV=development ts-node dist/index.js",
-		"start:dev": "tsc && NODE_ENV=development tsc-watch --onSuccess \"ts-node dist/index.js\"",
+		"start": "tsc && ts-node dist/index.js",
+		"start:test": "tsc && ts-node dist/index.js",
+		"start:dev": "tsc && tsc-watch --onSuccess \"ts-node dist/index.js\"",
 		"ngrok": "ngrok http 3000",
 		"ngrok:docker": "ngrok http 80",
 		"test": "echo \"Error: no test specified\" && exit 1"

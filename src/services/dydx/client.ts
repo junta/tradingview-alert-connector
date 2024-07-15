@@ -32,7 +32,6 @@ class DYDXConnector {
 			publicKey: process.env.STARK_PUBLIC_KEY,
 			privateKey: process.env.STARK_PRIVATE_KEY
 		};
-
 		this.client = new DydxClient(config.get('Dydx.Network.host'), {
 			apiTimeout: 3000,
 			networkId: config.get('Dydx.Network.chainID'),
