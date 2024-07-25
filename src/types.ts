@@ -21,6 +21,7 @@ export type AlertObject = {
 	reverse: boolean;
 	passphrase?: string;
 	collateral?: string;
+	slippagePercentage?: string;
 };
 
 export type dydxOrderParams = {

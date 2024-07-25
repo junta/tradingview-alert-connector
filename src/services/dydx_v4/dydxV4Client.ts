@@ -10,13 +10,69 @@ import {
 	OrderSide,
 	OrderTimeInForce,
 	OrderType,
-	IndexerConfig
+	IndexerConfig,
+	OrderFlags
 } from '@dydxprotocol/v4-client-js';
 import { dydxV4OrderParams, AlertObject, OrderResult } from '../../types';
 import { _sleep, doubleSizeIfReverseOrder } from '../../helper';
 import 'dotenv/config';
 import config from 'config';
 import { AbstractDexClient } from '../abstractDexClient';
+import { CronJob } from 'cron';
+import { getOpenedPositions, MarketData } from './utils';
+import { createObjectCsvWriter } from 'csv-writer';
+
+let previousPositions: MarketData[] = [];
+let positions: MarketData[] = [];
+
+const csvWriter = createObjectCsvWriter({
+	path: 'market_data.csv',
+	header: [
+		{ id: 'market', title: 'Market' },
+		{ id: 'status', title: 'Status' },
+		{ id: 'side', title: 'Side' },
+		{ id: 'size', title: 'Size' },
+		{ id: 'maxSize', title: 'Max Size' },
+		{ id: 'entryPrice', title: 'Entry Price' },
+		{ id: 'exitPrice', title: 'Exit Price' },
+		{ id: 'realizedPnl', title: 'Realized PnL' },
+		{ id: 'unrealizedPnl', title: 'Unrealized PnL' },
+		{ id: 'createdAt', title: 'Created At' },
+		{ id: 'createdAtHeight', title: 'Created At Height' },
+		{ id: 'closedAt', title: 'Closed At' },
+		{ id: 'sumOpen', title: 'Sum Open' },
+		{ id: 'sumClose', title: 'Sum Close' },
+		{ id: 'netFunding', title: 'Net Funding' },
+		{ id: 'subaccountNumber', title: 'Subaccount Number' }
+	],
+	append: true
+});
+
+function writeNewEntries(newData: MarketData[]) {
+	const newEntries = newData.filter(
+		(item) => !previousPositions.includes(item)
+	);
+
+	if (newEntries.length > 0) {
+		csvWriter
+			.writeRecords(newEntries)
+			.then(() => console.log('The CSV file was updated with new entries.'))
+			.catch((err) => console.error('Error writing to CSV file', err));
+
+		previousPositions = [...newData];
+	}
+}
+
+CronJob.from({
+	cronTime: '*/30 * * * * *', // Every 30 seconds
+	onTick: async () => {
+		const { positions: newPositions } = await getOpenedPositions();
+		positions = newPositions as unknown as MarketData[];
+		writeNewEntries(positions);
+	},
+	runOnInit: true,
+	start: true
+});
 
 export class DydxV4Client extends AbstractDexClient {
 	async getIsAccountReady() {
@@ -82,72 +138,76 @@ export class DydxV4Client extends AbstractDexClient {
 		const { client, subaccount } = await this.buildCompositeClient();
 
 		const market = orderParams.market;
-		const type = OrderType.MARKET;
+		const type = OrderType.LIMIT;
 		const side = orderParams.side;
 		const timeInForce = OrderTimeInForce.GTT;
 		const execution = OrderExecution.DEFAULT;
-		const slippagePercentage = 0.05;
+		const slippagePercentage = parseFloat(alertMessage.slippagePercentage); // Get from alert
 		const price =
 			side == OrderSide.BUY
 				? orderParams.price * (1 + slippagePercentage)
 				: orderParams.price * (1 - slippagePercentage);
-		const size = orderParams.size;
+		let size = orderParams.size;
+
+		if (side === OrderSide.SELL) {
+			const tickerPositions = positions.filter((el) => el.market === market);
+			const sum = tickerPositions.reduce(
+				(acc: number, cur) => acc + parseFloat(cur.size),
+				0
+			);
+
+			// If no opened positions
+			if (sum === 0) return;
+
+			size = Math.max(size, sum);
+		}
+
 		const postOnly = false;
 		const reduceOnly = false;
 		const triggerPrice = null;
-		let count = 0;
-		const maxTries = 3;
-		const fillWaitTime = 60000; // 1 minute
-		while (count <= maxTries) {
-			try {
-				const clientId = this.generateRandomInt32();
-				console.log('Client ID: ', clientId);
 
-				const tx = await client.placeOrder(
-					subaccount,
-					market,
-					type,
-					side,
-					price,
-					size,
-					clientId,
-					timeInForce,
-					120000, // 2 minute
-					execution,
-					postOnly,
-					reduceOnly,
-					triggerPrice
-				);
-				console.log('Transaction Result: ', tx);
-				await _sleep(fillWaitTime);
+		const fillWaitTime = Number(process.env.FILL_WAIT_TIME) || 300000; // 5 minutes by default
 
-				const isFilled = await this.isOrderFilled(String(clientId));
-				if (!isFilled)
-					throw new Error(
-						'Order is not found/filled. Retry again, count: ' + count
-					);
-				const orderResult: OrderResult = {
-					side: orderParams.side,
-					size: orderParams.size,
-					orderId: String(clientId)
-				};
-				await this.exportOrder(
-					'DydxV4',
-					alertMessage.strategy,
-					orderResult,
-					alertMessage.price,
-					alertMessage.market
-				);
+		const clientId = this.generateRandomInt32();
+		console.log('Client ID: ', clientId);
 
-				return orderResult;
-			} catch (error) {
-				console.error(error);
-				console.log('Retry again, count: ' + count);
-				count++;
+		console.log(client);
+		const tx = await client.placeOrder(
+			subaccount,
+			market,
+			type,
+			side,
+			price,
+			size,
+			clientId,
+			timeInForce,
+			fillWaitTime,
+			execution,
+			postOnly,
+			reduceOnly,
+			triggerPrice
+		);
+		console.log('Transaction Result: ', tx);
+		await _sleep(fillWaitTime);
 
-				await _sleep(5000);
-			}
+		const isFilled = await this.isOrderFilled(String(clientId));
+		if (!isFilled) {
+			await client.cancelOrder(subaccount, clientId, OrderFlags.CONDITIONAL);
 		}
+		const orderResult: OrderResult = {
+			side: orderParams.side,
+			size: orderParams.size,
+			orderId: String(clientId)
+		};
+		await this.exportOrder(
+			'DydxV4',
+			alertMessage.strategy,
+			orderResult,
+			alertMessage.price,
+			alertMessage.market
+		);
+
+		return orderResult;
 	}
 
 	private buildCompositeClient = async () => {
