@@ -10,7 +10,12 @@ import { big2BigNumberAndScaleUp } from '@perp/sdk-curie';
 import { clearingHouseAbi } from './abi/clearingHouse';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { PositionSide } from '@perp/sdk-curie';
-import { AlertObject, OrderResult, perpOrderParams } from '../../types';
+import {
+	AlertObject,
+	OrderResult,
+	perpOrderParams,
+	PositionData
+} from '../../types';
 
 export class PerpClient extends AbstractDexClient {
 	static async build() {
@@ -190,4 +195,10 @@ export class PerpClient extends AbstractDexClient {
 
 		return orderParams;
 	};
+
+	async getOpenedPositions(): Promise<PositionData> {
+		return {
+			positions: []
+		};
+	}
 }

@@ -11,68 +11,20 @@ import {
 	OrderTimeInForce,
 	OrderType,
 	IndexerConfig,
-	OrderFlags
+	OrderFlags,
+	PositionStatus
 } from '@dydxprotocol/v4-client-js';
-import { dydxV4OrderParams, AlertObject, OrderResult } from '../../types';
+import {
+	dydxV4OrderParams,
+	AlertObject,
+	OrderResult,
+	PositionData,
+	MarketData
+} from '../../types';
 import { _sleep, doubleSizeIfReverseOrder } from '../../helper';
 import 'dotenv/config';
 import config from 'config';
 import { AbstractDexClient } from '../abstractDexClient';
-import { CronJob } from 'cron';
-import { getOpenedPositions, MarketData } from './utils';
-import { createObjectCsvWriter } from 'csv-writer';
-
-let previousPositions: MarketData[] = [];
-let positions: MarketData[] = [];
-
-const csvWriter = createObjectCsvWriter({
-	path: 'market_data.csv',
-	header: [
-		{ id: 'market', title: 'Market' },
-		{ id: 'status', title: 'Status' },
-		{ id: 'side', title: 'Side' },
-		{ id: 'size', title: 'Size' },
-		{ id: 'maxSize', title: 'Max Size' },
-		{ id: 'entryPrice', title: 'Entry Price' },
-		{ id: 'exitPrice', title: 'Exit Price' },
-		{ id: 'realizedPnl', title: 'Realized PnL' },
-		{ id: 'unrealizedPnl', title: 'Unrealized PnL' },
-		{ id: 'createdAt', title: 'Created At' },
-		{ id: 'createdAtHeight', title: 'Created At Height' },
-		{ id: 'closedAt', title: 'Closed At' },
-		{ id: 'sumOpen', title: 'Sum Open' },
-		{ id: 'sumClose', title: 'Sum Close' },
-		{ id: 'netFunding', title: 'Net Funding' },
-		{ id: 'subaccountNumber', title: 'Subaccount Number' }
-	],
-	append: true
-});
-
-function writeNewEntries(newData: MarketData[]) {
-	const newEntries = newData.filter(
-		(item) => !previousPositions.includes(item)
-	);
-
-	if (newEntries.length > 0) {
-		csvWriter
-			.writeRecords(newEntries)
-			.then(() => console.log('The CSV file was updated with new entries.'))
-			.catch((err) => console.error('Error writing to CSV file', err));
-
-		previousPositions = [...newData];
-	}
-}
-
-CronJob.from({
-	cronTime: '*/30 * * * * *', // Every 30 seconds
-	onTick: async () => {
-		const { positions: newPositions } = await getOpenedPositions();
-		positions = newPositions as unknown as MarketData[];
-		writeNewEntries(positions);
-	},
-	runOnInit: true,
-	start: true
-});
 
 export class DydxV4Client extends AbstractDexClient {
 	async getIsAccountReady() {
@@ -133,7 +85,7 @@ export class DydxV4Client extends AbstractDexClient {
 		return orderParams;
 	}
 
-	async placeOrder(alertMessage: AlertObject) {
+	async placeOrder(alertMessage: AlertObject, openedPositions: MarketData[]) {
 		const orderParams = await this.buildOrderParams(alertMessage);
 		const { client, subaccount } = await this.buildCompositeClient();
 
@@ -150,7 +102,9 @@ export class DydxV4Client extends AbstractDexClient {
 		let size = orderParams.size;
 
 		if (side === OrderSide.SELL) {
-			const tickerPositions = positions.filter((el) => el.market === market);
+			const tickerPositions = openedPositions.filter(
+				(el) => el.market === market
+			);
 			const sum = tickerPositions.reduce(
 				(acc: number, cur) => acc + parseFloat(cur.size),
 				0
@@ -171,7 +125,6 @@ export class DydxV4Client extends AbstractDexClient {
 		const clientId = this.generateRandomInt32();
 		console.log('Client ID: ', clientId);
 
-		console.log(client);
 		const tx = await client.placeOrder(
 			subaccount,
 			market,
@@ -187,6 +140,7 @@ export class DydxV4Client extends AbstractDexClient {
 			reduceOnly,
 			triggerPrice
 		);
+		console.log(tx);
 		console.log('Transaction Result: ', tx);
 		await _sleep(fillWaitTime);
 
@@ -295,5 +249,17 @@ export class DydxV4Client extends AbstractDexClient {
 		if (!localWallet) return;
 
 		return await client.account.getSubaccountOrders(localWallet.address, 0);
+	};
+
+	getOpenedPositions = async () => {
+		const client = this.buildIndexerClient();
+		const localWallet = await this.generateLocalWallet();
+		if (!localWallet) return;
+
+		return (await client.account.getSubaccountPerpetualPositions(
+			localWallet.address,
+			0,
+			PositionStatus.OPEN
+		)) as PositionData;
 	};
 }

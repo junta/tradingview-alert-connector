@@ -6,7 +6,7 @@ import {
 } from '@bluefin-exchange/bluefin-v2-client';
 import 'dotenv/config';
 import { AbstractDexClient } from '../abstractDexClient';
-import { AlertObject, OrderResult } from '../../types';
+import { AlertObject, OrderResult, PositionData } from '../../types';
 import { doubleSizeIfReverseOrder } from '../../helper';
 
 export class BluefinDexClient extends AbstractDexClient {
@@ -152,5 +152,11 @@ export class BluefinDexClient extends AbstractDexClient {
 		} catch (e) {
 			console.error(e);
 		}
+	}
+
+	async getOpenedPositions(): Promise<PositionData> {
+		return {
+			positions: []
+		};
 	}
 }

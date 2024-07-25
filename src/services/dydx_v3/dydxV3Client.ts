@@ -11,7 +11,12 @@ import {
 import * as fs from 'fs';
 import config = require('config');
 import 'dotenv/config';
-import { dydxOrderParams, AlertObject, OrderResult } from '../../types';
+import {
+	dydxOrderParams,
+	AlertObject,
+	OrderResult,
+	PositionData
+} from '../../types';
 import {
 	_sleep,
 	doubleSizeIfReverseOrder,
@@ -350,4 +355,10 @@ export class DydxV3Client extends AbstractDexClient {
 			}
 		}
 	};
+
+	async getOpenedPositions(): Promise<PositionData> {
+		return {
+			positions: []
+		};
+	}
 }
