@@ -970,10 +970,10 @@
     web3 "1.3.6"
     web3-core "1.3.6"
 
-"@dydxprotocol/v4-client-js@^1.0.27":
-  version "1.1.17"
-  resolved "https://registry.npmjs.org/@dydxprotocol/v4-client-js/-/v4-client-js-1.1.17.tgz"
-  integrity sha512-+IFjnMO5lUKjeSALpW5vr85gT8fmmICJFw0BjN/CrcFYzro3i+3uJtO0/4A07TBWwBCxojfQneTUbMOm0DdHGw==
+"@dydxprotocol/v4-client-js@1.1.31":
+  version "1.1.31"
+  resolved "https://registry.yarnpkg.com/@dydxprotocol/v4-client-js/-/v4-client-js-1.1.31.tgz#9b6027dd8790b5d4e9d1ba02e98372c9eeaf5fb7"
+  integrity sha512-fF5b6LEjxXNMKNuGez1xJ1G2raWWEZiNdLXvkYC5MAO59CFYTdD8AGPiG991+Bl9qTJ3vP582oDv9EfgELTGBA==
   dependencies:
     "@cosmjs/amino" "^0.32.1"
     "@cosmjs/encoding" "^0.32.1"
@@ -4209,11 +4209,6 @@ crypto-browserify@3.12.0:
     public-encrypt "^4.0.0"
     randombytes "^2.0.0"
     randomfill "^1.0.3"
-
-csv-writer@^1.6.0:
-  version "1.6.0"
-  resolved "https://registry.yarnpkg.com/csv-writer/-/csv-writer-1.6.0.tgz#d0cea44b6b4d7d3baa2ecc6f3f7209233514bcf9"
-  integrity sha512-NOx7YDFWEsM/fTRAJjRpPp8t+MKRVvniAg9wQlUKx20MFrPs73WLJhFf5iteqrxNYnsy924K3Iroh3yNHeYd2g==
 
 d@1, d@^1.0.1, d@^1.0.2:
   version "1.0.2"

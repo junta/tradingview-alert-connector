@@ -2,61 +2,76 @@ import express, { Router } from 'express';
 import { validateAlert } from '../services';
 import { DexRegistry } from '../services/dexRegistry';
 import { CronJob } from 'cron';
-import { createObjectCsvWriter } from 'csv-writer';
 import { MarketData } from '../types';
+import * as fs from 'fs';
 
 const router: Router = express.Router();
 const dydxv4Client = new DexRegistry().getDex('dydxv4');
 
-let openedPositions: MarketData[];
-let previousPositions: MarketData[];
+let openedPositions: MarketData[] = [];
 
-const csvWriter = createObjectCsvWriter({
-	path: 'market_data.csv',
-	header: [
-		{ id: 'market', title: 'Market' },
-		{ id: 'status', title: 'Status' },
-		{ id: 'side', title: 'Side' },
-		{ id: 'size', title: 'Size' },
-		{ id: 'maxSize', title: 'Max Size' },
-		{ id: 'entryPrice', title: 'Entry Price' },
-		{ id: 'exitPrice', title: 'Exit Price' },
-		{ id: 'realizedPnl', title: 'Realized PnL' },
-		{ id: 'unrealizedPnl', title: 'Unrealized PnL' },
-		{ id: 'createdAt', title: 'Created At' },
-		{ id: 'createdAtHeight', title: 'Created At Height' },
-		{ id: 'closedAt', title: 'Closed At' },
-		{ id: 'sumOpen', title: 'Sum Open' },
-		{ id: 'sumClose', title: 'Sum Close' },
-		{ id: 'netFunding', title: 'Net Funding' },
-		{ id: 'subaccountNumber', title: 'Subaccount Number' }
-	],
-	append: true
-});
-
-function writeNewEntries(newData: MarketData[]) {
-	const newEntries = newData.filter(
-		(item) => !previousPositions.includes(item)
-	);
-
-	if (newEntries.length > 0) {
-		csvWriter
-			.writeRecords(newEntries)
-			.then(() => console.log('The CSV file was updated with new entries.'))
-			.catch((err) => console.error('Error writing to CSV file', err));
-
-		previousPositions = [...newData];
+function writeNewEntries({
+	exchange,
+	positions
+}: {
+	exchange: string;
+	positions: MarketData[];
+}) {
+	const folderPath = './data/custom/exports/';
+	if (!fs.existsSync(folderPath)) {
+		fs.mkdirSync(folderPath, {
+			recursive: true
+		});
 	}
+
+	const fullPath = folderPath + `/tradeHistory${exchange}.csv`;
+	if (!fs.existsSync(fullPath)) {
+		const headerString =
+			'market,status,side,size,maxSize,entryPrice,exitPrice,realizedPnl,unrealizedPnl,createdAt,createdAtHeight,closedAt,sumOpen,sumClose,netFunding,subaccountNumber';
+		fs.writeFileSync(fullPath, headerString);
+	}
+
+	const records = fs.readFileSync(fullPath).toString('utf-8').split('\n');
+
+	const newRecords = [];
+	console.log(records);
+
+	for (const position of positions) {
+		const record: string[] = [
+			position.market || '',
+			position.status || '',
+			position.side || '',
+			position.size || '',
+			position.maxSize || '',
+			position.entryPrice || '',
+			position.exitPrice || '',
+			position.realizedPnl || '',
+			position.unrealizedPnl || '',
+			position.createdAt || '',
+			position.createdAtHeight || '',
+			position.closedAt || '',
+			position.sumOpen || '',
+			position.sumClose || '',
+			position.netFunding || '',
+			position.subaccountNumber?.toString() || ''
+		];
+
+		if (records.includes(record.toString())) continue;
+
+		newRecords.push(record);
+	}
+
+	const appendString = newRecords.map((record) => `\n${record.join()}`).join();
+
+	fs.appendFileSync(fullPath, appendString);
 }
 
 CronJob.from({
 	cronTime: process.env.UPDATE_POSITIONS_TIMER || '*/30 * * * * *', // Every 30 seconds
 	onTick: async () => {
-		console.log(new Date());
 		const { positions: newPositions } = await dydxv4Client.getOpenedPositions();
 		openedPositions = newPositions as unknown as MarketData[];
-		console.log(openedPositions);
-		writeNewEntries(openedPositions);
+		writeNewEntries({ exchange: 'Dydxv4', positions: openedPositions });
 	},
 	runOnInit: true,
 	start: true

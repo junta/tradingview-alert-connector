@@ -95,13 +95,17 @@ export class DydxV4Client extends AbstractDexClient {
 		const timeInForce = OrderTimeInForce.GTT;
 		const execution = OrderExecution.DEFAULT;
 		const slippagePercentage = parseFloat(alertMessage.slippagePercentage); // Get from alert
+		const orderMode = alertMessage.orderMode || '';
 		const price =
 			side == OrderSide.BUY
 				? orderParams.price * (1 + slippagePercentage)
 				: orderParams.price * (1 - slippagePercentage);
 		let size = orderParams.size;
 
-		if (side === OrderSide.SELL) {
+		if (
+			side === OrderSide.SELL ||
+			(side === OrderSide.BUY && orderMode === 'full')
+		) {
 			const tickerPositions = openedPositions.filter(
 				(el) => el.market === market
 			);
@@ -118,35 +122,42 @@ export class DydxV4Client extends AbstractDexClient {
 
 		const postOnly = false;
 		const reduceOnly = false;
-		const triggerPrice = null;
 
-		const fillWaitTime = Number(process.env.FILL_WAIT_TIME) || 300000; // 5 minutes by default
+		const fillWaitTime = Number(process.env.FILL_WAIT_TIME_SECONDS) || 300; // 5 minutes by default
 
 		const clientId = this.generateRandomInt32();
 		console.log('Client ID: ', clientId);
 
-		const tx = await client.placeOrder(
-			subaccount,
-			market,
-			type,
-			side,
-			price,
-			size,
-			clientId,
-			timeInForce,
-			fillWaitTime,
-			execution,
-			postOnly,
-			reduceOnly,
-			triggerPrice
-		);
-		console.log(tx);
-		console.log('Transaction Result: ', tx);
+		try {
+			const tx = await client.placeOrder(
+				subaccount,
+				market,
+				type,
+				side,
+				price,
+				size,
+				clientId,
+				timeInForce,
+				fillWaitTime,
+				execution,
+				postOnly,
+				reduceOnly
+			);
+			console.log('Transaction Result: ', tx);
+		} catch (e) {
+			console.error(e);
+		}
 		await _sleep(fillWaitTime);
 
+		// Not sure if this logic is needed since we are using GTT TimeInForce
 		const isFilled = await this.isOrderFilled(String(clientId));
 		if (!isFilled) {
-			await client.cancelOrder(subaccount, clientId, OrderFlags.CONDITIONAL);
+			await client.cancelOrder(
+				subaccount,
+				clientId,
+				OrderFlags.LONG_TERM,
+				market
+			);
 		}
 		const orderResult: OrderResult = {
 			side: orderParams.side,

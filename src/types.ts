@@ -22,6 +22,7 @@ export type AlertObject = {
 	passphrase?: string;
 	collateral?: string;
 	slippagePercentage?: string;
+	orderMode?: '' | 'full';
 };
 
 export type dydxOrderParams = {

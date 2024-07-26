@@ -19,7 +19,7 @@
 	"dependencies": {
 		"@bluefin-exchange/bluefin-v2-client": "^5.2.35",
 		"@dydxprotocol/v3-client": "^1.14.0",
-		"@dydxprotocol/v4-client-js": "^1.0.27",
+		"@dydxprotocol/v4-client-js": "1.1.31",
 		"@perp/sdk-curie": "^1.22.0",
 		"@sentry/integrations": "^6.19.1",
 		"@sentry/node": "^6.18.2",
@@ -30,7 +30,6 @@
 		"axios": "^1.6.7",
 		"config": "^3.3.7",
 		"cron": "^3.1.7",
-		"csv-writer": "^1.6.0",
 		"decimal.js": "^10.4.3",
 		"dotenv": "^16.0.0",
 		"express": "^4.17.3",
