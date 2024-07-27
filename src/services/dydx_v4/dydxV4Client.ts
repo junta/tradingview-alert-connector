@@ -102,10 +102,7 @@ export class DydxV4Client extends AbstractDexClient {
 				: orderParams.price * (1 - slippagePercentage);
 		let size = orderParams.size;
 
-		if (
-			side === OrderSide.SELL ||
-			(side === OrderSide.BUY && orderMode === 'full')
-		) {
+		if (side === OrderSide.SELL && orderMode === 'full') {
 			const tickerPositions = openedPositions.filter(
 				(el) => el.market === market
 			);
@@ -149,16 +146,16 @@ export class DydxV4Client extends AbstractDexClient {
 		}
 		await _sleep(fillWaitTime);
 
-		// Not sure if this logic is needed since we are using GTT TimeInForce
-		const isFilled = await this.isOrderFilled(String(clientId));
-		if (!isFilled) {
-			await client.cancelOrder(
-				subaccount,
-				clientId,
-				OrderFlags.LONG_TERM,
-				market
-			);
-		}
+		// This logic isn't needed since we are using TimeInForce GoodTilTime
+		// const isFilled = await this.isOrderFilled(String(clientId));
+		// if (!isFilled) {
+		// 	await client.cancelOrder(
+		// 		subaccount,
+		// 		clientId,
+		// 		OrderFlags.LONG_TERM,
+		// 		market
+		// 	);
+		// }
 		const orderResult: OrderResult = {
 			side: orderParams.side,
 			size: orderParams.size,
