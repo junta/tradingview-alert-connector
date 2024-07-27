@@ -10,9 +10,17 @@ import {
 	OrderSide,
 	OrderTimeInForce,
 	OrderType,
-	IndexerConfig
+	IndexerConfig,
+	OrderFlags,
+	PositionStatus
 } from '@dydxprotocol/v4-client-js';
-import { dydxV4OrderParams, AlertObject, OrderResult } from '../../types';
+import {
+	dydxV4OrderParams,
+	AlertObject,
+	OrderResult,
+	PositionData,
+	MarketData
+} from '../../types';
 import { _sleep, doubleSizeIfReverseOrder } from '../../helper';
 import 'dotenv/config';
 import config from 'config';
@@ -77,77 +85,91 @@ export class DydxV4Client extends AbstractDexClient {
 		return orderParams;
 	}
 
-	async placeOrder(alertMessage: AlertObject) {
+	async placeOrder(alertMessage: AlertObject, openedPositions: MarketData[]) {
 		const orderParams = await this.buildOrderParams(alertMessage);
 		const { client, subaccount } = await this.buildCompositeClient();
 
 		const market = orderParams.market;
-		const type = OrderType.MARKET;
+		const type = OrderType.LIMIT;
 		const side = orderParams.side;
 		const timeInForce = OrderTimeInForce.GTT;
 		const execution = OrderExecution.DEFAULT;
-		const slippagePercentage = 0.05;
+		const slippagePercentage = parseFloat(alertMessage.slippagePercentage); // Get from alert
+		const orderMode = alertMessage.orderMode || '';
 		const price =
 			side == OrderSide.BUY
 				? orderParams.price * (1 + slippagePercentage)
 				: orderParams.price * (1 - slippagePercentage);
-		const size = orderParams.size;
+		let size = orderParams.size;
+
+		if (side === OrderSide.SELL) {
+			const tickerPositions = openedPositions.filter(
+				(el) => el.market === market
+			);
+			const sum = tickerPositions.reduce(
+				(acc: number, cur) => acc + parseFloat(cur.size),
+				0
+			);
+
+			// If no opened positions
+			if (sum === 0) return;
+
+			size = orderMode === 'full' ? sum : Math.max(size, sum);
+		}
+
 		const postOnly = false;
 		const reduceOnly = false;
-		const triggerPrice = null;
-		let count = 0;
-		const maxTries = 3;
-		const fillWaitTime = 60000; // 1 minute
-		while (count <= maxTries) {
-			try {
-				const clientId = this.generateRandomInt32();
-				console.log('Client ID: ', clientId);
 
-				const tx = await client.placeOrder(
-					subaccount,
-					market,
-					type,
-					side,
-					price,
-					size,
-					clientId,
-					timeInForce,
-					120000, // 2 minute
-					execution,
-					postOnly,
-					reduceOnly,
-					triggerPrice
-				);
-				console.log('Transaction Result: ', tx);
-				await _sleep(fillWaitTime);
+		const fillWaitTime = Number(process.env.FILL_WAIT_TIME_SECONDS) || 300; // 5 minutes by default
 
-				const isFilled = await this.isOrderFilled(String(clientId));
-				if (!isFilled)
-					throw new Error(
-						'Order is not found/filled. Retry again, count: ' + count
-					);
-				const orderResult: OrderResult = {
-					side: orderParams.side,
-					size: orderParams.size,
-					orderId: String(clientId)
-				};
-				await this.exportOrder(
-					'DydxV4',
-					alertMessage.strategy,
-					orderResult,
-					alertMessage.price,
-					alertMessage.market
-				);
+		const clientId = this.generateRandomInt32();
+		console.log('Client ID: ', clientId);
 
-				return orderResult;
-			} catch (error) {
-				console.error(error);
-				console.log('Retry again, count: ' + count);
-				count++;
-
-				await _sleep(5000);
-			}
+		try {
+			const tx = await client.placeOrder(
+				subaccount,
+				market,
+				type,
+				side,
+				price,
+				size,
+				clientId,
+				timeInForce,
+				fillWaitTime,
+				execution,
+				postOnly,
+				reduceOnly
+			);
+			console.log('Transaction Result: ', tx);
+		} catch (e) {
+			console.error(e);
 		}
+		await _sleep(fillWaitTime);
+
+		// This logic isn't needed since we are using TimeInForce GoodTilTime
+		// const isFilled = await this.isOrderFilled(String(clientId));
+		// if (!isFilled) {
+		// 	await client.cancelOrder(
+		// 		subaccount,
+		// 		clientId,
+		// 		OrderFlags.LONG_TERM,
+		// 		market
+		// 	);
+		// }
+		const orderResult: OrderResult = {
+			side: orderParams.side,
+			size: orderParams.size,
+			orderId: String(clientId)
+		};
+		await this.exportOrder(
+			'DydxV4',
+			alertMessage.strategy,
+			orderResult,
+			alertMessage.price,
+			alertMessage.market
+		);
+
+		return orderResult;
 	}
 
 	private buildCompositeClient = async () => {
@@ -235,5 +257,17 @@ export class DydxV4Client extends AbstractDexClient {
 		if (!localWallet) return;
 
 		return await client.account.getSubaccountOrders(localWallet.address, 0);
+	};
+
+	getOpenedPositions = async () => {
+		const client = this.buildIndexerClient();
+		const localWallet = await this.generateLocalWallet();
+		if (!localWallet) return;
+
+		return (await client.account.getSubaccountPerpetualPositions(
+			localWallet.address,
+			0,
+			PositionStatus.OPEN
+		)) as PositionData;
 	};
 }

@@ -4,7 +4,8 @@ import {
 	gmxOrderParams,
 	AlertObject,
 	GmxPositionResponse,
-	OrderResult
+	OrderResult,
+	PositionData
 } from '../../types';
 import config = require('config');
 import 'dotenv/config';
@@ -456,5 +457,11 @@ export class GmxClient extends AbstractDexClient {
 		const feeTokenAmount = adjustedGasLimit.mul(gasPrice);
 
 		return feeTokenAmount;
+	}
+
+	async getOpenedPositions(): Promise<PositionData> {
+		return {
+			positions: []
+		};
 	}
 }

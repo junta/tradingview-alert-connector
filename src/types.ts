@@ -6,7 +6,7 @@ import {
 } from '@dydxprotocol/v3-client';
 import { PositionSide } from '@perp/sdk-curie';
 import { gmxOrderType } from './services/gmx/constants';
-import { OrderSide as v4OrderSide } from '@dydxprotocol/v4-client-js';
+import { PositionStatus, OrderSide as v4OrderSide } from '@dydxprotocol/v4-client-js';
 
 export type AlertObject = {
 	exchange: string;
@@ -21,6 +21,8 @@ export type AlertObject = {
 	reverse: boolean;
 	passphrase?: string;
 	collateral?: string;
+	slippagePercentage?: string;
+	orderMode?: '' | 'full';
 };
 
 export type dydxOrderParams = {
@@ -75,4 +77,27 @@ export interface OrderResult {
 	size: number;
 	side: string;
 	orderId: string;
+}
+
+export interface MarketData {
+	market: string;
+	status: PositionStatus;
+	side: string;
+	size: string;
+	maxSize: string;
+	entryPrice: string;
+	exitPrice: string | null;
+	realizedPnl: string;
+	unrealizedPnl: string;
+	createdAt: string;
+	createdAtHeight: string;
+	closedAt: string | null;
+	sumOpen: string;
+	sumClose: string;
+	netFunding: string;
+	subaccountNumber: number;
+}
+
+export interface PositionData {
+	positions: MarketData[];
 }
