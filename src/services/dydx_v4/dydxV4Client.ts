@@ -102,7 +102,7 @@ export class DydxV4Client extends AbstractDexClient {
 				: orderParams.price * (1 - slippagePercentage);
 		let size = orderParams.size;
 
-		if (side === OrderSide.SELL && orderMode === 'full') {
+		if (side === OrderSide.SELL) {
 			const tickerPositions = openedPositions.filter(
 				(el) => el.market === market
 			);
@@ -114,7 +114,7 @@ export class DydxV4Client extends AbstractDexClient {
 			// If no opened positions
 			if (sum === 0) return;
 
-			size = Math.max(size, sum);
+			size = orderMode === 'full' ? sum : Math.max(size, sum);
 		}
 
 		const postOnly = false;
