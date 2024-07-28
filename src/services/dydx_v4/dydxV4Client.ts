@@ -98,8 +98,8 @@ export class DydxV4Client extends AbstractDexClient {
 		const orderMode = alertMessage.orderMode || '';
 		const price =
 			side == OrderSide.BUY
-				? orderParams.price * (1 + slippagePercentage)
-				: orderParams.price * (1 - slippagePercentage);
+				? orderParams.price * ((100 + slippagePercentage) / 100)
+				: orderParams.price * ((100 - slippagePercentage) / 100);
 		let size = orderParams.size;
 
 		if (side === OrderSide.SELL) {
