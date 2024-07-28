@@ -69,7 +69,7 @@ function writeNewEntries({
 CronJob.from({
 	cronTime: process.env.UPDATE_POSITIONS_TIMER || '*/30 * * * * *', // Every 30 seconds
 	onTick: async () => {
-		const { positions: newPositions } = await dydxv4Client.getOpenedPositions();
+		const { positions: newPositions = [] } = await dydxv4Client.getOpenedPositions();
 		openedPositions = newPositions as unknown as MarketData[];
 		writeNewEntries({ exchange: 'Dydxv4', positions: openedPositions });
 	},
