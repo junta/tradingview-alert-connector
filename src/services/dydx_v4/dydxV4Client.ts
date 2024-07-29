@@ -11,7 +11,6 @@ import {
 	OrderTimeInForce,
 	OrderType,
 	IndexerConfig,
-	OrderFlags,
 	PositionStatus
 } from '@dydxprotocol/v4-client-js';
 import {
@@ -259,7 +258,7 @@ export class DydxV4Client extends AbstractDexClient {
 		return await client.account.getSubaccountOrders(localWallet.address, 0);
 	};
 
-	getOpenedPositions = async () => {
+	getOpenedPositions = async (): Promise<PositionData> => {
 		const client = this.buildIndexerClient();
 		const localWallet = await this.generateLocalWallet();
 		if (!localWallet) return;

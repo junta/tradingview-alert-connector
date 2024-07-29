@@ -6,9 +6,12 @@ import { MarketData } from '../types';
 import * as fs from 'fs';
 
 const router: Router = express.Router();
-const dydxv4Client = new DexRegistry().getDex('dydxv4');
+const staticDexRegistry = new DexRegistry();
+const dydxv4Client = staticDexRegistry.getDex('dydxv4');
+const hyperliquidClient = staticDexRegistry.getDex('hyperliquid');
 
-let openedPositions: MarketData[] = [];
+let openedPositionsDydxv4: MarketData[] = [];
+let openedPositionsHyperliquid = [];
 
 function writeNewEntries({
 	exchange,
@@ -24,7 +27,7 @@ function writeNewEntries({
 		});
 	}
 
-	const fullPath = folderPath + `/tradeHistory${exchange}.csv`;
+	const fullPath = folderPath + `/positions${exchange}.csv`;
 	if (!fs.existsSync(fullPath)) {
 		const headerString =
 			'market,status,side,size,maxSize,entryPrice,exitPrice,realizedPnl,unrealizedPnl,createdAt,createdAtHeight,closedAt,sumOpen,sumClose,netFunding,subaccountNumber';
@@ -34,7 +37,6 @@ function writeNewEntries({
 	const records = fs.readFileSync(fullPath).toString('utf-8').split('\n');
 
 	const newRecords = [];
-	console.log(records);
 
 	for (const position of positions) {
 		const record: string[] = [
@@ -69,9 +71,10 @@ function writeNewEntries({
 CronJob.from({
 	cronTime: process.env.UPDATE_POSITIONS_TIMER || '*/30 * * * * *', // Every 30 seconds
 	onTick: async () => {
-		const { positions: newPositions = [] } = await dydxv4Client.getOpenedPositions();
-		openedPositions = newPositions as unknown as MarketData[];
-		writeNewEntries({ exchange: 'Dydxv4', positions: openedPositions });
+		const { positions: newPositions = [] } =
+			await dydxv4Client.getOpenedPositions();
+		openedPositionsDydxv4 = newPositions as unknown as MarketData[];
+		writeNewEntries({ exchange: 'Dydxv4', positions: openedPositionsDydxv4 });
 	},
 	runOnInit: true,
 	start: true
@@ -85,7 +88,14 @@ router.get('/accounts', async (req, res) => {
 	console.log('Received GET request.');
 
 	const dexRegistry = new DexRegistry();
-	const dexNames = ['dydxv3', 'dydxv4', 'perpetual', 'gmx', 'bluefin'];
+	const dexNames = [
+		'dydxv3',
+		'dydxv4',
+		'perpetual',
+		'gmx',
+		'bluefin',
+		'hyperliquid'
+	];
 	const dexClients = dexNames.map((name) => dexRegistry.getDex(name));
 
 	try {
@@ -98,7 +108,8 @@ router.get('/accounts', async (req, res) => {
 			dYdX_v4: accountStatuses[1], // dydxv4
 			PerpetualProtocol: accountStatuses[2], // perpetual
 			GMX: accountStatuses[3], // gmx
-			Bluefin: accountStatuses[4] // bluefin
+			Bluefin: accountStatuses[4], // bluefin
+			HyperLiquid: accountStatuses[5] // hyperliquid
 		};
 		res.send(message);
 	} catch (error) {
@@ -129,7 +140,7 @@ router.post('/', async (req, res) => {
 	// TODO: add check if dex client isReady
 
 	try {
-		const result = await dexClient.placeOrder(req.body, openedPositions);
+		const result = await dexClient.placeOrder(req.body, openedPositionsDydxv4);
 
 		res.send('OK');
 		// checkAfterPosition(req.body);

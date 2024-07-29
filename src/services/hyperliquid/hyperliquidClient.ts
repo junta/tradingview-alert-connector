@@ -1,40 +1,67 @@
-import { all } from "hyperliquid-ts-sdk";
-//https://github.com/elevatordown/hyperliquid-ts-sdk/blob/main/examples/cli.ts
-
+import * as ccxt from 'ccxt';
 import {
 	dydxV4OrderParams,
 	AlertObject,
 	OrderResult,
-	PositionData,
 	MarketData
 } from '../../types';
 import { _sleep, doubleSizeIfReverseOrder } from '../../helper';
 import 'dotenv/config';
-import config from 'config';
+import {
+	OrderSide,
+	OrderTimeInForce,
+	OrderType
+} from '@dydxprotocol/v4-client-js';
 import { AbstractDexClient } from '../abstractDexClient';
 
-export class DydxV4Client extends AbstractDexClient {
-	async getIsAccountReady() {
-		const subAccount = await this.getSubAccount();
-		if (!subAccount) return false;
+export class HyperLiquidClient extends AbstractDexClient {
+	private client: ccxt.hyperliquid;
 
-		console.log('dydx v4 account: ' + JSON.stringify(subAccount, null, 2));
-		return (Number(subAccount.freeCollateral) > 0) as boolean;
+	constructor() {
+		super();
+
+		if (
+			!process.env.HYPERLIQUID_PRIVATE_KEY &&
+			!process.env.HYPERLIQUID_WALLET_ADDRESS
+		) {
+			console.log('HyperLiquid Credentials is not set as environment variable');
+		}
+
+		this.client = new ccxt.hyperliquid({
+			privateKey: process.env.HYPERLIQUID_PRIVATE_KEY,
+			walletAddress: process.env.HYPERLIQUID_WALLET_ADDRESS
+		});
+
+		if (process.env.NODE_ENV !== 'production') this.client.setSandboxMode(true);
 	}
 
-	async getSubAccount() {
+	async getIsAccountReady(): Promise<boolean> {
 		try {
-			const client = this.buildIndexerClient();
-			const localWallet = await this.generateLocalWallet();
-			if (!localWallet) return;
-			const response = await client.account.getSubaccount(
-				localWallet.address,
-				0
-			);
+			const clientId = this.generateRandomHexString(32);
+			console.log('Client ID: ', clientId);
 
-			return response.subaccount;
-		} catch (error) {
-			console.error(error);
+			// const result = await this.client.createOrder(
+			// 	'WIF/USDC:USDC',
+			// 	'LIMIT',
+			// 	'BUY',
+			// 	6,
+			// 	2,
+			// 	{
+			// 		clientOrderId: clientId,
+			// 		timeInForce: 'gtc',
+			// 		postOnly: false,
+			// 		reduceOnly: false
+			// 		// vaultAddress: process.env.HYPERLIQUID_VAULT_ADDRESS
+			// 	}
+			// );
+			// console.log('Transaction Result: ', result);
+			// console.log(await this.client.fetchOrder(result.id, 'WIF/USDC:USDC'));
+
+			console.log((await this.getOpenedPositions()).at(-1));
+			return true;
+		} catch (e) {
+			console.log(e);
+			return false;
 		}
 	}
 
@@ -46,17 +73,7 @@ export class DydxV4Client extends AbstractDexClient {
 		console.log('latestPrice', latestPrice);
 
 		let orderSize: number;
-		if (alertMessage.sizeByLeverage) {
-			const account = await this.getSubAccount();
-
-			orderSize =
-				(Number(account.equity) * Number(alertMessage.sizeByLeverage)) /
-				latestPrice;
-		} else if (alertMessage.sizeUsd) {
-			orderSize = Number(alertMessage.sizeUsd) / latestPrice;
-		} else {
-			orderSize = alertMessage.size;
-		}
+		orderSize = alertMessage.size;
 
 		orderSize = doubleSizeIfReverseOrder(alertMessage, orderSize);
 
@@ -74,14 +91,15 @@ export class DydxV4Client extends AbstractDexClient {
 
 	async placeOrder(alertMessage: AlertObject, openedPositions: MarketData[]) {
 		const orderParams = await this.buildOrderParams(alertMessage);
-		const { client, subaccount } = await this.buildCompositeClient();
 
 		const market = orderParams.market;
 		const type = OrderType.LIMIT;
 		const side = orderParams.side;
 		const timeInForce = OrderTimeInForce.GTT;
-		const execution = OrderExecution.DEFAULT;
+
+		// Since we are using LIMIT type, referring to exchange, that orders don't have slippage
 		const slippagePercentage = parseFloat(alertMessage.slippagePercentage); // Get from alert
+		const vaultAddress = process.env.HYPERLIQUID_VAULT_ADDRESS;
 		const orderMode = alertMessage.orderMode || '';
 		const price =
 			side == OrderSide.BUY
@@ -112,149 +130,70 @@ export class DydxV4Client extends AbstractDexClient {
 		const clientId = this.generateRandomInt32();
 		console.log('Client ID: ', clientId);
 
+		// For cancelling if needed
+		let orderId: string;
+
 		try {
-			const tx = await client.placeOrder(
-				subaccount,
+			const result = await this.client.createOrder(
 				market,
 				type,
 				side,
-				price,
 				size,
-				clientId,
-				timeInForce,
-				fillWaitTime,
-				execution,
-				postOnly,
-				reduceOnly
+				price,
+				{
+					clientOrderId: clientId,
+					timeInForce,
+					slippage: alertMessage.slippagePercentage,
+					postOnly,
+					reduceOnly,
+					vaultAddress
+				}
 			);
-			console.log('Transaction Result: ', tx);
+			console.log('Transaction Result: ', result);
+			orderId = result.id;
 		} catch (e) {
 			console.error(e);
 		}
 		await _sleep(fillWaitTime);
 
-		// This logic isn't needed since we are using TimeInForce GoodTilTime
-		// const isFilled = await this.isOrderFilled(String(clientId));
-		// if (!isFilled) {
-		// 	await client.cancelOrder(
-		// 		subaccount,
-		// 		clientId,
-		// 		OrderFlags.LONG_TERM,
-		// 		market
-		// 	);
-		// }
+		const isFilled = await this.isOrderFilled(orderId, market);
+		if (!isFilled) {
+			await this.client.cancelOrder(orderId, market, {
+				clientOrderId: clientId
+			});
+		}
 		const orderResult: OrderResult = {
 			side: orderParams.side,
 			size: orderParams.size,
 			orderId: String(clientId)
 		};
-		await this.exportOrder(
-			'DydxV4',
-			alertMessage.strategy,
-			orderResult,
-			alertMessage.price,
-			alertMessage.market
-		);
 
 		return orderResult;
 	}
-
-	private buildCompositeClient = async () => {
-		const validatorConfig = new ValidatorConfig(
-			config.get('DydxV4.ValidatorConfig.restEndpoint'),
-			'dydx-mainnet-1',
-			{
-				CHAINTOKEN_DENOM: 'adydx',
-				CHAINTOKEN_DECIMALS: 18,
-				USDC_DENOM:
-					'ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5',
-				USDC_GAS_DENOM: 'uusdc',
-				USDC_DECIMALS: 6
-			}
-		);
-		const network =
-			process.env.NODE_ENV == 'production'
-				? new Network('mainnet', this.getIndexerConfig(), validatorConfig)
-				: Network.testnet();
-		let client;
-		try {
-			client = await CompositeClient.connect(network);
-		} catch (e) {
-			console.error(e);
-			throw new Error('Failed to connect to dYdX v4 client');
-		}
-
-		const localWallet = await this.generateLocalWallet();
-		const subaccount = new SubaccountClient(localWallet, 0);
-		return { client, subaccount };
-	};
-
-	private generateLocalWallet = async () => {
-		if (!process.env.DYDX_V4_MNEMONIC) {
-			console.log('DYDX_V4_MNEMONIC is not set as environment variable');
-			return;
-		}
-
-		const localWallet = await LocalWallet.fromMnemonic(
-			process.env.DYDX_V4_MNEMONIC,
-			BECH32_PREFIX
-		);
-		console.log('dYdX v4 Address:', localWallet.address);
-
-		return localWallet;
-	};
-
-	private buildIndexerClient = () => {
-		const mainnetIndexerConfig = this.getIndexerConfig();
-		const indexerConfig =
-			process.env.NODE_ENV !== 'production'
-				? Network.testnet().indexerConfig
-				: mainnetIndexerConfig;
-		return new IndexerClient(indexerConfig);
-	};
-
-	private getIndexerConfig = () => {
-		return new IndexerConfig(
-			config.get('DydxV4.IndexerConfig.httpsEndpoint'),
-			config.get('DydxV4.IndexerConfig.wssEndpoint')
-		);
-	};
 
 	private generateRandomInt32(): number {
 		const maxInt32 = 2147483647;
 		return Math.floor(Math.random() * (maxInt32 + 1));
 	}
 
-	private isOrderFilled = async (clientId: string): Promise<boolean> => {
-		const orders = await this.getOrders();
+	private generateRandomHexString(size: number): string {
+		return `0x${[...Array(size)]
+			.map(() => Math.floor(Math.random() * 16).toString(16))
+			.join('')}`;
+	}
 
-		const order = orders.find((order) => {
-			return order.clientId == clientId;
-		});
-		if (!order) return false;
+	private isOrderFilled = async (
+		orderId: string,
+		market: string
+	): Promise<boolean> => {
+		const order = await this.client.fetchOrder(orderId, market);
 
-		console.log('dYdX v4 Order ID: ', order.id);
+		console.log('HyperLiquid Order ID: ', order.id);
 
-		return order.status == 'FILLED';
+		return order.status == 'closed';
 	};
 
-	getOrders = async () => {
-		const client = this.buildIndexerClient();
-		const localWallet = await this.generateLocalWallet();
-		if (!localWallet) return;
-
-		return await client.account.getSubaccountOrders(localWallet.address, 0);
-	};
-
-	getOpenedPositions = async () => {
-		const client = this.buildIndexerClient();
-		const localWallet = await this.generateLocalWallet();
-		if (!localWallet) return;
-
-		return (await client.account.getSubaccountPerpetualPositions(
-			localWallet.address,
-			0,
-			PositionStatus.OPEN
-		)) as PositionData;
+	getOpenedPositions = async (): Promise<ccxt.Position[]> => {
+		return await this.client.fetchPositions();
 	};
 }

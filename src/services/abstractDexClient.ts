@@ -1,12 +1,12 @@
 import * as fs from 'fs';
 import { getStrategiesDB } from '../helper';
 import config from 'config';
-import { AlertObject, MarketData, OrderResult, PositionData } from '../types';
+import { AlertObject, MarketData, OrderResult } from '../types';
 
 export abstract class AbstractDexClient {
 	abstract getIsAccountReady(): Promise<boolean>;
 	abstract placeOrder(alertMessage: AlertObject, openedPositions: MarketData[]);
-	abstract getOpenedPositions(): Promise<PositionData>;
+	abstract getOpenedPositions();
 
 	exportOrder = async (
 		exchange: string,
