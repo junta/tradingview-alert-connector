@@ -5,7 +5,7 @@ import { AlertObject, MarketData, OrderResult } from '../types';
 
 export abstract class AbstractDexClient {
 	abstract getIsAccountReady(): Promise<boolean>;
-	abstract placeOrder(alertMessage: AlertObject, openedPositions: MarketData[]);
+	abstract placeOrder(alertMessage: AlertObject, openedPositions: any[]);
 	abstract getOpenedPositions();
 
 	exportOrder = async (

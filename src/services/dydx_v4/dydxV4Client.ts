@@ -20,7 +20,11 @@ import {
 	PositionData,
 	MarketData
 } from '../../types';
-import { _sleep, doubleSizeIfReverseOrder } from '../../helper';
+import {
+	_sleep,
+	calculateProfit,
+	doubleSizeIfReverseOrder
+} from '../../helper';
 import 'dotenv/config';
 import config from 'config';
 import { AbstractDexClient } from '../abstractDexClient';
@@ -102,18 +106,21 @@ export class DydxV4Client extends AbstractDexClient {
 		let size = orderParams.size;
 
 		if (side === OrderSide.SELL) {
-			const tickerPositions = openedPositions.filter(
-				(el) => el.market === market
-			);
-			const sum = tickerPositions.reduce(
-				(acc: number, cur) => acc + parseFloat(cur.size),
-				0
-			);
+			// Dydxv4 group all positions in one position per symbol
+			const position = openedPositions.find((el) => el.market === market);
 
-			// If no opened positions
-			if (sum === 0) return;
+			if (position) {
+				const profit = calculateProfit(price, parseFloat(position.entryPrice));
 
-			size = orderMode === 'full' ? sum : Math.max(size, sum);
+				if (profit < parseFloat(process.env.MINIMUM_PROFIT_PERCENT)) return;
+
+				const sum = parseFloat(position.size);
+
+				// If no opened positions
+				if (sum === 0) return;
+
+				size = orderMode === 'full' ? sum : Math.max(size, sum);
+			}
 		}
 
 		const postOnly = false;
@@ -139,11 +146,10 @@ export class DydxV4Client extends AbstractDexClient {
 				postOnly,
 				reduceOnly
 			);
-			console.log('Transaction Result: ', tx);
+			console.log('[Dydxv4] Transaction Result: ', tx);
 		} catch (e) {
 			console.error(e);
 		}
-		await _sleep(fillWaitTime);
 
 		// This logic isn't needed since we are using TimeInForce GoodTilTime
 		// const isFilled = await this.isOrderFilled(String(clientId));

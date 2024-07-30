@@ -5,7 +5,11 @@ import {
 	OrderResult,
 	MarketData
 } from '../../types';
-import { _sleep, doubleSizeIfReverseOrder } from '../../helper';
+import {
+	_sleep,
+	calculateProfit,
+	doubleSizeIfReverseOrder
+} from '../../helper';
 import 'dotenv/config';
 import {
 	OrderSide,
@@ -37,27 +41,8 @@ export class HyperLiquidClient extends AbstractDexClient {
 
 	async getIsAccountReady(): Promise<boolean> {
 		try {
-			const clientId = this.generateRandomHexString(32);
-			console.log('Client ID: ', clientId);
-
-			// const result = await this.client.createOrder(
-			// 	'WIF/USDC:USDC',
-			// 	'LIMIT',
-			// 	'BUY',
-			// 	6,
-			// 	2,
-			// 	{
-			// 		clientOrderId: clientId,
-			// 		timeInForce: 'gtc',
-			// 		postOnly: false,
-			// 		reduceOnly: false
-			// 		// vaultAddress: process.env.HYPERLIQUID_VAULT_ADDRESS
-			// 	}
-			// );
-			// console.log('Transaction Result: ', result);
-			// console.log(await this.client.fetchOrder(result.id, 'WIF/USDC:USDC'));
-
-			console.log((await this.getOpenedPositions()).at(-1));
+			// Fetched balance indicates connected wallet
+			await this.client.fetchBalance();
 			return true;
 		} catch (e) {
 			console.log(e);
@@ -85,49 +70,59 @@ export class HyperLiquidClient extends AbstractDexClient {
 			size: Number(orderSize),
 			price: Number(alertMessage.price)
 		};
-		console.log('orderParams for dydx', orderParams);
+		console.log('orderParams for hyperliquid', orderParams);
 		return orderParams;
 	}
 
-	async placeOrder(alertMessage: AlertObject, openedPositions: MarketData[]) {
+	async placeOrder(
+		alertMessage: AlertObject,
+		openedPositions: ccxt.Position[]
+	) {
 		const orderParams = await this.buildOrderParams(alertMessage);
 
 		const market = orderParams.market;
 		const type = OrderType.LIMIT;
 		const side = orderParams.side;
-		const timeInForce = OrderTimeInForce.GTT;
-
-		// Since we are using LIMIT type, referring to exchange, that orders don't have slippage
+		const timeInForce = 'gtc';
 		const slippagePercentage = parseFloat(alertMessage.slippagePercentage); // Get from alert
 		const vaultAddress = process.env.HYPERLIQUID_VAULT_ADDRESS;
 		const orderMode = alertMessage.orderMode || '';
 		const price =
 			side == OrderSide.BUY
-				? orderParams.price * (1 + slippagePercentage)
-				: orderParams.price * (1 - slippagePercentage);
+				? orderParams.price * ((100 + slippagePercentage) / 100)
+				: orderParams.price * ((100 - slippagePercentage) / 100);
+
 		let size = orderParams.size;
 
 		if (side === OrderSide.SELL) {
-			const tickerPositions = openedPositions.filter(
-				(el) => el.market === market
-			);
-			const sum = tickerPositions.reduce(
-				(acc: number, cur) => acc + parseFloat(cur.size),
-				0
-			);
+			// Hyperliquid group all positions in one position per symbol
+			const position = openedPositions.find((el) => el.symbol === market);
 
-			// If no opened positions
-			if (sum === 0) return;
+			if (position) {
+				console.log(position);
+				const profit = calculateProfit(price, position.entryPrice);
 
-			size = orderMode === 'full' ? sum : Math.max(size, sum);
+				console.log(profit);
+
+				if (profit < parseFloat(process.env.MINIMUM_PROFIT_PERCENT)) return;
+
+				const sum = position.contracts;
+				console.log(sum);
+
+				// If no opened positions
+				if (sum === 0) return;
+
+				size = orderMode === 'full' ? sum : Math.max(size, sum);
+			}
 		}
 
 		const postOnly = false;
 		const reduceOnly = false;
 
-		const fillWaitTime = Number(process.env.FILL_WAIT_TIME_SECONDS) || 300; // 5 minutes by default
+		const fillWaitTime =
+			parseInt(process.env.FILL_WAIT_TIME_SECONDS) * 1000 || 300 * 1000; // 5 minutes by default
 
-		const clientId = this.generateRandomInt32();
+		const clientId = this.generateRandomHexString(32);
 		console.log('Client ID: ', clientId);
 
 		// For cancelling if needed
@@ -143,13 +138,12 @@ export class HyperLiquidClient extends AbstractDexClient {
 				{
 					clientOrderId: clientId,
 					timeInForce,
-					slippage: alertMessage.slippagePercentage,
 					postOnly,
 					reduceOnly,
-					vaultAddress
+					...(vaultAddress && { vaultAddress })
 				}
 			);
-			console.log('Transaction Result: ', result);
+			console.log('[Hyperliquid] Transaction Result: ', result);
 			orderId = result.id;
 		} catch (e) {
 			console.error(e);
@@ -161,6 +155,8 @@ export class HyperLiquidClient extends AbstractDexClient {
 			await this.client.cancelOrder(orderId, market, {
 				clientOrderId: clientId
 			});
+
+			console.log(`HyperLiquid Order ID ${orderId} canceled`);
 		}
 		const orderResult: OrderResult = {
 			side: orderParams.side,

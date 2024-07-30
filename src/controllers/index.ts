@@ -4,6 +4,7 @@ import { DexRegistry } from '../services/dexRegistry';
 import { CronJob } from 'cron';
 import { MarketData } from '../types';
 import * as fs from 'fs';
+import type { Position } from 'ccxt';
 
 const router: Router = express.Router();
 const staticDexRegistry = new DexRegistry();
@@ -11,14 +12,14 @@ const dydxv4Client = staticDexRegistry.getDex('dydxv4');
 const hyperliquidClient = staticDexRegistry.getDex('hyperliquid');
 
 let openedPositionsDydxv4: MarketData[] = [];
-let openedPositionsHyperliquid = [];
+let openedPositionsHyperliquid: Position[] = [];
 
 function writeNewEntries({
 	exchange,
 	positions
 }: {
-	exchange: string;
-	positions: MarketData[];
+	exchange: 'Dydxv4' | 'Hyperliquid';
+	positions: MarketData[] | Position[];
 }) {
 	const folderPath = './data/custom/exports/';
 	if (!fs.existsSync(folderPath)) {
@@ -30,7 +31,7 @@ function writeNewEntries({
 	const fullPath = folderPath + `/positions${exchange}.csv`;
 	if (!fs.existsSync(fullPath)) {
 		const headerString =
-			'market,status,side,size,maxSize,entryPrice,exitPrice,realizedPnl,unrealizedPnl,createdAt,createdAtHeight,closedAt,sumOpen,sumClose,netFunding,subaccountNumber';
+			'market,status,side,size,maxSize,entryPrice,exitPrice,createdAt,createdAtHeight,closedAt,sumOpen,sumClose,netFunding,subaccountNumber';
 		fs.writeFileSync(fullPath, headerString);
 	}
 
@@ -39,24 +40,49 @@ function writeNewEntries({
 	const newRecords = [];
 
 	for (const position of positions) {
-		const record: string[] = [
-			position.market || '',
-			position.status || '',
-			position.side || '',
-			position.size || '',
-			position.maxSize || '',
-			position.entryPrice || '',
-			position.exitPrice || '',
-			position.realizedPnl || '',
-			position.unrealizedPnl || '',
-			position.createdAt || '',
-			position.createdAtHeight || '',
-			position.closedAt || '',
-			position.sumOpen || '',
-			position.sumClose || '',
-			position.netFunding || '',
-			position.subaccountNumber?.toString() || ''
-		];
+		let record: string[];
+
+		if (exchange === 'Dydxv4') {
+			const typedPosition = position as MarketData;
+
+			record = [
+				typedPosition.market || '',
+				typedPosition.status || '',
+				typedPosition.side || '',
+				typedPosition.size || '',
+				typedPosition.maxSize || '',
+				typedPosition.entryPrice || '',
+				typedPosition.exitPrice || '',
+				typedPosition.createdAt || '',
+				typedPosition.createdAtHeight || '',
+				typedPosition.closedAt || '',
+				typedPosition.sumOpen || '',
+				typedPosition.sumClose || '',
+				typedPosition.netFunding || '',
+				typedPosition.subaccountNumber?.toString() || ''
+			];
+		}
+
+		if (exchange === 'Hyperliquid') {
+			const typedPosition = position as Position;
+
+			record = [
+				typedPosition.symbol || '',
+				'OPEN',
+				typedPosition.side || '',
+				typedPosition.contracts?.toString() || '',
+				'',
+				typedPosition.entryPrice?.toString() || '',
+				'',
+				'',
+				'',
+				'',
+				'',
+				'',
+				'',
+				''
+			];
+		}
 
 		if (records.includes(record.toString())) continue;
 
@@ -68,13 +94,32 @@ function writeNewEntries({
 	fs.appendFileSync(fullPath, appendString);
 }
 
+const getExchangeOpenedPositions = (exchange: string) => {
+	switch (exchange) {
+		case 'dydxv4':
+			return openedPositionsDydxv4;
+		case 'hyperliquid':
+			return openedPositionsHyperliquid;
+	}
+};
+
 CronJob.from({
 	cronTime: process.env.UPDATE_POSITIONS_TIMER || '*/30 * * * * *', // Every 30 seconds
 	onTick: async () => {
-		const { positions: newPositions = [] } =
-			await dydxv4Client.getOpenedPositions();
-		openedPositionsDydxv4 = newPositions as unknown as MarketData[];
+		const [{ positions: dydxv4Positions }, hyperliquidPositions] =
+			await Promise.all([
+				await dydxv4Client.getOpenedPositions(),
+				await hyperliquidClient.getOpenedPositions()
+			]);
+
+		openedPositionsDydxv4 = dydxv4Positions as unknown as MarketData[];
 		writeNewEntries({ exchange: 'Dydxv4', positions: openedPositionsDydxv4 });
+
+		openedPositionsHyperliquid = hyperliquidPositions as Position[];
+		writeNewEntries({
+			exchange: 'Hyperliquid',
+			positions: openedPositionsHyperliquid
+		});
 	},
 	runOnInit: true,
 	start: true
@@ -140,7 +185,8 @@ router.post('/', async (req, res) => {
 	// TODO: add check if dex client isReady
 
 	try {
-		const result = await dexClient.placeOrder(req.body, openedPositionsDydxv4);
+		const openedPosition = getExchangeOpenedPositions(exchange);
+		const result = await dexClient.placeOrder(req.body, openedPosition);
 
 		res.send('OK');
 		// checkAfterPosition(req.body);
