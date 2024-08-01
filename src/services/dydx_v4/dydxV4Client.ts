@@ -11,7 +11,6 @@ import {
 	OrderTimeInForce,
 	OrderType,
 	IndexerConfig,
-	OrderFlags,
 	PositionStatus
 } from '@dydxprotocol/v4-client-js';
 import {
@@ -21,10 +20,11 @@ import {
 	PositionData,
 	MarketData
 } from '../../types';
-import { _sleep, doubleSizeIfReverseOrder } from '../../helper';
+import { calculateProfit, doubleSizeIfReverseOrder } from '../../helper';
 import 'dotenv/config';
 import config from 'config';
 import { AbstractDexClient } from '../abstractDexClient';
+import { Mutex } from 'async-mutex';
 
 export class DydxV4Client extends AbstractDexClient {
 	async getIsAccountReady() {
@@ -85,7 +85,11 @@ export class DydxV4Client extends AbstractDexClient {
 		return orderParams;
 	}
 
-	async placeOrder(alertMessage: AlertObject, openedPositions: MarketData[]) {
+	async placeOrder(
+		alertMessage: AlertObject,
+		openedPositions: MarketData[],
+		mutex: Mutex
+	) {
 		const orderParams = await this.buildOrderParams(alertMessage);
 		const { client, subaccount } = await this.buildCompositeClient();
 
@@ -103,18 +107,23 @@ export class DydxV4Client extends AbstractDexClient {
 		let size = orderParams.size;
 
 		if (side === OrderSide.SELL) {
-			const tickerPositions = openedPositions.filter(
-				(el) => el.market === market
-			);
-			const sum = tickerPositions.reduce(
-				(acc: number, cur) => acc + parseFloat(cur.size),
-				0
-			);
+			// Dydxv4 group all positions in one position per symbol
+			const position = openedPositions.find((el) => el.market === market);
 
-			// If no opened positions
-			if (sum === 0) return;
+			if (position) {
+				const profit = calculateProfit(price, parseFloat(position.entryPrice));
+				const minimumProfit =
+					parseFloat(process.env.MINIMUM_PROFIT_PERCENT) || 0;
 
-			size = orderMode === 'full' ? sum : Math.max(size, sum);
+				if (profit < minimumProfit) return;
+
+				const sum = parseFloat(position.size);
+
+				// If no opened positions
+				if (sum === 0) return;
+
+				size = orderMode === 'full' ? sum : Math.max(size, sum);
+			}
 		}
 
 		const postOnly = false;
@@ -124,6 +133,9 @@ export class DydxV4Client extends AbstractDexClient {
 
 		const clientId = this.generateRandomInt32();
 		console.log('Client ID: ', clientId);
+
+		// This solution fixes problem of two parallel calls in exchange, which is not possible
+		const release = await mutex.acquire();
 
 		try {
 			const tx = await client.placeOrder(
@@ -140,22 +152,13 @@ export class DydxV4Client extends AbstractDexClient {
 				postOnly,
 				reduceOnly
 			);
-			console.log('Transaction Result: ', tx);
+			console.log('[Dydxv4] Transaction Result: ', tx);
 		} catch (e) {
 			console.error(e);
+		} finally {
+			release();
 		}
-		await _sleep(fillWaitTime);
 
-		// This logic isn't needed since we are using TimeInForce GoodTilTime
-		// const isFilled = await this.isOrderFilled(String(clientId));
-		// if (!isFilled) {
-		// 	await client.cancelOrder(
-		// 		subaccount,
-		// 		clientId,
-		// 		OrderFlags.LONG_TERM,
-		// 		market
-		// 	);
-		// }
 		const orderResult: OrderResult = {
 			side: orderParams.side,
 			size: orderParams.size,
@@ -259,7 +262,7 @@ export class DydxV4Client extends AbstractDexClient {
 		return await client.account.getSubaccountOrders(localWallet.address, 0);
 	};
 
-	getOpenedPositions = async () => {
+	getOpenedPositions = async (): Promise<PositionData> => {
 		const client = this.buildIndexerClient();
 		const localWallet = await this.generateLocalWallet();
 		if (!localWallet) return;

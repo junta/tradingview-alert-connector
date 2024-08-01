@@ -3,6 +3,7 @@ import { BluefinDexClient } from './bluefin/bluefinClient';
 import { DydxV3Client } from './dydx_v3/dydxV3Client';
 import { DydxV4Client } from './dydx_v4/dydxV4Client';
 import { GmxClient } from './gmx/gmxClient';
+import { HyperLiquidClient } from './hyperliquid/hyperliquidClient';
 import { PerpClient } from './perp/perpClient';
 
 export class DexRegistry {
@@ -16,6 +17,7 @@ export class DexRegistry {
 		this.registeredDexs.set('perpetual', new PerpClient());
 		this.registeredDexs.set('gmx', new GmxClient());
 		this.registeredDexs.set('bluefin', new BluefinDexClient());
+		this.registeredDexs.set('hyperliquid', new HyperLiquidClient());
 	}
 
 	getDex(dexKey: string): AbstractDexClient {

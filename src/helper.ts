@@ -51,3 +51,7 @@ export function bigNumber2BigAndScaleDown(
 function scaleDownDecimals(number: Big, decimals: number) {
 	return number.div(new Big(10).pow(decimals));
 }
+
+export function calculateProfit(price: number, entryPrice: number): number {
+	return (price / entryPrice) * 100 - 100;
+}

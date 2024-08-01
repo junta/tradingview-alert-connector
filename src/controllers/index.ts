@@ -4,18 +4,26 @@ import { DexRegistry } from '../services/dexRegistry';
 import { CronJob } from 'cron';
 import { MarketData } from '../types';
 import * as fs from 'fs';
+import type { Position } from 'ccxt';
+import { Mutex } from 'async-mutex';
 
 const router: Router = express.Router();
-const dydxv4Client = new DexRegistry().getDex('dydxv4');
+const staticDexRegistry = new DexRegistry();
+const dydxv4Client = staticDexRegistry.getDex('dydxv4');
+const hyperliquidClient = staticDexRegistry.getDex('hyperliquid');
 
-let openedPositions: MarketData[] = [];
+let openedPositionsDydxv4: MarketData[] = [];
+let openedPositionsHyperliquid: Position[] = [];
+
+const mutexDydxv4 = new Mutex();
+const mutexHyperliquid = new Mutex();
 
 function writeNewEntries({
 	exchange,
 	positions
 }: {
-	exchange: string;
-	positions: MarketData[];
+	exchange: 'Dydxv4' | 'Hyperliquid';
+	positions: MarketData[] | Position[];
 }) {
 	const folderPath = './data/custom/exports/';
 	if (!fs.existsSync(folderPath)) {
@@ -24,37 +32,61 @@ function writeNewEntries({
 		});
 	}
 
-	const fullPath = folderPath + `/tradeHistory${exchange}.csv`;
+	const fullPath = folderPath + `/positions${exchange}.csv`;
 	if (!fs.existsSync(fullPath)) {
 		const headerString =
-			'market,status,side,size,maxSize,entryPrice,exitPrice,realizedPnl,unrealizedPnl,createdAt,createdAtHeight,closedAt,sumOpen,sumClose,netFunding,subaccountNumber';
+			'market,status,side,size,maxSize,entryPrice,exitPrice,createdAt,createdAtHeight,closedAt,sumOpen,sumClose,netFunding,subaccountNumber';
 		fs.writeFileSync(fullPath, headerString);
 	}
 
 	const records = fs.readFileSync(fullPath).toString('utf-8').split('\n');
 
 	const newRecords = [];
-	console.log(records);
 
 	for (const position of positions) {
-		const record: string[] = [
-			position.market || '',
-			position.status || '',
-			position.side || '',
-			position.size || '',
-			position.maxSize || '',
-			position.entryPrice || '',
-			position.exitPrice || '',
-			position.realizedPnl || '',
-			position.unrealizedPnl || '',
-			position.createdAt || '',
-			position.createdAtHeight || '',
-			position.closedAt || '',
-			position.sumOpen || '',
-			position.sumClose || '',
-			position.netFunding || '',
-			position.subaccountNumber?.toString() || ''
-		];
+		let record: string[];
+
+		if (exchange === 'Dydxv4') {
+			const typedPosition = position as MarketData;
+
+			record = [
+				typedPosition.market || '',
+				typedPosition.status || '',
+				typedPosition.side || '',
+				typedPosition.size || '',
+				typedPosition.maxSize || '',
+				typedPosition.entryPrice || '',
+				typedPosition.exitPrice || '',
+				typedPosition.createdAt || '',
+				typedPosition.createdAtHeight || '',
+				typedPosition.closedAt || '',
+				typedPosition.sumOpen || '',
+				typedPosition.sumClose || '',
+				typedPosition.netFunding || '',
+				typedPosition.subaccountNumber?.toString() || ''
+			];
+		}
+
+		if (exchange === 'Hyperliquid') {
+			const typedPosition = position as Position;
+
+			record = [
+				typedPosition.symbol || '',
+				'OPEN',
+				typedPosition.side || '',
+				typedPosition.contracts?.toString() || '',
+				'',
+				typedPosition.entryPrice?.toString() || '',
+				'',
+				'',
+				'',
+				'',
+				'',
+				'',
+				'',
+				''
+			];
+		}
 
 		if (records.includes(record.toString())) continue;
 
@@ -66,12 +98,52 @@ function writeNewEntries({
 	fs.appendFileSync(fullPath, appendString);
 }
 
+const getExchangeVariables = (exchange: string) => {
+	switch (exchange) {
+		case 'dydxv4':
+			return {
+				openedPositions: openedPositionsDydxv4,
+				mutex: mutexDydxv4
+			};
+		case 'hyperliquid':
+			return {
+				openedPositions: openedPositionsHyperliquid,
+				mutex: mutexHyperliquid
+			};
+	}
+};
+
+const dydxv4Updater = async () => {
+	try {
+		const { positions: dydxv4Positions } =
+			await dydxv4Client.getOpenedPositions();
+		openedPositionsDydxv4 = dydxv4Positions as unknown as MarketData[];
+		writeNewEntries({
+			exchange: 'Dydxv4',
+			positions: openedPositionsDydxv4
+		});
+	} catch {
+		console.log(`Dydxv4 is not working. Time: ${new Date()}`);
+	}
+};
+
+const hyperLiquidUpdater = async () => {
+	try {
+		const hyperliquidPositions = await hyperliquidClient.getOpenedPositions();
+		openedPositionsHyperliquid = hyperliquidPositions as unknown as Position[];
+		writeNewEntries({
+			exchange: 'Hyperliquid',
+			positions: openedPositionsHyperliquid
+		});
+	} catch {
+		console.log(`Hyperliquid is not working. Time: ${new Date()}`);
+	}
+};
+
 CronJob.from({
 	cronTime: process.env.UPDATE_POSITIONS_TIMER || '*/30 * * * * *', // Every 30 seconds
 	onTick: async () => {
-		const { positions: newPositions = [] } = await dydxv4Client.getOpenedPositions();
-		openedPositions = newPositions as unknown as MarketData[];
-		writeNewEntries({ exchange: 'Dydxv4', positions: openedPositions });
+		await Promise.all([dydxv4Updater(), hyperLiquidUpdater()]);
 	},
 	runOnInit: true,
 	start: true
@@ -85,7 +157,14 @@ router.get('/accounts', async (req, res) => {
 	console.log('Received GET request.');
 
 	const dexRegistry = new DexRegistry();
-	const dexNames = ['dydxv3', 'dydxv4', 'perpetual', 'gmx', 'bluefin'];
+	const dexNames = [
+		'dydxv3',
+		'dydxv4',
+		'perpetual',
+		'gmx',
+		'bluefin',
+		'hyperliquid'
+	];
 	const dexClients = dexNames.map((name) => dexRegistry.getDex(name));
 
 	try {
@@ -98,7 +177,8 @@ router.get('/accounts', async (req, res) => {
 			dYdX_v4: accountStatuses[1], // dydxv4
 			PerpetualProtocol: accountStatuses[2], // perpetual
 			GMX: accountStatuses[3], // gmx
-			Bluefin: accountStatuses[4] // bluefin
+			Bluefin: accountStatuses[4], // bluefin
+			HyperLiquid: accountStatuses[5] // hyperliquid
 		};
 		res.send(message);
 	} catch (error) {
@@ -129,7 +209,8 @@ router.post('/', async (req, res) => {
 	// TODO: add check if dex client isReady
 
 	try {
-		const result = await dexClient.placeOrder(req.body, openedPositions);
+		const { openedPositions, mutex } = getExchangeVariables(exchange);
+		await dexClient.placeOrder(req.body, openedPositions, mutex);
 
 		res.send('OK');
 		// checkAfterPosition(req.body);
@@ -138,8 +219,8 @@ router.post('/', async (req, res) => {
 	}
 });
 
-router.get('/debug-sentry', function mainHandler(req, res) {
-	throw new Error('My first Sentry error!');
-});
+// router.get('/debug-sentry', function mainHandler(req, res) {
+// 	throw new Error('My first Sentry error!');
+// });
 
 export default router;
