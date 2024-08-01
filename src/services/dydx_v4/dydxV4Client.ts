@@ -110,20 +110,16 @@ export class DydxV4Client extends AbstractDexClient {
 			// Dydxv4 group all positions in one position per symbol
 			const position = openedPositions.find((el) => el.market === market);
 
-			if (position) {
-				const profit = calculateProfit(price, parseFloat(position.entryPrice));
-				const minimumProfit =
-					parseFloat(process.env.MINIMUM_PROFIT_PERCENT) || 0;
+			if (!position) return;
 
-				if (profit < minimumProfit) return;
+			const profit = calculateProfit(price, parseFloat(position.entryPrice));
+			const minimumProfit = parseFloat(process.env.MINIMUM_PROFIT_PERCENT) || 0;
 
-				const sum = parseFloat(position.size);
+			if (profit < minimumProfit) return;
 
-				// If no opened positions
-				if (sum === 0) return;
+			const sum = parseFloat(position.size);
 
-				size = orderMode === 'full' ? sum : Math.max(size, sum);
-			}
+			size = orderMode === 'full' ? sum : Math.max(size, sum);
 		}
 
 		const postOnly = false;

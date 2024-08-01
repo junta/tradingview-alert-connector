@@ -92,20 +92,16 @@ export class HyperLiquidClient extends AbstractDexClient {
 			// Hyperliquid group all positions in one position per symbol
 			const position = openedPositions.find((el) => el.symbol === market);
 
-			if (position) {
-				const profit = calculateProfit(price, position.entryPrice);
-				const minimumProfit =
-					parseFloat(process.env.MINIMUM_PROFIT_PERCENT) || 0;
+			if (!position) return;
 
-				if (profit < minimumProfit) return;
+			const profit = calculateProfit(price, position.entryPrice);
+			const minimumProfit = parseFloat(process.env.MINIMUM_PROFIT_PERCENT) || 0;
 
-				const sum = position.contracts;
+			if (profit < minimumProfit) return;
 
-				// If no opened positions
-				if (sum === 0) return;
+			const sum = position.contracts;
 
-				size = orderMode === 'full' ? sum : Math.max(size, sum);
-			}
+			size = orderMode === 'full' ? sum : Math.max(size, sum);
 		}
 
 		const postOnly = false;
