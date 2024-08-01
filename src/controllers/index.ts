@@ -5,6 +5,7 @@ import { CronJob } from 'cron';
 import { MarketData } from '../types';
 import * as fs from 'fs';
 import type { Position } from 'ccxt';
+import { Mutex } from 'async-mutex';
 
 const router: Router = express.Router();
 const staticDexRegistry = new DexRegistry();
@@ -13,6 +14,9 @@ const hyperliquidClient = staticDexRegistry.getDex('hyperliquid');
 
 let openedPositionsDydxv4: MarketData[] = [];
 let openedPositionsHyperliquid: Position[] = [];
+
+const mutexDydxv4 = new Mutex();
+const mutexHyperliquid = new Mutex();
 
 function writeNewEntries({
 	exchange,
@@ -94,32 +98,52 @@ function writeNewEntries({
 	fs.appendFileSync(fullPath, appendString);
 }
 
-const getExchangeOpenedPositions = (exchange: string) => {
+const getExchangeVariables = (exchange: string) => {
 	switch (exchange) {
 		case 'dydxv4':
-			return openedPositionsDydxv4;
+			return {
+				openedPositions: openedPositionsDydxv4,
+				mutex: mutexDydxv4
+			};
 		case 'hyperliquid':
-			return openedPositionsHyperliquid;
+			return {
+				openedPositions: openedPositionsHyperliquid,
+				mutex: mutexHyperliquid
+			};
+	}
+};
+
+const dydxv4Updater = async () => {
+	try {
+		const { positions: dydxv4Positions } =
+			await dydxv4Client.getOpenedPositions();
+		openedPositionsDydxv4 = dydxv4Positions as unknown as MarketData[];
+		writeNewEntries({
+			exchange: 'Dydxv4',
+			positions: openedPositionsDydxv4
+		});
+	} catch {
+		console.log(`Dydxv4 is not working. Time: ${new Date()}`);
+	}
+};
+
+const hyperLiquidUpdater = async () => {
+	try {
+		const hyperliquidPositions = await hyperliquidClient.getOpenedPositions();
+		openedPositionsHyperliquid = hyperliquidPositions as unknown as Position[];
+		writeNewEntries({
+			exchange: 'Hyperliquid',
+			positions: openedPositionsHyperliquid
+		});
+	} catch {
+		console.log(`Hyperliquid is not working. Time: ${new Date()}`);
 	}
 };
 
 CronJob.from({
 	cronTime: process.env.UPDATE_POSITIONS_TIMER || '*/30 * * * * *', // Every 30 seconds
 	onTick: async () => {
-		const [{ positions: dydxv4Positions }, hyperliquidPositions] =
-			await Promise.all([
-				await dydxv4Client.getOpenedPositions(),
-				await hyperliquidClient.getOpenedPositions()
-			]);
-
-		openedPositionsDydxv4 = dydxv4Positions as unknown as MarketData[];
-		writeNewEntries({ exchange: 'Dydxv4', positions: openedPositionsDydxv4 });
-
-		openedPositionsHyperliquid = hyperliquidPositions as Position[];
-		writeNewEntries({
-			exchange: 'Hyperliquid',
-			positions: openedPositionsHyperliquid
-		});
+		await Promise.all([dydxv4Updater(), hyperLiquidUpdater()]);
 	},
 	runOnInit: true,
 	start: true
@@ -185,8 +209,8 @@ router.post('/', async (req, res) => {
 	// TODO: add check if dex client isReady
 
 	try {
-		const openedPosition = getExchangeOpenedPositions(exchange);
-		const result = await dexClient.placeOrder(req.body, openedPosition);
+		const { openedPositions, mutex } = getExchangeVariables(exchange);
+		await dexClient.placeOrder(req.body, openedPositions, mutex);
 
 		res.send('OK');
 		// checkAfterPosition(req.body);
@@ -195,8 +219,8 @@ router.post('/', async (req, res) => {
 	}
 });
 
-router.get('/debug-sentry', function mainHandler(req, res) {
-	throw new Error('My first Sentry error!');
-});
+// router.get('/debug-sentry', function mainHandler(req, res) {
+// 	throw new Error('My first Sentry error!');
+// });
 
 export default router;

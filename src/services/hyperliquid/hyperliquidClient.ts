@@ -1,22 +1,14 @@
 import * as ccxt from 'ccxt';
-import {
-	dydxV4OrderParams,
-	AlertObject,
-	OrderResult,
-	MarketData
-} from '../../types';
+import { dydxV4OrderParams, AlertObject, OrderResult } from '../../types';
 import {
 	_sleep,
 	calculateProfit,
 	doubleSizeIfReverseOrder
 } from '../../helper';
 import 'dotenv/config';
-import {
-	OrderSide,
-	OrderTimeInForce,
-	OrderType
-} from '@dydxprotocol/v4-client-js';
+import { OrderSide, OrderType } from '@dydxprotocol/v4-client-js';
 import { AbstractDexClient } from '../abstractDexClient';
+import { Mutex } from 'async-mutex';
 
 export class HyperLiquidClient extends AbstractDexClient {
 	private client: ccxt.hyperliquid;
@@ -25,10 +17,12 @@ export class HyperLiquidClient extends AbstractDexClient {
 		super();
 
 		if (
-			!process.env.HYPERLIQUID_PRIVATE_KEY &&
+			!process.env.HYPERLIQUID_PRIVATE_KEY ||
 			!process.env.HYPERLIQUID_WALLET_ADDRESS
 		) {
-			console.log('HyperLiquid Credentials is not set as environment variable');
+			console.log(
+				'HyperLiquid credentials are not set as environment variable'
+			);
 		}
 
 		this.client = new ccxt.hyperliquid({
@@ -45,7 +39,6 @@ export class HyperLiquidClient extends AbstractDexClient {
 			await this.client.fetchBalance();
 			return true;
 		} catch (e) {
-			console.log(e);
 			return false;
 		}
 	}
@@ -76,7 +69,8 @@ export class HyperLiquidClient extends AbstractDexClient {
 
 	async placeOrder(
 		alertMessage: AlertObject,
-		openedPositions: ccxt.Position[]
+		openedPositions: ccxt.Position[],
+		mutex: Mutex
 	) {
 		const orderParams = await this.buildOrderParams(alertMessage);
 
@@ -99,15 +93,11 @@ export class HyperLiquidClient extends AbstractDexClient {
 			const position = openedPositions.find((el) => el.symbol === market);
 
 			if (position) {
-				console.log(position);
 				const profit = calculateProfit(price, position.entryPrice);
-
-				console.log(profit);
 
 				if (profit < parseFloat(process.env.MINIMUM_PROFIT_PERCENT)) return;
 
 				const sum = position.contracts;
-				console.log(sum);
 
 				// If no opened positions
 				if (sum === 0) return;
@@ -128,6 +118,9 @@ export class HyperLiquidClient extends AbstractDexClient {
 		// For cancelling if needed
 		let orderId: string;
 
+		// This solution fixes problem of two parallel calls in exchange, which is not possible
+		const release = await mutex.acquire();
+
 		try {
 			const result = await this.client.createOrder(
 				market,
@@ -147,7 +140,10 @@ export class HyperLiquidClient extends AbstractDexClient {
 			orderId = result.id;
 		} catch (e) {
 			console.error(e);
+		} finally {
+			release();
 		}
+
 		await _sleep(fillWaitTime);
 
 		const isFilled = await this.isOrderFilled(orderId, market);

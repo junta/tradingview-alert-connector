@@ -20,14 +20,11 @@ import {
 	PositionData,
 	MarketData
 } from '../../types';
-import {
-	_sleep,
-	calculateProfit,
-	doubleSizeIfReverseOrder
-} from '../../helper';
+import { calculateProfit, doubleSizeIfReverseOrder } from '../../helper';
 import 'dotenv/config';
 import config from 'config';
 import { AbstractDexClient } from '../abstractDexClient';
+import { Mutex } from 'async-mutex';
 
 export class DydxV4Client extends AbstractDexClient {
 	async getIsAccountReady() {
@@ -88,7 +85,11 @@ export class DydxV4Client extends AbstractDexClient {
 		return orderParams;
 	}
 
-	async placeOrder(alertMessage: AlertObject, openedPositions: MarketData[]) {
+	async placeOrder(
+		alertMessage: AlertObject,
+		openedPositions: MarketData[],
+		mutex: Mutex
+	) {
 		const orderParams = await this.buildOrderParams(alertMessage);
 		const { client, subaccount } = await this.buildCompositeClient();
 
@@ -131,6 +132,9 @@ export class DydxV4Client extends AbstractDexClient {
 		const clientId = this.generateRandomInt32();
 		console.log('Client ID: ', clientId);
 
+		// This solution fixes problem of two parallel calls in exchange, which is not possible
+		const release = await mutex.acquire();
+
 		try {
 			const tx = await client.placeOrder(
 				subaccount,
@@ -149,18 +153,10 @@ export class DydxV4Client extends AbstractDexClient {
 			console.log('[Dydxv4] Transaction Result: ', tx);
 		} catch (e) {
 			console.error(e);
+		} finally {
+			release();
 		}
 
-		// This logic isn't needed since we are using TimeInForce GoodTilTime
-		// const isFilled = await this.isOrderFilled(String(clientId));
-		// if (!isFilled) {
-		// 	await client.cancelOrder(
-		// 		subaccount,
-		// 		clientId,
-		// 		OrderFlags.LONG_TERM,
-		// 		market
-		// 	);
-		// }
 		const orderResult: OrderResult = {
 			side: orderParams.side,
 			size: orderParams.size,
