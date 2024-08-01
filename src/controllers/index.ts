@@ -88,7 +88,11 @@ function writeNewEntries({
 			];
 		}
 
-		if (records.includes(record.toString())) continue;
+		if (
+			records.includes(record.toString()) ||
+			records.includes(`${record.toString()},`)
+		)
+			continue;
 
 		newRecords.push(record);
 	}
