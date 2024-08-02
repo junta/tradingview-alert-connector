@@ -96,6 +96,10 @@ export class DydxV4Client extends AbstractDexClient {
 		const market = orderParams.market;
 		const type = OrderType.LIMIT;
 		const side = orderParams.side;
+		const mode = process.env.DYDX_V4_MODE || '';
+
+		if (side === OrderSide.BUY && mode.toLowerCase() === 'onlysell') return;
+
 		const timeInForce = OrderTimeInForce.GTT;
 		const execution = OrderExecution.DEFAULT;
 		const slippagePercentage = parseFloat(alertMessage.slippagePercentage); // Get from alert

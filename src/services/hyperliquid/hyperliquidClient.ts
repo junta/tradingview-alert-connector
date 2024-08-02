@@ -77,6 +77,10 @@ export class HyperLiquidClient extends AbstractDexClient {
 		const market = orderParams.market;
 		const type = OrderType.LIMIT;
 		const side = orderParams.side;
+		const mode = process.env.HYPERLIQUID_MODE || '';
+
+		if (side === OrderSide.BUY && mode.toLowerCase() === 'onlysell') return;
+
 		const timeInForce = 'gtc';
 		const slippagePercentage = parseFloat(alertMessage.slippagePercentage); // Get from alert
 		const vaultAddress = process.env.HYPERLIQUID_VAULT_ADDRESS;
