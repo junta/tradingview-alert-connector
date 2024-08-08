@@ -28,8 +28,18 @@ export const ExchangeRouterAbi = [
 				type: 'address'
 			},
 			{
+				internalType: 'contract IShiftHandler',
+				name: '_shiftHandler',
+				type: 'address'
+			},
+			{
 				internalType: 'contract IOrderHandler',
 				name: '_orderHandler',
+				type: 'address'
+			},
+			{
+				internalType: 'contract IExternalHandler',
+				name: '_externalHandler',
 				type: 'address'
 			}
 		],
@@ -110,6 +120,11 @@ export const ExchangeRouterAbi = [
 		type: 'error'
 	},
 	{
+		inputs: [{ internalType: 'uint256', name: 'value', type: 'uint256' }],
+		name: 'InvalidClaimableFactor',
+		type: 'error'
+	},
+	{
 		inputs: [
 			{ internalType: 'address', name: 'market', type: 'address' },
 			{ internalType: 'address', name: 'token', type: 'address' },
@@ -178,6 +193,13 @@ export const ExchangeRouterAbi = [
 	{
 		inputs: [{ internalType: 'bytes32', name: 'key', type: 'bytes32' }],
 		name: 'cancelOrder',
+		outputs: [],
+		stateMutability: 'payable',
+		type: 'function'
+	},
+	{
+		inputs: [{ internalType: 'bytes32', name: 'key', type: 'bytes32' }],
+		name: 'cancelShift',
 		outputs: [],
 		stateMutability: 'payable',
 		type: 'function'
@@ -294,6 +316,11 @@ export const ExchangeRouterAbi = [
 							{ internalType: 'address', name: 'receiver', type: 'address' },
 							{
 								internalType: 'address',
+								name: 'cancellationReceiver',
+								type: 'address'
+							},
+							{
+								internalType: 'address',
 								name: 'callbackContract',
 								type: 'address'
 							},
@@ -310,7 +337,7 @@ export const ExchangeRouterAbi = [
 							},
 							{ internalType: 'address[]', name: 'swapPath', type: 'address[]' }
 						],
-						internalType: 'struct BaseOrderUtils.CreateOrderParamsAddresses',
+						internalType: 'struct IBaseOrderUtils.CreateOrderParamsAddresses',
 						name: 'addresses',
 						type: 'tuple'
 					},
@@ -352,7 +379,7 @@ export const ExchangeRouterAbi = [
 								type: 'uint256'
 							}
 						],
-						internalType: 'struct BaseOrderUtils.CreateOrderParamsNumbers',
+						internalType: 'struct IBaseOrderUtils.CreateOrderParamsNumbers',
 						name: 'numbers',
 						type: 'tuple'
 					},
@@ -372,14 +399,42 @@ export const ExchangeRouterAbi = [
 						name: 'shouldUnwrapNativeToken',
 						type: 'bool'
 					},
+					{ internalType: 'bool', name: 'autoCancel', type: 'bool' },
 					{ internalType: 'bytes32', name: 'referralCode', type: 'bytes32' }
 				],
-				internalType: 'struct BaseOrderUtils.CreateOrderParams',
+				internalType: 'struct IBaseOrderUtils.CreateOrderParams',
 				name: 'params',
 				type: 'tuple'
 			}
 		],
 		name: 'createOrder',
+		outputs: [{ internalType: 'bytes32', name: '', type: 'bytes32' }],
+		stateMutability: 'payable',
+		type: 'function'
+	},
+	{
+		inputs: [
+			{
+				components: [
+					{ internalType: 'address', name: 'receiver', type: 'address' },
+					{
+						internalType: 'address',
+						name: 'callbackContract',
+						type: 'address'
+					},
+					{ internalType: 'address', name: 'uiFeeReceiver', type: 'address' },
+					{ internalType: 'address', name: 'fromMarket', type: 'address' },
+					{ internalType: 'address', name: 'toMarket', type: 'address' },
+					{ internalType: 'uint256', name: 'minMarketTokens', type: 'uint256' },
+					{ internalType: 'uint256', name: 'executionFee', type: 'uint256' },
+					{ internalType: 'uint256', name: 'callbackGasLimit', type: 'uint256' }
+				],
+				internalType: 'struct ShiftUtils.CreateShiftParams',
+				name: 'params',
+				type: 'tuple'
+			}
+		],
+		name: 'createShift',
 		outputs: [{ internalType: 'bytes32', name: '', type: 'bytes32' }],
 		stateMutability: 'payable',
 		type: 'function'
@@ -459,6 +514,95 @@ export const ExchangeRouterAbi = [
 			{ internalType: 'contract EventEmitter', name: '', type: 'address' }
 		],
 		stateMutability: 'view',
+		type: 'function'
+	},
+	{
+		inputs: [
+			{
+				components: [
+					{ internalType: 'address', name: 'receiver', type: 'address' },
+					{
+						internalType: 'address',
+						name: 'callbackContract',
+						type: 'address'
+					},
+					{ internalType: 'address', name: 'uiFeeReceiver', type: 'address' },
+					{ internalType: 'address', name: 'market', type: 'address' },
+					{
+						internalType: 'address[]',
+						name: 'longTokenSwapPath',
+						type: 'address[]'
+					},
+					{
+						internalType: 'address[]',
+						name: 'shortTokenSwapPath',
+						type: 'address[]'
+					},
+					{
+						internalType: 'uint256',
+						name: 'minLongTokenAmount',
+						type: 'uint256'
+					},
+					{
+						internalType: 'uint256',
+						name: 'minShortTokenAmount',
+						type: 'uint256'
+					},
+					{
+						internalType: 'bool',
+						name: 'shouldUnwrapNativeToken',
+						type: 'bool'
+					},
+					{ internalType: 'uint256', name: 'executionFee', type: 'uint256' },
+					{ internalType: 'uint256', name: 'callbackGasLimit', type: 'uint256' }
+				],
+				internalType: 'struct WithdrawalUtils.CreateWithdrawalParams',
+				name: 'params',
+				type: 'tuple'
+			},
+			{
+				components: [
+					{ internalType: 'address[]', name: 'tokens', type: 'address[]' },
+					{ internalType: 'address[]', name: 'providers', type: 'address[]' },
+					{ internalType: 'bytes[]', name: 'data', type: 'bytes[]' }
+				],
+				internalType: 'struct OracleUtils.SetPricesParams',
+				name: 'oracleParams',
+				type: 'tuple'
+			}
+		],
+		name: 'executeAtomicWithdrawal',
+		outputs: [],
+		stateMutability: 'payable',
+		type: 'function'
+	},
+	{
+		inputs: [],
+		name: 'externalHandler',
+		outputs: [
+			{ internalType: 'contract IExternalHandler', name: '', type: 'address' }
+		],
+		stateMutability: 'view',
+		type: 'function'
+	},
+	{
+		inputs: [
+			{
+				internalType: 'address[]',
+				name: 'externalCallTargets',
+				type: 'address[]'
+			},
+			{
+				internalType: 'bytes[]',
+				name: 'externalCallDataList',
+				type: 'bytes[]'
+			},
+			{ internalType: 'address[]', name: 'refundTokens', type: 'address[]' },
+			{ internalType: 'address[]', name: 'refundReceivers', type: 'address[]' }
+		],
+		name: 'makeExternalCalls',
+		outputs: [],
+		stateMutability: 'nonpayable',
 		type: 'function'
 	},
 	{
@@ -542,6 +686,15 @@ export const ExchangeRouterAbi = [
 		type: 'function'
 	},
 	{
+		inputs: [],
+		name: 'shiftHandler',
+		outputs: [
+			{ internalType: 'contract IShiftHandler', name: '', type: 'address' }
+		],
+		stateMutability: 'view',
+		type: 'function'
+	},
+	{
 		inputs: [
 			{ internalType: 'bytes32', name: 'key', type: 'bytes32' },
 			{
@@ -559,7 +712,9 @@ export const ExchangeRouterAbi = [
 						internalType: 'struct Price.Props[]',
 						name: 'primaryPrices',
 						type: 'tuple[]'
-					}
+					},
+					{ internalType: 'uint256', name: 'minTimestamp', type: 'uint256' },
+					{ internalType: 'uint256', name: 'maxTimestamp', type: 'uint256' }
 				],
 				internalType: 'struct OracleUtils.SimulatePricesParams',
 				name: 'simulatedOracleParams',
@@ -589,7 +744,9 @@ export const ExchangeRouterAbi = [
 						internalType: 'struct Price.Props[]',
 						name: 'primaryPrices',
 						type: 'tuple[]'
-					}
+					},
+					{ internalType: 'uint256', name: 'minTimestamp', type: 'uint256' },
+					{ internalType: 'uint256', name: 'maxTimestamp', type: 'uint256' }
 				],
 				internalType: 'struct OracleUtils.SimulatePricesParams',
 				name: 'simulatedOracleParams',
@@ -619,11 +776,50 @@ export const ExchangeRouterAbi = [
 						internalType: 'struct Price.Props[]',
 						name: 'primaryPrices',
 						type: 'tuple[]'
-					}
+					},
+					{ internalType: 'uint256', name: 'minTimestamp', type: 'uint256' },
+					{ internalType: 'uint256', name: 'maxTimestamp', type: 'uint256' }
 				],
 				internalType: 'struct OracleUtils.SimulatePricesParams',
 				name: 'simulatedOracleParams',
 				type: 'tuple'
+			}
+		],
+		name: 'simulateExecuteShift',
+		outputs: [],
+		stateMutability: 'payable',
+		type: 'function'
+	},
+	{
+		inputs: [
+			{ internalType: 'bytes32', name: 'key', type: 'bytes32' },
+			{
+				components: [
+					{
+						internalType: 'address[]',
+						name: 'primaryTokens',
+						type: 'address[]'
+					},
+					{
+						components: [
+							{ internalType: 'uint256', name: 'min', type: 'uint256' },
+							{ internalType: 'uint256', name: 'max', type: 'uint256' }
+						],
+						internalType: 'struct Price.Props[]',
+						name: 'primaryPrices',
+						type: 'tuple[]'
+					},
+					{ internalType: 'uint256', name: 'minTimestamp', type: 'uint256' },
+					{ internalType: 'uint256', name: 'maxTimestamp', type: 'uint256' }
+				],
+				internalType: 'struct OracleUtils.SimulatePricesParams',
+				name: 'simulatedOracleParams',
+				type: 'tuple'
+			},
+			{
+				internalType: 'enum ISwapPricingUtils.SwapPricingType',
+				name: 'swapPricingType',
+				type: 'uint8'
 			}
 		],
 		name: 'simulateExecuteWithdrawal',
@@ -637,7 +833,8 @@ export const ExchangeRouterAbi = [
 			{ internalType: 'uint256', name: 'sizeDeltaUsd', type: 'uint256' },
 			{ internalType: 'uint256', name: 'acceptablePrice', type: 'uint256' },
 			{ internalType: 'uint256', name: 'triggerPrice', type: 'uint256' },
-			{ internalType: 'uint256', name: 'minOutputAmount', type: 'uint256' }
+			{ internalType: 'uint256', name: 'minOutputAmount', type: 'uint256' },
+			{ internalType: 'bool', name: 'autoCancel', type: 'bool' }
 		],
 		name: 'updateOrder',
 		outputs: [],
