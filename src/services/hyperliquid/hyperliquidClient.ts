@@ -199,6 +199,10 @@ export class HyperLiquidClient extends AbstractDexClient {
 	};
 
 	getOpenedPositions = async (): Promise<ccxt.Position[]> => {
-		return await this.client.fetchPositions();
+		const vaultAddress = process.env.HYPERLIQUID_VAULT_ADDRESS;
+
+		return this.client.fetchPositions(undefined, {
+			...(vaultAddress && { user: vaultAddress })
+		});
 	};
 }
