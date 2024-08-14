@@ -2,6 +2,7 @@ export * from './dydx/client';
 export * from './dydx/getFill';
 export * from './dydx/getAccount';
 export * from './dydx/getOrder';
+export * from './dydx/getTransfers';
 export * from './dydx/createOrder';
 export * from './dydx/buildOrderParams';
 export * from './dydx/getFills';
