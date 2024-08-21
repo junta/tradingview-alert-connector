@@ -23,6 +23,7 @@ export class HyperLiquidClient extends AbstractDexClient {
 			console.log(
 				'HyperLiquid credentials are not set as environment variable'
 			);
+
 		}
 
 		this.client = new ccxt.hyperliquid({
@@ -46,7 +47,7 @@ export class HyperLiquidClient extends AbstractDexClient {
 	async buildOrderParams(alertMessage: AlertObject) {
 		const orderSide =
 			alertMessage.order == 'buy' ? OrderSide.BUY : OrderSide.SELL;
-
+		
 		const latestPrice = alertMessage.price;
 		console.log('latestPrice', latestPrice);
 
@@ -78,6 +79,7 @@ export class HyperLiquidClient extends AbstractDexClient {
 		const type = OrderType.LIMIT;
 		const side = orderParams.side;
 		const mode = process.env.HYPERLIQUID_MODE || '';
+		const direction = alertMessage.direction == 'short' ? OrderSide.SELL : OrderSide.BUY;
 
 		if (side === OrderSide.BUY && mode.toLowerCase() === 'onlysell') return;
 
@@ -92,7 +94,7 @@ export class HyperLiquidClient extends AbstractDexClient {
 
 		let size = orderParams.size;
 
-		if (side === OrderSide.SELL) {
+		if (side === OrderSide.SELL && direction === OrderSide.BUY || side === OrderSide.BUY && direction === OrderSide.SELL) {
 			// Hyperliquid group all positions in one position per symbol
 			const position = openedPositions.find((el) => el.symbol === market);
 
@@ -101,12 +103,22 @@ export class HyperLiquidClient extends AbstractDexClient {
 			const profit = calculateProfit(price, position.entryPrice);
 			const minimumProfit = parseFloat(process.env.MINIMUM_PROFIT_PERCENT) || 0;
 
-			if (profit < minimumProfit) return;
+			if (direction === OrderSide.BUY && profit < minimumProfit || direction === OrderSide.SELL && (-1 * profit) < minimumProfit ) {
+				console.log("Order is ignored because profit level not reached: current profit ${profit}, direction ${direction}");
+				return;
+			}
 
-			const sum = position.contracts;
+			const sum = Math.abs(position.contracts);
 
 			size = orderMode === 'full' ? sum : Math.max(size, sum);
 		}
+		else if(orderMode === 'full')
+		{
+			const position = openedPositions.find((el) => el.symbol === market);
+			if(position != null && (side === OrderSide.SELL && position.contracts > 0 || side === OrderSide.BUY && position.contracts < 0))
+				size = Math.abs(position.contracts);
+		}
+
 
 		const postOnly = false;
 		const reduceOnly = false;

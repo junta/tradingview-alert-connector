@@ -49,11 +49,11 @@ export const validateAlert = async (
 
 	//check position
 	if (
-		alertMessage.position != 'long' &&
-		alertMessage.position != 'short' &&
-		alertMessage.position != 'flat'
+		alertMessage.direction != 'long' &&
+		alertMessage.direction != 'short' &&
+		alertMessage.direction != 'flat'
 	) {
-		console.error('Position field of tradingview alert is not correct.');
+		console.error('Direction field of tradingview alert is not correct.');
 		return false;
 	}
 
@@ -79,7 +79,7 @@ export const validateAlert = async (
 	}
 
 	if (
-		alertMessage.position == 'flat' &&
+		alertMessage.direction == 'flat' &&
 		rootData[alertMessage.strategy].isFirstOrder == 'true'
 	) {
 		console.log(
