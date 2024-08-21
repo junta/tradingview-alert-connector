@@ -17,12 +17,12 @@ export type AlertObject = {
 	sizeByLeverage?: number;
 	order: string;
 	price: number;
-	position: string;
 	reverse: boolean;
 	passphrase?: string;
 	collateral?: string;
 	slippagePercentage?: string;
 	orderMode?: '' | 'full';
+	direction?: string;
 };
 
 export type dydxOrderParams = {
