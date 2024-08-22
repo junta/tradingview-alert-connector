@@ -78,15 +78,15 @@ export const validateAlert = async (
 		db.push(isFirstOrderPath, 'true');
 	}
 
-	if (
-		alertMessage.direction == 'flat' &&
-		rootData[alertMessage.strategy].isFirstOrder == 'true'
-	) {
-		console.log(
-			'this alert is first and close order, so does not create a new order.'
-		);
-		return false;
-	}
+//	if (
+//		alertMessage.direction == 'flat' &&
+//		rootData[alertMessage.strategy].isFirstOrder == 'true'
+//	) {
+//		console.log(
+//			'this alert is first and close order, so does not create a new order.'
+//		);
+//		return false;
+//	}
 
 	return true;
 };

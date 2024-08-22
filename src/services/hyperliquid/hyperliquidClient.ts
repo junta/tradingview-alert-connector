@@ -79,7 +79,7 @@ export class HyperLiquidClient extends AbstractDexClient {
 		const type = OrderType.LIMIT;
 		const side = orderParams.side;
 		const mode = process.env.HYPERLIQUID_MODE || '';
-		const direction = alertMessage.direction == 'short' ? OrderSide.SELL : OrderSide.BUY;
+		const direction = alertMessage.direction;
 
 		if (side === OrderSide.BUY && mode.toLowerCase() === 'onlysell') return;
 
@@ -94,16 +94,19 @@ export class HyperLiquidClient extends AbstractDexClient {
 
 		let size = orderParams.size;
 
-		if (side === OrderSide.SELL && direction === OrderSide.BUY || side === OrderSide.BUY && direction === OrderSide.SELL) {
+		if (side === OrderSide.SELL && direction === 'long' || side === OrderSide.BUY && direction === 'short') {
 			// Hyperliquid group all positions in one position per symbol
 			const position = openedPositions.find((el) => el.symbol === market);
 
-			if (!position) return;
+			if (!position) {
+				console.log("order is ignored because position not exists");
+				return;
+			}
 
 			const profit = calculateProfit(price, position.entryPrice);
 			const minimumProfit = parseFloat(process.env.MINIMUM_PROFIT_PERCENT) || 0;
 
-			if (direction === OrderSide.BUY && profit < minimumProfit || direction === OrderSide.SELL && (-1 * profit) < minimumProfit ) {
+			if (direction === 'long' && profit < minimumProfit || direction === 'short' && (-1 * profit) < minimumProfit ) {
 				console.log("Order is ignored because profit level not reached: current profit ${profit}, direction ${direction}");
 				return;
 			}
