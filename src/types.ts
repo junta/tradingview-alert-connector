@@ -22,6 +22,7 @@ export type AlertObject = {
 	collateral?: string;
 	slippagePercentage?: string;
 	orderMode?: '' | 'full';
+	newPositionSize: number;
 	direction?: string;
 };
 

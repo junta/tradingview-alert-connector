@@ -87,6 +87,7 @@ export class HyperLiquidClient extends AbstractDexClient {
 		const slippagePercentage = parseFloat(alertMessage.slippagePercentage); // Get from alert
 		const vaultAddress = process.env.HYPERLIQUID_VAULT_ADDRESS;
 		const orderMode = alertMessage.orderMode || '';
+		const newPositionSize = alertMessage.newPositionSize;
 		const price =
 			side == OrderSide.BUY
 				? orderParams.price * ((100 + slippagePercentage) / 100)
@@ -113,15 +114,25 @@ export class HyperLiquidClient extends AbstractDexClient {
 
 			const sum = Math.abs(position.contracts);
 
-			size = orderMode === 'full' ? sum : Math.max(size, sum);
+			size = orderMode === 'full' || newPositionSize === 0 ? sum : Math.max(size, sum);
 		}
-		else if(orderMode === 'full')
+		else if(orderMode === 'full' || newPositionSize == 0)
 		{
 			const position = openedPositions.find((el) => el.symbol === market);
-			if(position != null && (side === OrderSide.SELL && position.contracts > 0 || side === OrderSide.BUY && position.contracts < 0))
-				size = Math.abs(position.contracts);
+			if(!position)
+			{
+				if(newPositionSize == 0)
+				{
+					console.log("ignore this order because new position size is 0 and current position not exists");
+					return;
+				}
+			}
+			else
+			{
+				if(side === OrderSide.SELL && position.contracts > 0 || side === OrderSide.BUY && position.contracts < 0)
+					size = Math.abs(position.contracts);
+			}
 		}
-
 
 		const postOnly = false;
 		const reduceOnly = false;
@@ -136,7 +147,7 @@ export class HyperLiquidClient extends AbstractDexClient {
 		let orderId: string;
 
 		// This solution fixes problem of two parallel calls in exchange, which is not possible
-		const release = await mutex.acquire();
+//		const release = await mutex.acquire();
 
 		try {
 			const result = await this.client.createOrder(
@@ -158,7 +169,7 @@ export class HyperLiquidClient extends AbstractDexClient {
 		} catch (e) {
 			console.error(e);
 		} finally {
-			release();
+//			release();
 		}
 
 		await _sleep(fillWaitTime);
