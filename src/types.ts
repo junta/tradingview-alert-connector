@@ -24,6 +24,7 @@ export type AlertObject = {
 	orderMode?: '' | 'full';
 	newPositionSize: number;
 	direction?: string;
+	minProfit?: number;
 };
 
 export type dydxOrderParams = {

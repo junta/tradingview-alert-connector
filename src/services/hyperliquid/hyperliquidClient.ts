@@ -105,7 +105,7 @@ export class HyperLiquidClient extends AbstractDexClient {
 			}
 
 			const profit = calculateProfit(price, position.entryPrice);
-			const minimumProfit = parseFloat(process.env.MINIMUM_PROFIT_PERCENT) || 0;
+			const minimumProfit = alertMessage.minProfit ?? parseFloat(process.env.MINIMUM_PROFIT_PERCENT);
 
 			if (direction === 'long' && profit < minimumProfit || direction === 'short' && (-1 * profit) < minimumProfit ) {
 				console.log("Order is ignored because profit level not reached: current profit ${profit}, direction ${direction}");
