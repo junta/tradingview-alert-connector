@@ -7,7 +7,7 @@ export * from './dydx/createOrder';
 export * from './dydx/buildOrderParams';
 export * from './dydx/getFills';
 export * from './dydx/getOrders';
-export * from './dydx/getPnl'
+export * from './dydx/getPnl';
 export * from './perp/client';
 export * from './perp/createOrder';
 export * from './perp/buildOrderParams';
