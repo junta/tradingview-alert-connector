@@ -117,7 +117,7 @@ export class DydxV4Client extends AbstractDexClient {
 			if (!position) return;
 
 			const profit = calculateProfit(price, parseFloat(position.entryPrice));
-			const minimumProfit = parseFloat(process.env.MINIMUM_PROFIT_PERCENT) || 0;
+			const minimumProfit = alertMessage.minProfit ?? parseFloat(process.env.MINIMUM_PROFIT_PERCENT);
 
 			if (profit < minimumProfit) return;
 
