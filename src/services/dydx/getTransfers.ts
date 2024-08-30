@@ -7,6 +7,7 @@ export const getTransfers = async () => {
 	const transfersResponse = await connector.client.private.getTransfers(
 		{
 			limit: 100,
+			createdBeforeOrAt: new Date().toISOString()
 		},
 	  );
 	
