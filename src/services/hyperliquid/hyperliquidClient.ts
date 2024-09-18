@@ -114,7 +114,7 @@ export class HyperLiquidClient extends AbstractDexClient {
 
 			const sum = Math.abs(position.contracts);
 
-			size = orderMode === 'full' || newPositionSize === 0 ? sum : Math.max(size, sum);
+			size = orderMode === 'full' || newPositionSize == 0 ? sum : Math.max(size, sum);
 		}
 		else if(orderMode === 'full' || newPositionSize == 0)
 		{
