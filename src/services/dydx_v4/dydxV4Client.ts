@@ -97,6 +97,7 @@ export class DydxV4Client extends AbstractDexClient {
 		const type = OrderType.LIMIT;
 		const side = orderParams.side;
 		const mode = process.env.DYDX_V4_MODE || '';
+		const direction = alertMessage.direction;
 
 		if (side === OrderSide.BUY && mode.toLowerCase() === 'onlysell') return;
 
@@ -104,28 +105,52 @@ export class DydxV4Client extends AbstractDexClient {
 		const execution = OrderExecution.DEFAULT;
 		const slippagePercentage = parseFloat(alertMessage.slippagePercentage); // Get from alert
 		const orderMode = alertMessage.orderMode || '';
+		const newPositionSize = alertMessage.newPositionSize;
+
 		const price =
 			side == OrderSide.BUY
 				? orderParams.price * ((100 + slippagePercentage) / 100)
 				: orderParams.price * ((100 - slippagePercentage) / 100);
 		let size = orderParams.size;
 
-		if (side === OrderSide.SELL) {
-			// Dydxv4 group all positions in one position per symbol
+		if (side === OrderSide.SELL && direction === 'long' || side === OrderSide.BUY && direction === 'short') {
+			// dydx group all positions in one position per symbol
 			const position = openedPositions.find((el) => el.market === market);
 
-			if (!position) return;
+			if (!position) {
+				console.log("order is ignored because position not exists");
+				return;
+			}
 
-			const profit = calculateProfit(price, parseFloat(position.entryPrice));
+			const profit = calculateProfit(price, position.entryPrice);
 			const minimumProfit = alertMessage.minProfit ?? parseFloat(process.env.MINIMUM_PROFIT_PERCENT);
 
-			if (profit < minimumProfit) return;
+			if (direction === 'long' && profit < minimumProfit || direction === 'short' && (-1 * profit) < minimumProfit ) {
+				console.log("Order is ignored because profit level not reached: current profit ${profit}, direction ${direction}");
+				return;
+			}
 
-			const sum = parseFloat(position.size);
+			const sum = Math.abs(position.size);
 
-			size = orderMode === 'full' ? sum : Math.max(size, sum);
+			size = orderMode === 'full' || newPositionSize == 0 ? sum : Math.max(size, sum);
 		}
-
+		else if(orderMode === 'full' || newPositionSize == 0)
+		{
+			const position = openedPositions.find((el) => el.market === market);
+			if(!position)
+			{
+				if(newPositionSize == 0)
+				{
+					console.log("ignore this order because new position size is 0 and current position not exists");
+					return;
+				}
+			}
+			else
+			{
+				if(side === OrderSide.SELL && position.size > 0 || side === OrderSide.BUY && position.size < 0)
+					size = Math.abs(position.size);
+			}
+		}
 		const postOnly = false;
 		const reduceOnly = false;
 

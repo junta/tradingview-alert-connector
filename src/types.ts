@@ -85,9 +85,9 @@ export interface MarketData {
 	market: string;
 	status: PositionStatus;
 	side: string;
-	size: string;
+	size: number;
 	maxSize: string;
-	entryPrice: string;
+	entryPrice: number;
 	exitPrice: string | null;
 	realizedPnl: string;
 	unrealizedPnl: string;
