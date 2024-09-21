@@ -132,7 +132,7 @@ export class DydxV4Client extends AbstractDexClient {
 
 			const sum = Math.abs(position.size);
 
-			size = orderMode === 'full' || newPositionSize == 0 ? sum : Math.max(size, sum);
+			size = orderMode === 'full' || newPositionSize == 0 ? sum : Math.min(size, sum);
 		}
 		else if(orderMode === 'full' || newPositionSize == 0)
 		{
