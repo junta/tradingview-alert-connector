@@ -36,7 +36,7 @@ const myReferralCode =
 	'0x74765f616c6572745f636f6e6e6563746f720000000000000000000000000000';
 
 export class GmxClient extends AbstractDexClient {
-	private signer;
+	private signer: ethers.Wallet;
 	constructor() {
 		super();
 		this.signer = this.getClient();
@@ -286,9 +286,11 @@ export class GmxClient extends AbstractDexClient {
 		}
 
 		multiCallParams.push(createOrderData);
+		const gasPrice = this.getGasPrice();
 
 		const tx = await gmxContract.multicall(multiCallParams, {
-			value: executionFee
+			value: executionFee,
+			gasPrice: gasPrice
 		});
 		console.log('Order created successfully:', tx);
 

@@ -11,8 +11,8 @@ Perpetual:
     slippage: 0.05
 GMX:
   Network:
-    host: http://127.0.0.1:8545
-    # host: https://arbitrum.llamarpc.com
+    # host: http://127.0.0.1:8545
+    host: https://arbitrum.llamarpc.com
 DydxV4:
   IndexerConfig:
     httpsEndpoint: https://indexer.dydx.trade
