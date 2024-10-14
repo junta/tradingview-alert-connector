@@ -104,7 +104,7 @@ export class HyperLiquidClient extends AbstractDexClient {
 				return;
 			}
 
-			const profit = calculateProfit(price, position.entryPrice);
+			const profit = calculateProfit(orderParams.price, position.entryPrice);
 			const minimumProfit = alertMessage.minProfit ?? parseFloat(process.env.MINIMUM_PROFIT_PERCENT);
 
 			if (direction === 'long' && profit < minimumProfit || direction === 'short' && (-1 * profit) < minimumProfit ) {
