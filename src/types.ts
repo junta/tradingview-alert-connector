@@ -17,12 +17,14 @@ export type AlertObject = {
 	sizeByLeverage?: number;
 	order: string;
 	price: number;
-	position: string;
 	reverse: boolean;
 	passphrase?: string;
 	collateral?: string;
 	slippagePercentage?: string;
 	orderMode?: '' | 'full';
+	newPositionSize: number;
+	direction?: string;
+	minProfit?: number;
 };
 
 export type dydxOrderParams = {
@@ -83,9 +85,9 @@ export interface MarketData {
 	market: string;
 	status: PositionStatus;
 	side: string;
-	size: string;
+	size: number;
 	maxSize: string;
-	entryPrice: string;
+	entryPrice: number;
 	exitPrice: string | null;
 	realizedPnl: string;
 	unrealizedPnl: string;
