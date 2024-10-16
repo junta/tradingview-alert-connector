@@ -1,5 +1,6 @@
 import { AbstractDexClient } from './abstractDexClient';
 import { BluefinDexClient } from './bluefin/bluefinClient';
+import { BybitClient } from './bybit/bybitClient';
 import { DydxV3Client } from './dydx_v3/dydxV3Client';
 import { DydxV4Client } from './dydx_v4/dydxV4Client';
 import { GmxClient } from './gmx/gmxClient';
@@ -18,6 +19,7 @@ export class DexRegistry {
 		this.registeredDexs.set('gmx', new GmxClient());
 		this.registeredDexs.set('bluefin', new BluefinDexClient());
 		this.registeredDexs.set('hyperliquid', new HyperLiquidClient());
+		this.registeredDexs.set('bybit', new BybitClient());
 	}
 
 	getDex(dexKey: string): AbstractDexClient {

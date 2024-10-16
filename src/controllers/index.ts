@@ -11,18 +11,21 @@ const router: Router = express.Router();
 const staticDexRegistry = new DexRegistry();
 const dydxv4Client = staticDexRegistry.getDex('dydxv4');
 const hyperliquidClient = staticDexRegistry.getDex('hyperliquid');
+const bybitClient = staticDexRegistry.getDex('bybit');
 
 let openedPositionsDydxv4: MarketData[] = [];
 let openedPositionsHyperliquid: Position[] = [];
+let openedPositionsBybit: Position[] = [];
 
 const mutexDydxv4 = new Mutex();
 const mutexHyperliquid = new Mutex();
+const mutexBybit = new Mutex();
 
 function writeNewEntries({
 	exchange,
 	positions
 }: {
-	exchange: 'Dydxv4' | 'Hyperliquid';
+	exchange: 'Dydxv4' | 'Hyperliquid' | 'Bybit';
 	positions: MarketData[] | Position[];
 }) {
 	const folderPath = './data/custom/exports/';
@@ -67,7 +70,7 @@ function writeNewEntries({
 			];
 		}
 
-		if (exchange === 'Hyperliquid') {
+		if (exchange === 'Hyperliquid' || exchange === 'Bybit') {
 			const typedPosition = position as Position;
 
 			record = [
@@ -114,6 +117,11 @@ const getExchangeVariables = (exchange: string) => {
 				openedPositions: openedPositionsHyperliquid,
 				mutex: mutexHyperliquid
 			};
+		case 'bybit':
+			return {
+				openedPositions: openedPositionsBybit,
+				mutex: mutexBybit
+			};
 	}
 };
 
@@ -144,10 +152,23 @@ const hyperLiquidUpdater = async () => {
 	}
 };
 
+const bybitUpdater = async () => {
+	try {
+		const bybitPositions = await bybitClient.getOpenedPositions();
+		openedPositionsBybit = bybitPositions as unknown as Position[];
+		writeNewEntries({
+			exchange: 'Bybit',
+			positions: openedPositionsBybit
+		});
+	} catch {
+		console.log(`Bybit is not working. Time: ${new Date()}`);
+	}
+};
+
 CronJob.from({
 	cronTime: process.env.UPDATE_POSITIONS_TIMER || '*/30 * * * * *', // Every 30 seconds
 	onTick: async () => {
-		await Promise.all([dydxv4Updater(), hyperLiquidUpdater()]);
+		await Promise.all([dydxv4Updater(), hyperLiquidUpdater(), bybitUpdater()]);
 	},
 	runOnInit: true,
 	start: true
@@ -167,7 +188,8 @@ router.get('/accounts', async (req, res) => {
 		'perpetual',
 		'gmx',
 		'bluefin',
-		'hyperliquid'
+		'hyperliquid',
+		'bybit'
 	];
 	const dexClients = dexNames.map((name) => dexRegistry.getDex(name));
 
@@ -182,7 +204,8 @@ router.get('/accounts', async (req, res) => {
 			PerpetualProtocol: accountStatuses[2], // perpetual
 			GMX: accountStatuses[3], // gmx
 			Bluefin: accountStatuses[4], // bluefin
-			HyperLiquid: accountStatuses[5] // hyperliquid
+			HyperLiquid: accountStatuses[5], // hyperliquid
+			Bybit: accountStatuses[6] // bybit
 		};
 		res.send(message);
 	} catch (error) {
