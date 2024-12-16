@@ -422,11 +422,11 @@ export class GmxClient extends AbstractDexClient {
 
 	private getGasPrice = async () => {
 		let gasPrice = await this.signer.getGasPrice();
-
-		// add 10% as buffer
 		const buffer = gasPrice.mul(1000).div(10000);
 		gasPrice = gasPrice.add(buffer);
 		return gasPrice;
+	};
+	
 	};
 
 	private async getExecutionFee(orderType: gmxOrderType) {
@@ -455,8 +455,10 @@ export class GmxClient extends AbstractDexClient {
 			.mul(12)
 			.div(10);
 
-		const gasPrice = await this.getGasPrice();
-		const feeTokenAmount = adjustedGasLimit.mul(gasPrice);
+			const gasPrice = await this.getGasPrice();
+			const safeGasPrice = gasPrice || ethers.utils.parseUnits('5', 'gwei'); // Fallback to 20 Gwei if null
+			const feeTokenAmount = adjustedGasLimit.mul(safeGasPrice);
+			
 
 		return feeTokenAmount;
 	}
