@@ -290,10 +290,23 @@ export class GmxClient extends AbstractDexClient {
 		multiCallParams.push(createOrderData);
 		const gasPrice = this.getGasPrice();
 
-		const tx = await gmxContract.multicall(multiCallParams, {
-			value: executionFee,
-			gasPrice: gasPrice
-		});
+		let attempt = 0;
+		let tx;
+		while (attempt < 3) {
+			try {
+				tx = await gmxContract.multicall(multiCallParams, {
+					value: executionFee,
+					gasPrice: gasPrice
+				});
+				break;
+			} catch (error) {
+				console.error(error);
+				attempt++;
+				if (attempt >= 3) throw error;
+				console.log(`Retrying transaction... Attempt ${attempt}/3`);
+			}
+		}
+
 		console.log('Order created successfully:', tx);
 
 		const receipt = await tx.wait();
@@ -458,7 +471,8 @@ export class GmxClient extends AbstractDexClient {
 			.div(10);
 
 		const gasPrice = await this.getGasPrice();
-		const feeTokenAmount = adjustedGasLimit.mul(gasPrice);
+		// add 20% as buffer
+		const feeTokenAmount = adjustedGasLimit.mul(gasPrice).mul(12).div(10);
 
 		return feeTokenAmount;
 	}
