@@ -24,7 +24,7 @@ import { _sleep } from '../../helper';
 import axios from 'axios';
 import { dataStoreAbi } from './abi/dataStore';
 
-const exchangeRounter = '0x69C527fC77291722b52649E45c838e41be8Bf5d5';
+const exchangeRounter = '0x900173A66dbD345006C51fA35fA3aB760FcD843b';
 const transferRouter = '0x7452c558d45f8afC8c83dAe62C3f8A5BE19c71f6';
 const reader = '0xf60becbba223eea9495da3f606753867ec10d139';
 const dataStore = '0xFD70de6b91282D8017aA4E741e9Ae325CAb992d8';
@@ -221,12 +221,14 @@ export class GmxClient extends AbstractDexClient {
 				acceptablePrice,
 				executionFee,
 				callbackGasLimit: 0,
-				minOutputAmount: 0
+				minOutputAmount: 0,
+				validFromTime: 0
 			},
 			orderType,
 			decreasePositionSwapType,
 			isLong: positionResponse.hasLongPosition ?? orderParams.isLong,
 			shouldUnwrapNativeToken: false,
+			autoCancel: false,
 			referralCode: myReferralCode
 			// 0x0000000000000000000000000000000000000000000000000000000000000000
 		};

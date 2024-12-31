@@ -377,6 +377,11 @@ export const ExchangeRouterAbi = [
 								internalType: 'uint256',
 								name: 'minOutputAmount',
 								type: 'uint256'
+							},
+							{
+								internalType: 'uint256',
+								name: 'validFromTime',
+								type: 'uint256'
 							}
 						],
 						internalType: 'struct IBaseOrderUtils.CreateOrderParamsNumbers',
@@ -728,6 +733,135 @@ export const ExchangeRouterAbi = [
 	},
 	{
 		inputs: [
+			{
+				components: [
+					{
+						internalType: 'address[]',
+						name: 'primaryTokens',
+						type: 'address[]'
+					},
+					{
+						components: [
+							{ internalType: 'uint256', name: 'min', type: 'uint256' },
+							{ internalType: 'uint256', name: 'max', type: 'uint256' }
+						],
+						internalType: 'struct Price.Props[]',
+						name: 'primaryPrices',
+						type: 'tuple[]'
+					},
+					{ internalType: 'uint256', name: 'minTimestamp', type: 'uint256' },
+					{ internalType: 'uint256', name: 'maxTimestamp', type: 'uint256' }
+				],
+				internalType: 'struct OracleUtils.SimulatePricesParams',
+				name: 'simulatedOracleParams',
+				type: 'tuple'
+			}
+		],
+		name: 'simulateExecuteLatestDeposit',
+		outputs: [],
+		stateMutability: 'payable',
+		type: 'function'
+	},
+	{
+		inputs: [
+			{
+				components: [
+					{
+						internalType: 'address[]',
+						name: 'primaryTokens',
+						type: 'address[]'
+					},
+					{
+						components: [
+							{ internalType: 'uint256', name: 'min', type: 'uint256' },
+							{ internalType: 'uint256', name: 'max', type: 'uint256' }
+						],
+						internalType: 'struct Price.Props[]',
+						name: 'primaryPrices',
+						type: 'tuple[]'
+					},
+					{ internalType: 'uint256', name: 'minTimestamp', type: 'uint256' },
+					{ internalType: 'uint256', name: 'maxTimestamp', type: 'uint256' }
+				],
+				internalType: 'struct OracleUtils.SimulatePricesParams',
+				name: 'simulatedOracleParams',
+				type: 'tuple'
+			}
+		],
+		name: 'simulateExecuteLatestOrder',
+		outputs: [],
+		stateMutability: 'payable',
+		type: 'function'
+	},
+	{
+		inputs: [
+			{
+				components: [
+					{
+						internalType: 'address[]',
+						name: 'primaryTokens',
+						type: 'address[]'
+					},
+					{
+						components: [
+							{ internalType: 'uint256', name: 'min', type: 'uint256' },
+							{ internalType: 'uint256', name: 'max', type: 'uint256' }
+						],
+						internalType: 'struct Price.Props[]',
+						name: 'primaryPrices',
+						type: 'tuple[]'
+					},
+					{ internalType: 'uint256', name: 'minTimestamp', type: 'uint256' },
+					{ internalType: 'uint256', name: 'maxTimestamp', type: 'uint256' }
+				],
+				internalType: 'struct OracleUtils.SimulatePricesParams',
+				name: 'simulatedOracleParams',
+				type: 'tuple'
+			}
+		],
+		name: 'simulateExecuteLatestShift',
+		outputs: [],
+		stateMutability: 'payable',
+		type: 'function'
+	},
+	{
+		inputs: [
+			{
+				components: [
+					{
+						internalType: 'address[]',
+						name: 'primaryTokens',
+						type: 'address[]'
+					},
+					{
+						components: [
+							{ internalType: 'uint256', name: 'min', type: 'uint256' },
+							{ internalType: 'uint256', name: 'max', type: 'uint256' }
+						],
+						internalType: 'struct Price.Props[]',
+						name: 'primaryPrices',
+						type: 'tuple[]'
+					},
+					{ internalType: 'uint256', name: 'minTimestamp', type: 'uint256' },
+					{ internalType: 'uint256', name: 'maxTimestamp', type: 'uint256' }
+				],
+				internalType: 'struct OracleUtils.SimulatePricesParams',
+				name: 'simulatedOracleParams',
+				type: 'tuple'
+			},
+			{
+				internalType: 'enum ISwapPricingUtils.SwapPricingType',
+				name: 'swapPricingType',
+				type: 'uint8'
+			}
+		],
+		name: 'simulateExecuteLatestWithdrawal',
+		outputs: [],
+		stateMutability: 'payable',
+		type: 'function'
+	},
+	{
+		inputs: [
 			{ internalType: 'bytes32', name: 'key', type: 'bytes32' },
 			{
 				components: [
@@ -834,6 +968,7 @@ export const ExchangeRouterAbi = [
 			{ internalType: 'uint256', name: 'acceptablePrice', type: 'uint256' },
 			{ internalType: 'uint256', name: 'triggerPrice', type: 'uint256' },
 			{ internalType: 'uint256', name: 'minOutputAmount', type: 'uint256' },
+			{ internalType: 'uint256', name: 'validFromTime', type: 'uint256' },
 			{ internalType: 'bool', name: 'autoCancel', type: 'bool' }
 		],
 		name: 'updateOrder',
