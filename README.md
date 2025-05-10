@@ -31,8 +31,8 @@ https://www.tradingview.com/gopro/
 # Installation
 
 ```bash
-git clone https://github.com/junta/tradingview-alert-connector.git
-cd tradingview-alert-connector
+git clone https://github.com/blockcircle/mte-automation.git
+cd mte-automation
 npm install --force
 ```
 
@@ -54,6 +54,6 @@ docker-compose up -d
 yarn start
 ```
 
-## Disclaimer
+Disclaimer
 
 This project is hosted under an MIT OpenSource License. This tool does not guarantee users’ future profit and users have to use this tool on their own responsibility.
