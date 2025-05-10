@@ -1,8 +1,12 @@
-# Tradingview-Alert-Connector
+# MTE-Automation
 
-Tradingview-Alert-Connector is a free and noncustodial tool for you to Integrate tradingView alert and execute automated trading for perpetual futures DEXes.
+MTE-Automation is a noncustodial tool for you to Integrate TradingView trade alerts from the Momentum Trading Engine to execute trades on perpetual furure DEXs.
 
-Currently supports [dYdX v3](https://dydx.exchange), [dYdX v4](https://dydx.trade/?ref=LawfulBalletF7U), [Perpetual Protocol v2](https://perp.com/), [GMX v2](https://app.gmx.io/#/trade/) and [Bluefin](https://trade.bluefin.io).
+Currently supports [dYdX v3](https://dydx.exchange), [dYdX v4](https://dydx.trade/), [Perpetual Protocol v2](https://perp.com/), [GMX v2](https://app.gmx.io/#/trade/) and [Bluefin](https://trade.bluefin.io).
+
+This code repository began as a fork of the powerful junta "tradingview-alert-connector", the objective is to refacfor the code base to allow for countless trading configurations to be forward tested from the Momentum Trading Engine (MTE)! 
+
+The goal is to have .env setup for each instance of a trading configuration you want to launch. This allows you to, for example; test Configuration 1 on BTC/USD in one container while simultaneously test Configuration 2 on SOL/USD in another container etc each configuration is unique to asset pairs, time periods, leverage, equity % etc
 
 # Docs
 
