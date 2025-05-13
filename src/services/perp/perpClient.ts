@@ -11,15 +11,24 @@ import { clearingHouseAbi } from './abi/clearingHouse';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { PositionSide } from '@perp/sdk-curie';
 import { AlertObject, OrderResult, perpOrderParams } from '../../types';
+import { ProfileName, getEnvVar } from '../../utils/envLoader';
 
 export class PerpClient extends AbstractDexClient {
-	static async build() {
-		if (!process.env.PERPETUAL_PRIVATE_KEY) {
+	private profile: ProfileName;
+
+	constructor(alertMessage?: AlertObject) {
+		super();
+		this.profile = alertMessage?.envProfile || '';
+	}
+
+	async init() {
+		if (!getEnvVar('PERPETUAL_PRIVATE_KEY', this.profile)) {
 			console.log(
-				'PERPETUAL_PRIVATE_KEY for Perpetual Protocol is not set as environment variable'
+				`PERPETUAL_PRIVATE_KEY for Perpetual Protocol is not set as environment variable for profile ${this.profile || 'default'}`
 			);
 			return;
 		}
+		
 		const rpcURL: string = config.get('Perpetual.Network.host');
 		const perp = new PerpetualProtocol({
 			chainId: SupportedChainIds.OPTIMISM,
@@ -35,7 +44,7 @@ export class PerpClient extends AbstractDexClient {
 
 		const provider = new ethers.providers.JsonRpcProvider(rpcURL);
 		const signer = new ethers.Wallet(
-			'0x' + process.env.PERPETUAL_PRIVATE_KEY,
+			'0x' + getEnvVar('PERPETUAL_PRIVATE_KEY', this.profile),
 			provider
 		);
 		await perp.connect({ signer });
@@ -45,7 +54,7 @@ export class PerpClient extends AbstractDexClient {
 
 	getIsAccountReady = async () => {
 		try {
-			const perp = await PerpClient.build();
+			const perp = await this.init();
 			if (!perp || !perp.wallet) return false;
 
 			const balance = await perp.wallet.getBalanceEth();
@@ -57,6 +66,7 @@ export class PerpClient extends AbstractDexClient {
 			return Number(balance) > 0;
 		} catch (error) {
 			console.error(error);
+			return false;
 		}
 	};
 
@@ -66,13 +76,13 @@ export class PerpClient extends AbstractDexClient {
 		const maxTries = 3;
 		while (count <= maxTries) {
 			try {
-				const perp = await PerpClient.build();
+				const perp = await this.init();
 				if (!perp || !perp.clearingHouse) return;
 
 				const rpcURL: string = config.get('Perpetual.Network.host');
 				const provider = new StaticJsonRpcProvider(rpcURL);
 				const wallet = new Wallet(
-					'0x' + process.env.PERPETUAL_PRIVATE_KEY,
+					'0x' + getEnvVar('PERPETUAL_PRIVATE_KEY', this.profile),
 					provider
 				);
 				const clearingHouse = new Contract(
@@ -156,7 +166,7 @@ export class PerpClient extends AbstractDexClient {
 
 		let orderSize: number;
 		if (alertMessage.sizeByLeverage) {
-			const perp = await PerpClient.build();
+			const perp = await this.init();
 			if (!perp || !perp.vault)
 				throw Error('Perpetual Protocol Vault is not connected');
 

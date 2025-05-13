@@ -17,8 +17,16 @@ import { _sleep, doubleSizeIfReverseOrder } from '../../helper';
 import 'dotenv/config';
 import config from 'config';
 import { AbstractDexClient } from '../abstractDexClient';
+import { ProfileName, getEnvVar } from '../../utils/envLoader';
 
 export class DydxV4Client extends AbstractDexClient {
+	private profile: ProfileName;
+
+	constructor(alertMessage?: AlertObject) {
+		super();
+		this.profile = alertMessage?.envProfile;
+	}
+
 	async getIsAccountReady() {
 		const subAccount = await this.getSubAccount();
 		if (!subAccount) return false;
@@ -44,6 +52,7 @@ export class DydxV4Client extends AbstractDexClient {
 	}
 
 	async buildOrderParams(alertMessage: AlertObject) {
+		this.profile = alertMessage.envProfile;
 		const orderSide =
 			alertMessage.order == 'buy' ? OrderSide.BUY : OrderSide.SELL;
 
@@ -78,6 +87,8 @@ export class DydxV4Client extends AbstractDexClient {
 	}
 
 	async placeOrder(alertMessage: AlertObject) {
+		this.profile = alertMessage.envProfile;
+
 		const orderParams = await this.buildOrderParams(alertMessage);
 		const { client, subaccount } = await this.buildCompositeClient();
 
@@ -181,13 +192,14 @@ export class DydxV4Client extends AbstractDexClient {
 	};
 
 	private generateLocalWallet = async () => {
-		if (!process.env.DYDX_V4_MNEMONIC) {
+		const mnemonic = getEnvVar('DYDX_V4_MNEMONIC', this.profile);
+		if (!mnemonic) {
 			console.log('DYDX_V4_MNEMONIC is not set as environment variable');
 			return;
 		}
 
 		const localWallet = await LocalWallet.fromMnemonic(
-			process.env.DYDX_V4_MNEMONIC,
+			mnemonic,
 			BECH32_PREFIX
 		);
 		console.log('dYdX v4 Address:', localWallet.address);

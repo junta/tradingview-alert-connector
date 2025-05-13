@@ -1,5 +1,5 @@
 import { AbstractDexClient } from '../abstractDexClient';
-import { doubleSizeIfReverseOrder, getStrategiesDB } from '../../helper';
+import { doubleSizeIfReverseOrder } from '../../helper';
 import {
 	gmxOrderParams,
 	AlertObject,
@@ -23,6 +23,7 @@ import {
 import { _sleep } from '../../helper';
 import axios from 'axios';
 import { dataStoreAbi } from './abi/dataStore';
+import { getEnvVar, ProfileName } from '../../utils/envLoader';
 
 const exchangeRounter = '0x900173A66dbD345006C51fA35fA3aB760FcD843b';
 const transferRouter = '0x7452c558d45f8afC8c83dAe62C3f8A5BE19c71f6';
@@ -37,33 +38,35 @@ const myReferralCode =
 
 export class GmxClient extends AbstractDexClient {
 	private signer: ethers.Wallet;
-	constructor() {
+	private profile: ProfileName;
+	constructor(alertMessage: AlertObject) {
 		super();
+		this.profile = alertMessage.envProfile || '';
 		this.signer = this.getClient();
 	}
 
 	getClient = () => {
-		if (!process.env.GMX_PRIVATE_KEY) {
+		const gmx_private_key = getEnvVar('GMX_PRIVATE_KEY', this.profile);
+		if (!gmx_private_key) {
 			console.log('GMX_PRIVATE_KEY for GMX is not set as environment variable');
 			return;
 		}
 
 		// TODO: set 1x leverage by default
-		if (!process.env.GMX_LEVERAGE) {
+		const gmx_leverage = getEnvVar('GMX_LEVERAGE', this.profile);
+		if (!gmx_leverage) {
 			console.log('GMX_LEVERAGE for GMX is not set as environment variable');
 			return;
 		}
 
-		const GMX_LEVERAGE = Number(process.env.GMX_LEVERAGE);
-
-		if (GMX_LEVERAGE < 0.1 || GMX_LEVERAGE > 100) {
+		if (Number(gmx_leverage) < 0.1 || Number(gmx_leverage) > 100) {
 			console.error('GMX_LEVERAGE must be between 1.1 and 100');
 			return;
 		}
 
 		const rpcUrl: string = config.get('GMX.Network.host');
 		const provider = ethers.getDefaultProvider(rpcUrl);
-		return new ethers.Wallet('0x' + process.env.GMX_PRIVATE_KEY, provider);
+		return new ethers.Wallet('0x' + gmx_private_key, provider);
 	};
 
 	getIsAccountReady = async () => {
@@ -75,7 +78,7 @@ export class GmxClient extends AbstractDexClient {
 				ethers.utils.formatEther(balance)
 			);
 
-			console.log('GMX_LEVERAGE: ' + process.env.GMX_LEVERAGE);
+			console.log('GMX_LEVERAGE: ' + getEnvVar('GMX_LEVERAGE', this.profile));
 
 			return Number(balance) > 0;
 		} catch (error) {
@@ -251,7 +254,7 @@ export class GmxClient extends AbstractDexClient {
 		// when MarketIncrease, calculate collateral amount, approve, sentToken
 		if (orderType == gmxOrderType.MarketIncrease) {
 			const sendUsdAmount =
-				orderParams.sizeUsd / Number(process.env.GMX_LEVERAGE);
+				orderParams.sizeUsd / Number(getEnvVar('GMX_LEVERAGE', this.profile));
 			if (sendUsdAmount < 2) throw Error("Can't send less than 2 USD");
 
 			const collateralPrice = await this.getCollateralPrice(

@@ -7,9 +7,11 @@ import {
 import { PositionSide } from '@perp/sdk-curie';
 import { gmxOrderType } from './services/gmx/constants';
 import { OrderSide as v4OrderSide } from '@dydxprotocol/v4-client-js';
+import { ProfileName } from './utils/envLoader';
 
 export type AlertObject = {
 	exchange: string;
+	envProfile?: ProfileName; // optional, since users may only use 1 profile/config. expects empty or "P1", "P2", "P3", etc.
 	strategy: string;
 	market: string;
 	size?: number;

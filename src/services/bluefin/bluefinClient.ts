@@ -8,17 +8,22 @@ import 'dotenv/config';
 import { AbstractDexClient } from '../abstractDexClient';
 import { AlertObject, OrderResult } from '../../types';
 import { doubleSizeIfReverseOrder } from '../../helper';
+import { getEnvVar, ProfileName } from '../../utils/envLoader';
 
 export class BluefinDexClient extends AbstractDexClient {
 	private client: BluefinClient;
-	constructor() {
+	private profile: ProfileName;
+	constructor(alertMessage: AlertObject) {
 		super();
+		this.profile = alertMessage.envProfile || ""; 
 		this.client = this.getClient();
 	}
 
 	getClient(): BluefinClient {
-		if (!process.env.BLUEFIN_MNEMONIC) {
-			console.log('BLUEFIN_MNEMONIC is not set as environment variable');
+		const mnemonic = getEnvVar('BLUEFIN_MNEMONIC', this.profile);
+
+		if (!mnemonic) {
+			console.log(`BLUEFIN_MNEMONIC${this.profile ? '_' + this.profile : ''}is not set as environment variable`);
 			return;
 		}
 
@@ -27,7 +32,7 @@ export class BluefinDexClient extends AbstractDexClient {
 			return new BluefinClient(
 				true,
 				Networks.PRODUCTION_SUI,
-				process.env.BLUEFIN_MNEMONIC,
+				mnemonic,
 				'ED25519'
 			);
 		} catch (e) {

@@ -18,36 +18,38 @@ import {
 	getDecimalPointLength,
 	getStrategiesDB
 } from '../../helper';
+import { getEnvVar, ProfileName } from '../../utils/envLoader';
 
 export class DydxV3Client extends AbstractDexClient {
 	client: DydxClient | undefined;
 	positionID = '0';
-	static instance: DydxV3Client | null = null;
+	private profile: ProfileName;
 
-	public constructor() {
+	public constructor(alertMessage?: AlertObject) {
 		super();
+		this.profile = alertMessage?.envProfile || '';
 		if (
-			!process.env.API_KEY ||
-			!process.env.API_PASSPHRASE ||
-			!process.env.API_PASSPHRASE
+			!getEnvVar('API_KEY', this.profile) ||
+			!getEnvVar('API_PASSPHRASE', this.profile) ||
+			!getEnvVar('API_SECRET', this.profile)
 		) {
 			console.log('API Key for dYdX is not set as environment variable');
 			return;
 		}
-		if (!process.env.STARK_PUBLIC_KEY || !process.env.STARK_PRIVATE_KEY) {
+		if (!getEnvVar('STARK_PUBLIC_KEY', this.profile) || !getEnvVar('STARK_PRIVATE_KEY', this.profile)) {
 			console.log('STARK Key for dYdX is not set as environment variable');
 			return;
 		}
 
 		const apiKeys = {
-			key: process.env.API_KEY,
-			passphrase: process.env.API_PASSPHRASE,
-			secret: process.env.API_SECRET
+			key: getEnvVar('API_KEY', this.profile),
+			passphrase: getEnvVar('API_PASSPHRASE', this.profile),
+			secret: getEnvVar('API_SECRET', this.profile)
 		};
 
 		const starkKeyPair = {
-			publicKey: process.env.STARK_PUBLIC_KEY,
-			privateKey: process.env.STARK_PRIVATE_KEY
+			publicKey: getEnvVar('STARK_PUBLIC_KEY', this.profile),
+			privateKey: getEnvVar('STARK_PRIVATE_KEY', this.profile)
 		};
 
 		this.client = new DydxClient(config.get('Dydx.Network.host'), {
@@ -56,48 +58,49 @@ export class DydxV3Client extends AbstractDexClient {
 			apiKeyCredentials: apiKeys,
 			starkPrivateKey: starkKeyPair
 		});
+
+		// Initizlize positionID immediately
+		this.initializePositionID();
 	}
 
-	static async build() {
-		if (!this.instance) {
-			const connector = new DydxV3Client();
-			if (!connector || !connector.client) return;
-			const account = await connector.client.private.getAccount(
-				process.env.ETH_ADDRESS
+	private async initializePositionID() {
+		try {
+			if (!this.client) return;
+			
+			const account = await this.client.private.getAccount(
+				getEnvVar('ETH_ADDRESS', this.profile)
 			);
-
-			connector.positionID = account.account.positionId;
-			this.instance = connector;
+			this.positionID = account.account.positionId;
+		} catch (error) {
+			console.error("Failed to initialize positionID:", error);
 		}
-
-		return this.instance;
 	}
 
 	getIsAccountReady = async () => {
 		try {
-			const connector = await DydxV3Client.build();
-			if (!connector) return false;
+			if (!this.client) return false;
 
-			const account = await connector.client.private.getAccount(
-				process.env.ETH_ADDRESS
+			const account = await this.client.private.getAccount(
+				getEnvVar('ETH_ADDRESS', this.profile)
 			);
 			console.log('dYdX account: ', account);
 			return (Number(account.account.freeCollateral) > 0) as boolean;
 		} catch (error) {
 			console.error(error);
+			return false;
 		}
 	};
 
 	placeOrder = async (alertMessage: AlertObject) => {
+		if (!this.client) return false;
+
 		const market = Market[alertMessage.market as keyof typeof Market];
 		if (!market) {
 			console.error('Market field of tradingview alert is not correct.');
 			return false;
 		}
 
-		const connector = await DydxV3Client.build();
-
-		const markets = await connector.client.public.getMarkets(market);
+		const markets = await this.client.public.getMarkets(market);
 		// console.log('markets', markets);
 
 		const minOrderSize = parseFloat(markets.markets[market].minOrderSize);
@@ -117,12 +120,12 @@ export class DydxV3Client extends AbstractDexClient {
 		const maxTries = 3;
 		while (count <= maxTries) {
 			try {
-				const connector = await DydxV3Client.build();
+				if (!this.client) return false;
 
 				const orderResponseObject: { order: OrderResponseObject } =
-					await connector.client.private.createOrder(
+					await this.client.private.createOrder(
 						orderParams,
-						connector.positionID
+						this.positionID
 					);
 
 				// console.log(orderResult.order);
@@ -161,18 +164,20 @@ export class DydxV3Client extends AbstractDexClient {
 				await _sleep(5000);
 			}
 		}
+
+		return false;
 	};
 
 	private buildOrderParams = async (alertMessage: AlertObject) => {
+		if (!this.client) return;
+		
 		// set expiration datetime. must be more than 1 minute from current datetime
 		const date = new Date();
 		date.setMinutes(date.getMinutes() + 2);
 		const dateStr = date.toJSON();
 
-		const connector = await DydxV3Client.build();
-
 		const market = Market[alertMessage.market as keyof typeof Market];
-		const marketsData = await connector.client.public.getMarkets(market);
+		const marketsData = await this.client.public.getMarkets(market);
 		// console.log('markets', markets);
 
 		const orderSide =
@@ -183,8 +188,8 @@ export class DydxV3Client extends AbstractDexClient {
 
 		let orderSize: number;
 		if (alertMessage.sizeByLeverage) {
-			const account = await connector.client.private.getAccount(
-				process.env.ETH_ADDRESS
+			const account = await this.client.private.getAccount(
+				getEnvVar('ETH_ADDRESS', this.profile)
 			);
 			const equity = Number(account.account.equity);
 			orderSize = (equity * Number(alertMessage.sizeByLeverage)) / latestPrice;
@@ -305,13 +310,14 @@ export class DydxV3Client extends AbstractDexClient {
 	};
 
 	private getFill = async (order_id: string) => {
+		if (!this.client) return;
+
 		let count = 0;
 		const maxTries = 3;
 		while (count <= maxTries) {
 			try {
-				const connector = await DydxV3Client.build();
 				const allFills: { fills: FillResponseObject[] } =
-					await connector.client.private.getFills({ orderId: order_id });
+					await this.client.private.getFills({ orderId: order_id });
 
 				return allFills.fills[0];
 			} catch (error) {
@@ -325,14 +331,15 @@ export class DydxV3Client extends AbstractDexClient {
 	};
 
 	private getOrder = async (order_id: string) => {
+		if (!this.client) return;
+		
 		let count = 0;
 		const maxTries = 3;
 		let filled;
 		while (count <= maxTries && !filled) {
 			try {
-				const connector = await DydxV3Client.build();
 				const orderResponse: { order: OrderResponseObject } =
-					await connector.client.private.getOrderById(order_id);
+					await this.client.private.getOrderById(order_id);
 
 				count++;
 				filled = orderResponse.order.status == 'FILLED' ? true : false;
