@@ -91,8 +91,18 @@ export class GmxClient extends AbstractDexClient {
 
 		let orderSize: number;
 
-		// TODO: implement sizeByLeverage for GMX
-		if (alertMessage.size) {
+		if (alertMessage.sizeByLeverage) {
+      // Get USDC balance for leverage-based sizing
+        const usdcBalance = await this.getUSDCBalance();
+        if (!usdcBalance) {
+          console.error('Could not retrieve USDC balance for leverage calculation');
+          return;
+        }
+      
+      // Calculate USD size: equity * leverage multiplier
+      orderSize = usdcBalance * Number(alertMessage.sizeByLeverage);
+      console.log(`Calculated size by leverage: USDC balance=${usdcBalance}, leverage=${alertMessage.sizeByLeverage}, result=${orderSize}`);
+    } else if (alertMessage.size) {
 			// convert to USD size
 			orderSize = Math.floor(
 				Number(alertMessage.size) * Number(alertMessage.price)
@@ -479,4 +489,21 @@ export class GmxClient extends AbstractDexClient {
 
 		return feeTokenAmount;
 	}
+
+	private getUSDCBalance = async (): Promise<number | null> => {
+    try {
+      if (!this.signer) return null;
+      
+      const usdcContract = new ethers.Contract(usdc, erc20Abi, this.signer);
+      const usdcBalance = await usdcContract.balanceOf(this.signer.address);
+      const usdcAmount = Number(ethers.utils.formatUnits(usdcBalance, usdcDecimal));
+      
+      console.log(`USDC balance: ${usdcAmount}`);
+      
+      return usdcAmount;
+  	} catch (error) {
+      console.error('Error getting USDC balance:', error);
+      return null;
+    }
+	};
 }

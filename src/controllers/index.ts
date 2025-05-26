@@ -2,6 +2,7 @@ import express, { Router } from 'express';
 import { validateAlert } from '../services';
 import { DexRegistry } from '../services/dexRegistry';
 import { ProfileName } from '../utils/envLoader';
+import { DiscordWebhookService } from '../services/discordWebhook';
 
 const router: Router = express.Router();
 
@@ -74,6 +75,9 @@ router.post('/', async (req, res) => {
 	}
 
 	// TODO: add check if dex client isReady 
+
+	// Initialize Discord service (will only work if DISCORD_WEBHOOK_URL is set in .env)
+	const discordService = new DiscordWebhookService();
 
 	try {
 		const result = await dexClient.placeOrder(req.body);

@@ -12,9 +12,9 @@ import { ProfileName } from './utils/envLoader';
 export type AlertObject = {
 	exchange: string;
 	envProfile?: ProfileName; // optional, since users may only use 1 profile/config. expects empty or "P1", "P2", "P3", etc.
-	strategy: string;
+	strategy: string; // convenience field - no impact on trade execution.
 	market: string;
-	size?: number;
+	size?: number;           // only use one of these "size___" fields at a time
 	sizeUsd?: number;
 	sizeByLeverage?: number;
 	order: string;
@@ -78,3 +78,14 @@ export interface OrderResult {
 	side: string;
 	orderId: string;
 }
+
+// {
+//     "exchange": "gmx",
+//     "strategy": "Config 1 - Swings, High PnL",
+//     "market": "SOL_USD",
+//     "sizeByLeverage": 3,
+//     "reverse": false,
+//     "order":"{{strategy.order.action}}",
+//     "position":"{{strategy.market_position}}",
+//     "price":"{{strategy.order.price}}"
+// }
