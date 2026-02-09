@@ -18,6 +18,7 @@
 	"license": "MIT",
 	"dependencies": {
 		"@bluefin-exchange/bluefin-v2-client": "^5.2.35",
+		"@msgpack/msgpack": "^3.0.0-beta.2",
 		"@dydxprotocol/v3-client": "^1.16.0",
 		"@dydxprotocol/v4-client-js": "^1.0.27",
 		"@perp/sdk-curie": "^1.22.0",
@@ -31,6 +32,7 @@
 		"config": "^3.3.7",
 		"decimal.js": "^10.4.3",
 		"dotenv": "^16.0.0",
+		"ethers": "^5.7.2",
 		"ethers-v6": "npm:ethers@6.13.4",
 		"express": "^4.17.3",
 		"helmet": "^5.0.2",

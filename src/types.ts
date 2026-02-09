@@ -76,3 +76,12 @@ export interface OrderResult {
 	side: string;
 	orderId: string;
 }
+
+export type hyperliquidOrderParams = {
+	coin: string;
+	isBuy: boolean;
+	size: string;
+	price: string;
+	reduceOnly: boolean;
+	assetIndex: number;
+};
