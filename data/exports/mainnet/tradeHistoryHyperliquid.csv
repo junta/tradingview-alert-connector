@@ -1,0 +1,2 @@
+datetime,strategy,market,side,size,avgPrice,tradingviewPrice,priceGap,status,orderId
+2026-02-09T08:13:15.916Z,testETH,ETH_USD,BUY,0,0,2067,-2067,FAILED,

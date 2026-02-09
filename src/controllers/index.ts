@@ -12,7 +12,7 @@ router.get('/accounts', async (req, res) => {
 	console.log('Received GET request.');
 
 	const dexRegistry = new DexRegistry();
-	const dexNames = ['dydxv3', 'dydxv4', 'perpetual', 'gmx', 'bluefin', 'hyperliquid'];
+	const dexNames = ['dydxv4', 'perpetual', 'gmx', 'bluefin', 'hyperliquid'];
 	const dexClients = dexNames.map((name) => dexRegistry.getDex(name));
 
 	try {
@@ -21,12 +21,11 @@ router.get('/accounts', async (req, res) => {
 		);
 
 		const message = {
-			dYdX_v3: accountStatuses[0], // dydxv3
-			dYdX_v4: accountStatuses[1], // dydxv4
-			PerpetualProtocol: accountStatuses[2], // perpetual
-			GMX: accountStatuses[3], // gmx
-			Bluefin: accountStatuses[4], // bluefin
-			Hyperliquid: accountStatuses[5] // hyperliquid
+			dYdX_v4: accountStatuses[0], // dydxv4
+			PerpetualProtocol: accountStatuses[1], // perpetual
+			GMX: accountStatuses[2], // gmx
+			Bluefin: accountStatuses[3], // bluefin
+			Hyperliquid: accountStatuses[4] // hyperliquid
 		};
 		res.send(message);
 	} catch (error) {
@@ -44,8 +43,7 @@ router.post('/', async (req, res) => {
 		return;
 	}
 		
-	// set dydxv3 by default for backwards compatibility
-	const exchange = req.body['exchange']?.toLowerCase() || 'dydxv3';
+	const exchange = req.body['exchange']?.toLowerCase() || 'dydx';
 
 	const dexClient = new DexRegistry().getDex(exchange);
 

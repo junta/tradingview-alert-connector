@@ -1,4 +1,4 @@
-jest.mock('../../helper', () => ({
+jest.mock('../src/helper', () => ({
 	getStrategiesDB: jest.fn(() => {
 		const mockData: Record<string, any> = {};
 		const mockDb = {
@@ -16,11 +16,10 @@ jest.mock('../../helper', () => ({
 	})
 }));
 
-jest.mock('../dexRegistry', () => ({
+jest.mock('../src/services/dexRegistry', () => ({
 	DexRegistry: jest.fn().mockImplementation(() => ({
 		getAllDexKeys: jest.fn(() => [
 			'dydxv4',
-			'dydxv3',
 			'dydx',
 			'perpetual',
 			'gmx',
@@ -30,8 +29,8 @@ jest.mock('../dexRegistry', () => ({
 	}))
 }));
 
-import { validateAlert } from '../validateAlert';
-import { AlertObject } from '../../types';
+import { validateAlert } from '../src/services/validateAlert';
+import { AlertObject } from '../src/types';
 
 describe('validateAlert', () => {
 	const baseAlert: AlertObject = {

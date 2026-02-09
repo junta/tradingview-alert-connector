@@ -1,9 +1,3 @@
-Dydx:
-  Network:
-    host: https://api.stage.dydx.exchange
-    chainID: 5
-  User:
-    limitFee: 0.2
 Perpetual:
   Network:
     host: https://mainnet.optimism.io/

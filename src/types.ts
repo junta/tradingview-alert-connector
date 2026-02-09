@@ -1,9 +1,3 @@
-import {
-	OrderSide,
-	OrderType,
-	TimeInForce,
-	Market
-} from '@dydxprotocol/v3-client';
 import { PositionSide } from '@perp/sdk-curie';
 import { gmxOrderType } from './services/gmx/constants';
 import { OrderSide as v4OrderSide } from '@dydxprotocol/v4-client-js';
@@ -21,18 +15,6 @@ export type AlertObject = {
 	reverse: boolean;
 	passphrase?: string;
 	collateral?: string;
-};
-
-export type dydxOrderParams = {
-	market: Market;
-	side: OrderSide;
-	type: OrderType.MARKET;
-	timeInForce: TimeInForce.FOK;
-	postOnly: false;
-	size: string;
-	price: string;
-	limitFee: string;
-	expiration: string;
 };
 
 export type dydxV4OrderParams = {
