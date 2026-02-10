@@ -8,6 +8,7 @@
 		"start": "tsc && NODE_ENV=production node dist/index.js",
 		"start:test": "tsc && NODE_ENV=test ts-node dist/index.js",
 		"start:dev": "tsc && NODE_ENV=development tsc-watch --onSuccess \"ts-node dist/index.js\"",
+		"start:prod": "tsc && NODE_ENV=production tsc-watch --onSuccess \"node dist/index.js\"",
 		"decode": "ts-node scripts/decode.ts",
 		"test": "jest",
 		"test:prod": "NODE_ENV=production jest",
@@ -18,8 +19,8 @@
 	"license": "MIT",
 	"dependencies": {
 		"@bluefin-exchange/bluefin-v2-client": "^5.2.35",
-		"@msgpack/msgpack": "^3.0.0-beta.2",
 		"@dydxprotocol/v4-client-js": "^1.0.27",
+		"@nktkas/hyperliquid": "^0.31.0",
 		"@perp/sdk-curie": "^1.22.0",
 		"@sentry/integrations": "^6.19.1",
 		"@sentry/node": "^6.18.2",

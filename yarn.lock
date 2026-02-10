@@ -1981,11 +1981,6 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@msgpack/msgpack@^3.0.0-beta.2":
-  version "3.1.3"
-  resolved "https://registry.yarnpkg.com/@msgpack/msgpack/-/msgpack-3.1.3.tgz#c4bff2b9539faf0882f3ee03537a7e9a4b3a7864"
-  integrity sha512-47XIizs9XZXvuJgoaJUIE2lFoID8ugvc0jzSHP+Ptfk8nTbnR8g788wv48N03Kx0UkAv559HWRQ3yzOgzlRNUA==
-
 "@mysten/bcs@0.8.1":
   version "0.8.1"
   resolved "https://registry.yarnpkg.com/@mysten/bcs/-/bcs-0.8.1.tgz#30d3256a728a4a934ae608d118347289fe0ba1e7"
@@ -2070,6 +2065,21 @@
     jose "^4.14.4"
     poseidon-lite "^0.2.0"
 
+"@nktkas/hyperliquid@^0.31.0":
+  version "0.31.0"
+  resolved "https://registry.yarnpkg.com/@nktkas/hyperliquid/-/hyperliquid-0.31.0.tgz#f9362457a4ce7372c8b695667794610c79523c27"
+  integrity sha512-yK8f0ObhiX5jrK0kCLe5DXMNaG9gbJfvCFvIjYCumbo1L/EZcjHXbhVJ24rEWnw8OkWCS9zHcncJhspZQ7MTFg==
+  dependencies:
+    "@nktkas/rews" "^1.2.3"
+    "@noble/hashes" "^2.0.1"
+    micro-eth-signer "^0.18.1"
+    valibot "1.2.0"
+
+"@nktkas/rews@^1.2.3":
+  version "1.2.3"
+  resolved "https://registry.yarnpkg.com/@nktkas/rews/-/rews-1.2.3.tgz#e0f91757e402e04289e504c36f024b1b057c1fb5"
+  integrity sha512-cpfcIlkUpYlbAI1cvfCTBCajWZfUM6gWyuCJXszECKxdetsU3vURKC8Sz//MDR6RWoULk9T48eJ+0agxT7yB1w==
+
 "@noble/curves@1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@noble/curves/-/curves-1.2.0.tgz#92d7e12e4e49b23105a2555c6984d41733d65c35"
@@ -2091,6 +2101,13 @@
   dependencies:
     "@noble/hashes" "1.4.0"
 
+"@noble/curves@^2.0.0":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@noble/curves/-/curves-2.0.1.tgz#64ba8bd5e8564a02942655602515646df1cdb3ad"
+  integrity sha512-vs1Az2OOTBiP4q0pwjW5aF0xp9n4MxVrmkFBxc6EKZc6ddYx5gaZiAsZoq0uRRXWbi3AT/sBqn05eRPtn1JCPw==
+  dependencies:
+    "@noble/hashes" "2.0.1"
+
 "@noble/hashes@1.3.2":
   version "1.3.2"
   resolved "https://registry.yarnpkg.com/@noble/hashes/-/hashes-1.3.2.tgz#6f26dbc8fbc7205873ce3cee2f690eba0d421b39"
@@ -2105,6 +2122,11 @@
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/@noble/hashes/-/hashes-1.4.0.tgz#45814aa329f30e4fe0ba49426f49dfccdd066426"
   integrity sha512-V1JJ1WTRUqHHrOSh597hURcMqVKVGL/ea3kv0gSnEdsEZ0/+VyPghM1lMNGc00z7CIQorSvbKpuJkxvuHbvdbg==
+
+"@noble/hashes@2.0.1", "@noble/hashes@^2.0.0", "@noble/hashes@^2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@noble/hashes/-/hashes-2.0.1.tgz#fc1a928061d1232b0a52bb754393c37a5216c89e"
+  integrity sha512-XlOlEbQcE9fmuXxrVTXCTlG2nlRXa9Rj3rr5Ue/+tX+nmkgbX720YHh0VR3hBF9xDvwnb8D2shVGOwNx+ulArw==
 
 "@noble/secp256k1@^1.7.1":
   version "1.7.1"
@@ -2216,6 +2238,11 @@
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
   integrity sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==
+
+"@scure/base@2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@scure/base/-/base-2.0.0.tgz#ba6371fddf92c2727e88ad6ab485db6e624f9a98"
+  integrity sha512-3E1kpuZginKkek01ovG8krQ0Z44E3DHPjc5S2rjJw9lZn3KSQOs8S7wqikF/AH7iRanHypj85uGyxk0XAyC37w==
 
 "@scure/base@~1.1.4", "@scure/base@~1.1.6":
   version "1.1.6"
@@ -5780,6 +5807,22 @@ methods@~1.1.2:
   resolved "https://registry.yarnpkg.com/methods/-/methods-1.1.2.tgz#5529a4d67654134edcc5266656835b0f851afcee"
   integrity sha512-iclAHeNqNm68zFtnZ0e+1L2yUIdvzNoauKU4WBA3VvH/vPFieF7qfRlwUZU+DA9P9bPXIS90ulxoUoCH23sV2w==
 
+micro-eth-signer@^0.18.1:
+  version "0.18.1"
+  resolved "https://registry.yarnpkg.com/micro-eth-signer/-/micro-eth-signer-0.18.1.tgz#3a37e5ddff6a13c1bffe6eddb8774e8242cea2ee"
+  integrity sha512-vXKhCZxrytpl+dXR9JeaE41ZVFndi7wCKc1Jd22smOMAeDErvRcXaTxhYUf1yQxis4n2kIdv/pH7iuf+5/cj+Q==
+  dependencies:
+    "@noble/curves" "^2.0.0"
+    "@noble/hashes" "^2.0.0"
+    micro-packed "^0.8.0"
+
+micro-packed@^0.8.0:
+  version "0.8.0"
+  resolved "https://registry.yarnpkg.com/micro-packed/-/micro-packed-0.8.0.tgz#fe516c50b7150fd84728b8456731f79e2925eaf8"
+  integrity sha512-AKb8znIvg9sooythbXzyFeChEY0SkW0C6iXECpy/ls0e5BtwXO45J9wD9SLzBztnS4XmF/5kwZknsq+jyynd/A==
+  dependencies:
+    "@scure/base" "2.0.0"
+
 micromatch@^4.0.4:
   version "4.0.7"
   resolved "https://registry.yarnpkg.com/micromatch/-/micromatch-4.0.7.tgz#33e8190d9fe474a9895525f5618eee136d46c2e5"
@@ -6946,6 +6989,11 @@ v8-to-istanbul@^9.0.1:
     "@jridgewell/trace-mapping" "^0.3.12"
     "@types/istanbul-lib-coverage" "^2.0.1"
     convert-source-map "^2.0.0"
+
+valibot@1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/valibot/-/valibot-1.2.0.tgz#8fc720d9e4082ba16e30a914064a39619b2f1d6f"
+  integrity sha512-mm1rxUsmOxzrwnX5arGS+U4T25RdvpPjPN4yR0u9pUBov9+zGVtO84tif1eY4r6zWxVxu3KzIyknJy3rxfRZZg==
 
 vary@~1.1.2:
   version "1.1.2"

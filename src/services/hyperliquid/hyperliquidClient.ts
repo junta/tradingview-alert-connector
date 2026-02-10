@@ -1,235 +1,49 @@
 import { AbstractDexClient } from '../abstractDexClient';
 import { AlertObject, hyperliquidOrderParams } from '../../types';
 import { _sleep, getStrategiesDB } from '../../helper';
+import { HttpTransport, InfoClient, ExchangeClient } from '@nktkas/hyperliquid';
 import { ethers } from 'ethers';
-import * as https from 'https';
-import * as msgpack from '@msgpack/msgpack';
 import * as fs from 'fs';
 import config = require('config');
 import 'dotenv/config';
 
-function httpPost(url: string, data: any): Promise<any> {
-	return new Promise((resolve, reject) => {
-		const urlObj = new URL(url);
-		const postData = JSON.stringify(data);
-		const options = {
-			hostname: urlObj.hostname,
-			port: 443,
-			path: urlObj.pathname,
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'Content-Length': Buffer.byteLength(postData)
-			}
-		};
+const REFERRAL_CODE = '0XIBUKI';
+const BUILDER_ADDRESS: `0x${string}` =
+	'0x0000000000000000000000000000000000000000';
 
-		const req = https.request(options, (res) => {
-			let body = '';
-			res.on('data', (chunk: string) => (body += chunk));
-			res.on('end', () => {
-				try {
-					resolve(JSON.parse(body));
-				} catch {
-					resolve(body);
-				}
-			});
-		});
+export class HyperliquidHelper {
+	readonly info: InfoClient;
+	readonly exchange: ExchangeClient;
+	readonly address: string;
 
-		req.on('error', reject);
-		req.write(postData);
-		req.end();
-	});
-}
-
-const EIP_712_DOMAIN = {
-	name: 'Exchange',
-	version: '1',
-	chainId: 1337,
-	verifyingContract: '0x0000000000000000000000000000000000000000'
-};
-
-const AGENT_TYPES = {
-	Agent: [
-		{ name: 'source', type: 'string' },
-		{ name: 'connectionId', type: 'bytes32' }
-	]
-};
-
-export class HyperliquidConnector {
-	private wallet: ethers.Wallet;
-	private baseUrl: string;
-	private isMainnet: boolean;
-	private static referrerSet = false;
-
-	constructor(wallet: ethers.Wallet, baseUrl: string, isMainnet: boolean) {
-		this.wallet = wallet;
-		this.baseUrl = baseUrl;
-		this.isMainnet = isMainnet;
+	constructor(info: InfoClient, exchange: ExchangeClient, address: string) {
+		this.info = info;
+		this.exchange = exchange;
+		this.address = address;
 	}
 
-	static build(): HyperliquidConnector | null {
+	static build(): HyperliquidHelper | null {
 		if (!process.env.HYPERLIQUID_PRIVATE_KEY) {
-			console.log(
-				'HYPERLIQUID_PRIVATE_KEY is not set as environment variable'
-			);
+			console.log('HYPERLIQUID_PRIVATE_KEY is not set as environment variable');
 			return null;
 		}
 
 		const baseUrl: string = config.get('Hyperliquid.Network.host');
-		const isMainnet = baseUrl.includes('api.hyperliquid.xyz');
+		const isTestnet = baseUrl.includes('testnet');
 
 		const privateKey = process.env.HYPERLIQUID_PRIVATE_KEY.startsWith('0x')
 			? process.env.HYPERLIQUID_PRIVATE_KEY
 			: '0x' + process.env.HYPERLIQUID_PRIVATE_KEY;
 
 		const wallet = new ethers.Wallet(privateKey);
-
-		return new HyperliquidConnector(wallet, baseUrl, isMainnet);
-	}
-
-	getAddress(): string {
-		return this.wallet.address;
-	}
-
-	async info(body: any): Promise<any> {
-		return httpPost(this.baseUrl + '/info', body);
-	}
-
-	async getMeta(): Promise<any> {
-		return this.info({ type: 'meta' });
-	}
-
-	async getAllMids(): Promise<Record<string, string>> {
-		return this.info({ type: 'allMids' });
-	}
-
-	async getAccountState(): Promise<any> {
-		return this.info({
-			type: 'clearinghouseState',
-			user: this.wallet.address
+		const transport = new HttpTransport({
+			apiUrl: baseUrl,
+			isTestnet
 		});
-	}
+		const info = new InfoClient({ transport });
+		const exchange = new ExchangeClient({ transport, wallet });
 
-	private computeActionHash(
-		action: any,
-		nonce: number,
-		vaultAddress: string | null
-	): string {
-		const msgpackBytes = msgpack.encode(action);
-		const nonceBytes = Buffer.alloc(8);
-		nonceBytes.writeBigUInt64BE(BigInt(nonce));
-		const vaultByte = Buffer.from([vaultAddress ? 1 : 0]);
-
-		let data: Buffer;
-		if (vaultAddress) {
-			const vaultBytes = Buffer.from(
-				vaultAddress.replace('0x', ''),
-				'hex'
-			);
-			data = Buffer.concat([
-				Buffer.from(msgpackBytes),
-				nonceBytes,
-				vaultByte,
-				vaultBytes
-			]);
-		} else {
-			data = Buffer.concat([
-				Buffer.from(msgpackBytes),
-				nonceBytes,
-				vaultByte
-			]);
-		}
-
-		return ethers.utils.keccak256(data);
-	}
-
-	private async signAction(
-		action: any,
-		nonce: number,
-		vaultAddress: string | null = null
-	): Promise<any> {
-		const actionHash = this.computeActionHash(action, nonce, vaultAddress);
-
-		const domain = {
-			...EIP_712_DOMAIN,
-			chainId: this.isMainnet ? 1337 : 421614
-		};
-
-		const agentValue = {
-			source: this.isMainnet ? 'a' : 'b',
-			connectionId: actionHash
-		};
-
-		const signature = await this.wallet._signTypedData(
-			domain,
-			AGENT_TYPES,
-			agentValue
-		);
-		const { r, s, v } = ethers.utils.splitSignature(signature);
-
-		return { r, s, v };
-	}
-
-	async exchange(action: any): Promise<any> {
-		const nonce = Date.now();
-		const signature = await this.signAction(action, nonce);
-
-		const payload = {
-			action,
-			nonce,
-			signature,
-			vaultAddress: null
-		};
-
-		return httpPost(this.baseUrl + '/exchange', payload);
-	}
-
-	async setReferrer(code: string): Promise<any> {
-		if (HyperliquidConnector.referrerSet) return;
-
-		try {
-			const action = {
-				type: 'setReferrer',
-				code
-			};
-			const result = await this.exchange(action);
-			HyperliquidConnector.referrerSet = true;
-			console.log('Hyperliquid referrer set to:', code);
-			return result;
-		} catch (error) {
-			HyperliquidConnector.referrerSet = true;
-			console.log('Hyperliquid referrer already set or failed:', error);
-		}
-	}
-
-	async placeOrder(
-		assetIndex: number,
-		isBuy: boolean,
-		limitPx: string,
-		sz: string,
-		reduceOnly: boolean = false,
-		builder?: { b: string; f: number }
-	): Promise<any> {
-		const order: any = {
-			a: assetIndex,
-			b: isBuy,
-			p: limitPx,
-			s: sz,
-			r: reduceOnly,
-			t: { limit: { tif: 'Ioc' } }
-		};
-
-		const action: any = {
-			type: 'order',
-			orders: [order],
-			grouping: 'na'
-		};
-
-		if (builder) {
-			action.builder = builder;
-		}
-
-		return this.exchange(action);
+		return new HyperliquidHelper(info, exchange, wallet.address);
 	}
 }
 
@@ -238,21 +52,39 @@ export class HyperliquidClient extends AbstractDexClient {
 
 	async getIsAccountReady(): Promise<boolean> {
 		try {
-			const connector = HyperliquidConnector.build();
-			if (!connector) return false;
+			const helper = HyperliquidHelper.build();
+			if (!helper) return false;
 
-			const accountState = await connector.getAccountState();
-			console.log('Hyperliquid accountState:', JSON.stringify(accountState, null, 2));
-			const accountValue = parseFloat(
-				accountState.marginSummary.accountValue
+			console.log('Hyperliquid wallet address:', helper.address);
+
+			const userAddr = helper.address as `0x${string}`;
+
+			// Check perps margin account
+			const accountState = await helper.info.clearinghouseState({
+				user: userAddr
+			});
+			const perpsValue = parseFloat(accountState.marginSummary.accountValue);
+
+			// Check spot balances (deposits land here)
+			const spotState = await helper.info.spotClearinghouseState({
+				user: userAddr
+			});
+			const spotValue = (spotState.balances || []).reduce(
+				(sum: number, b: any) => sum + parseFloat(b.total || '0'),
+				0
 			);
-			console.log('Hyperliquid account value:', accountValue);
 
-			if (accountValue == 0) {
-				return false;
-			} else {
-				return true;
-			}
+			const totalValue = perpsValue + spotValue;
+			console.log(
+				'Hyperliquid account — perps:',
+				perpsValue,
+				'spot:',
+				spotValue,
+				'total:',
+				totalValue
+			);
+
+			return totalValue > 0;
 		} catch (error) {
 			console.error(error);
 			return false;
@@ -278,8 +110,8 @@ export class HyperliquidClient extends AbstractDexClient {
 	}
 
 	async buildOrderParams(alertMessage: AlertObject) {
-		const connector = HyperliquidConnector.build();
-		if (!connector) return;
+		const helper = HyperliquidHelper.build();
+		if (!helper) return;
 
 		const [, rootData] = getStrategiesDB();
 
@@ -294,7 +126,7 @@ export class HyperliquidClient extends AbstractDexClient {
 		const isBuy = alertMessage.order === 'buy';
 
 		// Get market metadata for asset index and size decimals
-		const meta = await connector.getMeta();
+		const meta = await helper.info.meta();
 		const assetInfo = meta.universe.find((a: any) => a.name === coin);
 		if (!assetInfo) {
 			console.error(`Asset ${coin} not found on Hyperliquid`);
@@ -304,22 +136,21 @@ export class HyperliquidClient extends AbstractDexClient {
 		const szDecimals: number = assetInfo.szDecimals;
 
 		// Get mid price for size calculation and slippage
-		const mids = await connector.getAllMids();
+		const mids = await helper.info.allMids();
 		const midPrice = parseFloat(mids[coin]);
 		if (!midPrice) {
-			console.error(
-				`Could not get mid price for ${coin} on Hyperliquid`
-			);
+			console.error(`Could not get mid price for ${coin} on Hyperliquid`);
 			return;
 		}
 
 		// Determine order size
 		let orderSize: number;
 		if (alertMessage.sizeByLeverage) {
-			const accountState = await connector.getAccountState();
+			const accountState = await helper.info.clearinghouseState({
+				user: helper.address as `0x${string}`
+			});
 			const equity = parseFloat(accountState.marginSummary.accountValue);
-			orderSize =
-				(equity * Number(alertMessage.sizeByLeverage)) / midPrice;
+			orderSize = (equity * Number(alertMessage.sizeByLeverage)) / midPrice;
 		} else if (alertMessage.sizeUsd) {
 			orderSize = Number(alertMessage.sizeUsd) / midPrice;
 		} else if (
@@ -361,42 +192,47 @@ export class HyperliquidClient extends AbstractDexClient {
 		const maxTries = 3;
 		while (count <= maxTries) {
 			try {
-				const connector = HyperliquidConnector.build();
-				if (!connector) return;
+				const helper = HyperliquidHelper.build();
+				if (!helper) return;
 
 				// Attempt to set referrer on first order
 				if (!this.referrerAttempted) {
 					this.referrerAttempted = true;
-					const referralCode = process.env.HYPERLIQUID_REFERRAL_CODE;
-					if (referralCode) {
-						await connector.setReferrer(referralCode);
+					try {
+						await helper.exchange.setReferrer({
+							code: REFERRAL_CODE
+						});
+					} catch (error) {
+						console.log('Hyperliquid referrer already set or failed:', error);
 					}
 				}
 
-				// Build optional builder fee
-				let builder: { b: string; f: number } | undefined;
-				const builderAddress = process.env.HYPERLIQUID_BUILDER_ADDRESS;
-				if (builderAddress) {
-					const builderFee: number = config.get(
-						'Hyperliquid.User.builderFee'
-					);
-					builder = { b: builderAddress, f: builderFee };
+				// Build builder fee
+				const builderFee: number = config.get('Hyperliquid.User.builderFee');
+				const builder = {
+					b: BUILDER_ADDRESS,
+					f: builderFee
+				};
+
+				const orderRequest: any = {
+					orders: [
+						{
+							a: orderParams.assetIndex,
+							b: orderParams.isBuy,
+							p: orderParams.price,
+							s: orderParams.size,
+							r: orderParams.reduceOnly,
+							t: { limit: { tif: 'Ioc' as const } }
+						}
+					],
+					grouping: 'na' as const
+				};
+
+				if (builderFee > 0) {
+					orderRequest.builder = builder;
 				}
 
-				const result = await connector.placeOrder(
-					orderParams.assetIndex,
-					orderParams.isBuy,
-					orderParams.price,
-					orderParams.size,
-					orderParams.reduceOnly,
-					builder
-				);
-
-				if (result.status === 'err') {
-					throw new Error(
-						`Hyperliquid order error: ${result.response}`
-					);
-				}
+				const result = await helper.exchange.order(orderRequest);
 
 				console.log(
 					new Date() + ' placed order on Hyperliquid market:',
@@ -453,9 +289,7 @@ export class HyperliquidClient extends AbstractDexClient {
 		db.push(positionPath, storedSize + position);
 
 		const environment =
-			config.util.getEnv('NODE_ENV') == 'production'
-				? 'mainnet'
-				: 'testnet';
+			config.util.getEnv('NODE_ENV') == 'production' ? 'mainnet' : 'testnet';
 		const folderPath = './data/exports/' + environment;
 		if (!fs.existsSync(folderPath)) {
 			fs.mkdirSync(folderPath, { recursive: true });

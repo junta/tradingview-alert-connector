@@ -11,7 +11,7 @@ Hyperliquid:
     host: https://api.hyperliquid-testnet.xyz
   User:
     slippage: 0.05
-    builderFee: 10
+    builderFee: 0
 DydxV4:
   IndexerConfig:
     httpsEndpoint: https://indexer.dydx.trade

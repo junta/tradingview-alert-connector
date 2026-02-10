@@ -1,15 +1,20 @@
 import { ethers } from 'ethers';
 import * as fs from 'fs';
+import config from 'config';
 
 jest.mock('fs');
-jest.mock('https', () => ({ request: jest.fn() }));
+jest.mock('@nktkas/hyperliquid', () => ({
+	HttpTransport: jest.fn(),
+	InfoClient: jest.fn(),
+	ExchangeClient: jest.fn()
+}));
 
 jest.mock('config', () => ({
 	get: jest.fn((key: string) => {
 		const configMap: Record<string, any> = {
 			'Hyperliquid.Network.host': 'https://api.hyperliquid.xyz',
 			'Hyperliquid.User.slippage': 0.05,
-			'Hyperliquid.User.builderFee': 10
+			'Hyperliquid.User.builderFee': 5
 		};
 		return configMap[key];
 	}),
@@ -31,7 +36,7 @@ jest.mock('../src/helper', () => ({
 }));
 
 import {
-	HyperliquidConnector,
+	HyperliquidHelper,
 	HyperliquidClient
 } from '../src/services/hyperliquid/hyperliquidClient';
 import { AlertObject } from '../src/types';
@@ -39,7 +44,7 @@ import { AlertObject } from '../src/types';
 const TEST_PRIVATE_KEY =
 	'ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
 
-describe('HyperliquidConnector', () => {
+describe('HyperliquidHelper', () => {
 	const originalEnv = process.env;
 
 	beforeEach(() => {
@@ -53,174 +58,58 @@ describe('HyperliquidConnector', () => {
 	describe('build()', () => {
 		it('returns null when HYPERLIQUID_PRIVATE_KEY is not set', () => {
 			delete process.env.HYPERLIQUID_PRIVATE_KEY;
-			const connector = HyperliquidConnector.build();
-			expect(connector).toBeNull();
+			const helper = HyperliquidHelper.build();
+			expect(helper).toBeNull();
 		});
 
-		it('creates connector when HYPERLIQUID_PRIVATE_KEY is set', () => {
+		it('creates helper when HYPERLIQUID_PRIVATE_KEY is set', () => {
 			process.env.HYPERLIQUID_PRIVATE_KEY = TEST_PRIVATE_KEY;
-			const connector = HyperliquidConnector.build();
-			expect(connector).not.toBeNull();
+			const helper = HyperliquidHelper.build();
+			expect(helper).not.toBeNull();
 		});
 
 		it('handles private key with 0x prefix', () => {
 			process.env.HYPERLIQUID_PRIVATE_KEY = '0x' + TEST_PRIVATE_KEY;
-			const connector = HyperliquidConnector.build();
-			expect(connector).not.toBeNull();
-			expect(connector.getAddress()).toBe(
+			const helper = HyperliquidHelper.build();
+			expect(helper).not.toBeNull();
+			expect(helper.address).toBe(
 				new ethers.Wallet('0x' + TEST_PRIVATE_KEY).address
 			);
 		});
 
 		it('handles private key without 0x prefix', () => {
 			process.env.HYPERLIQUID_PRIVATE_KEY = TEST_PRIVATE_KEY;
-			const connector = HyperliquidConnector.build();
-			expect(connector).not.toBeNull();
-			expect(connector.getAddress()).toBe(
+			const helper = HyperliquidHelper.build();
+			expect(helper).not.toBeNull();
+			expect(helper.address).toBe(
 				new ethers.Wallet('0x' + TEST_PRIVATE_KEY).address
 			);
 		});
+
+		it('provides info and exchange clients', () => {
+			process.env.HYPERLIQUID_PRIVATE_KEY = TEST_PRIVATE_KEY;
+			const helper = HyperliquidHelper.build();
+			expect(helper.info).toBeDefined();
+			expect(helper.exchange).toBeDefined();
+		});
 	});
 
-	describe('getAddress()', () => {
+	describe('address', () => {
 		it('returns the wallet address derived from private key', () => {
 			process.env.HYPERLIQUID_PRIVATE_KEY = TEST_PRIVATE_KEY;
-			const connector = HyperliquidConnector.build();
+			const helper = HyperliquidHelper.build();
 			const expectedAddress = new ethers.Wallet(
 				'0x' + TEST_PRIVATE_KEY
 			).address;
-			expect(connector.getAddress()).toBe(expectedAddress);
+			expect(helper.address).toBe(expectedAddress);
 		});
 	});
 
-	describe('placeOrder()', () => {
-		it('constructs correct order action structure', async () => {
-			process.env.HYPERLIQUID_PRIVATE_KEY = TEST_PRIVATE_KEY;
-			const connector = HyperliquidConnector.build();
-
-			let capturedAction: any;
-			(connector as any).exchange = jest
-				.fn()
-				.mockImplementation((action: any) => {
-					capturedAction = action;
-					return Promise.resolve({ status: 'ok' });
-				});
-
-			await connector.placeOrder(0, true, '50000', '0.01', false);
-
-			expect(capturedAction).toEqual({
-				type: 'order',
-				orders: [
-					{
-						a: 0,
-						b: true,
-						p: '50000',
-						s: '0.01',
-						r: false,
-						t: { limit: { tif: 'Ioc' } }
-					}
-				],
-				grouping: 'na'
-			});
-		});
-
-		it('sets reduceOnly when specified', async () => {
-			process.env.HYPERLIQUID_PRIVATE_KEY = TEST_PRIVATE_KEY;
-			const connector = HyperliquidConnector.build();
-
-			let capturedAction: any;
-			(connector as any).exchange = jest
-				.fn()
-				.mockImplementation((action: any) => {
-					capturedAction = action;
-					return Promise.resolve({ status: 'ok' });
-				});
-
-			await connector.placeOrder(1, false, '3000', '1.5', true);
-
-			expect(capturedAction.orders[0].r).toBe(true);
-			expect(capturedAction.orders[0].b).toBe(false);
-			expect(capturedAction.orders[0].a).toBe(1);
-		});
-
-		it('includes builder fee in action when provided', async () => {
-			process.env.HYPERLIQUID_PRIVATE_KEY = TEST_PRIVATE_KEY;
-			const connector = HyperliquidConnector.build();
-
-			let capturedAction: any;
-			(connector as any).exchange = jest
-				.fn()
-				.mockImplementation((action: any) => {
-					capturedAction = action;
-					return Promise.resolve({ status: 'ok' });
-				});
-
-			const builder = {
-				b: '0x1234567890abcdef1234567890abcdef12345678',
-				f: 10
-			};
-			await connector.placeOrder(0, true, '50000', '0.01', false, builder);
-
-			expect(capturedAction.builder).toEqual(builder);
-		});
-
-		it('does not include builder field when not provided', async () => {
-			process.env.HYPERLIQUID_PRIVATE_KEY = TEST_PRIVATE_KEY;
-			const connector = HyperliquidConnector.build();
-
-			let capturedAction: any;
-			(connector as any).exchange = jest
-				.fn()
-				.mockImplementation((action: any) => {
-					capturedAction = action;
-					return Promise.resolve({ status: 'ok' });
-				});
-
-			await connector.placeOrder(0, true, '50000', '0.01', false);
-
-			expect(capturedAction.builder).toBeUndefined();
-		});
-	});
-
-	describe('setReferrer()', () => {
-		it('sends setReferrer action to exchange', async () => {
-			process.env.HYPERLIQUID_PRIVATE_KEY = TEST_PRIVATE_KEY;
-			const connector = HyperliquidConnector.build();
-
-			let capturedAction: any;
-			(connector as any).exchange = jest
-				.fn()
-				.mockImplementation((action: any) => {
-					capturedAction = action;
-					return Promise.resolve({ status: 'ok' });
-				});
-
-			await connector.setReferrer('TESTCODE');
-
-			expect(capturedAction).toEqual({
-				type: 'setReferrer',
-				code: 'TESTCODE'
-			});
-		});
-
-		it('handles error gracefully when referrer already set', async () => {
-			process.env.HYPERLIQUID_PRIVATE_KEY = TEST_PRIVATE_KEY;
-			const connector = HyperliquidConnector.build();
-
-			(connector as any).exchange = jest
-				.fn()
-				.mockRejectedValue(new Error('Referrer already set'));
-
-			// Should not throw
-			await connector.setReferrer('TESTCODE');
-		});
-	});
-
-	describe('isMainnet detection', () => {
+	describe('testnet detection', () => {
 		it('detects mainnet from api.hyperliquid.xyz URL', () => {
 			process.env.HYPERLIQUID_PRIVATE_KEY = TEST_PRIVATE_KEY;
-			const connector = HyperliquidConnector.build();
-			expect(connector).not.toBeNull();
+			const helper = HyperliquidHelper.build();
+			expect(helper).not.toBeNull();
 		});
 
 		it('detects testnet from testnet URL', () => {
@@ -229,15 +118,15 @@ describe('HyperliquidConnector', () => {
 				'https://api.hyperliquid-testnet.xyz'
 			);
 			process.env.HYPERLIQUID_PRIVATE_KEY = TEST_PRIVATE_KEY;
-			const connector = HyperliquidConnector.build();
-			expect(connector).not.toBeNull();
+			const helper = HyperliquidHelper.build();
+			expect(helper).not.toBeNull();
 		});
 	});
 });
 
 describe('HyperliquidClient', () => {
 	let client: HyperliquidClient;
-	let mockConnector: any;
+	let mockHelper: any;
 	let buildSpy: jest.SpyInstance;
 
 	const originalEnv = process.env;
@@ -248,16 +137,22 @@ describe('HyperliquidClient', () => {
 
 		client = new HyperliquidClient();
 
-		mockConnector = {
-			getMeta: jest.fn(),
-			getAllMids: jest.fn(),
-			getAccountState: jest.fn(),
-			placeOrder: jest.fn(),
-			setReferrer: jest.fn()
+		mockHelper = {
+			info: {
+				meta: jest.fn(),
+				allMids: jest.fn(),
+				clearinghouseState: jest.fn(),
+				spotClearinghouseState: jest.fn().mockResolvedValue({ balances: [] })
+			},
+			exchange: {
+				order: jest.fn(),
+				setReferrer: jest.fn()
+			},
+			address: new ethers.Wallet('0x' + TEST_PRIVATE_KEY).address
 		};
 		buildSpy = jest
-			.spyOn(HyperliquidConnector, 'build')
-			.mockReturnValue(mockConnector);
+			.spyOn(HyperliquidHelper, 'build')
+			.mockReturnValue(mockHelper);
 
 		(fs.existsSync as jest.Mock).mockReturnValue(true);
 		(fs.appendFileSync as jest.Mock).mockImplementation(() => {});
@@ -269,8 +164,8 @@ describe('HyperliquidClient', () => {
 	});
 
 	describe('getIsAccountReady', () => {
-		it('returns true when account has positive value', async () => {
-			mockConnector.getAccountState.mockResolvedValue({
+		it('returns true when perps account has positive value', async () => {
+			mockHelper.info.clearinghouseState.mockResolvedValue({
 				marginSummary: { accountValue: '1500.50' }
 			});
 
@@ -278,16 +173,35 @@ describe('HyperliquidClient', () => {
 			expect(result).toBe(true);
 		});
 
-		it('returns false when account value is zero', async () => {
-			mockConnector.getAccountState.mockResolvedValue({
+		it('returns true when only spot has balance', async () => {
+			mockHelper.info.clearinghouseState.mockResolvedValue({
 				marginSummary: { accountValue: '0' }
+			});
+			mockHelper.info.spotClearinghouseState.mockResolvedValue({
+				balances: [
+					{ coin: 'USDC', total: '4.985908', hold: '0.0' }
+				]
+			});
+
+			const result = await client.getIsAccountReady();
+			expect(result).toBe(true);
+		});
+
+		it('returns false when both perps and spot are zero', async () => {
+			mockHelper.info.clearinghouseState.mockResolvedValue({
+				marginSummary: { accountValue: '0' }
+			});
+			mockHelper.info.spotClearinghouseState.mockResolvedValue({
+				balances: [
+					{ coin: 'USDC', total: '0.0', hold: '0.0' }
+				]
 			});
 
 			const result = await client.getIsAccountReady();
 			expect(result).toBe(false);
 		});
 
-		it('returns false when connector build fails', async () => {
+		it('returns false when helper build fails', async () => {
 			buildSpy.mockReturnValueOnce(null);
 
 			const result = await client.getIsAccountReady();
@@ -295,28 +209,43 @@ describe('HyperliquidClient', () => {
 		});
 
 		it('returns false on API error', async () => {
-			mockConnector.getAccountState.mockRejectedValue(
+			mockHelper.info.clearinghouseState.mockRejectedValue(
 				new Error('API error')
 			);
 
 			const result = await client.getIsAccountReady();
 			expect(result).toBe(false);
 		});
+
+		it('passes user address to both clearinghouseState calls', async () => {
+			mockHelper.info.clearinghouseState.mockResolvedValue({
+				marginSummary: { accountValue: '1500.50' }
+			});
+
+			await client.getIsAccountReady();
+
+			expect(mockHelper.info.clearinghouseState).toHaveBeenCalledWith({
+				user: mockHelper.address
+			});
+			expect(mockHelper.info.spotClearinghouseState).toHaveBeenCalledWith({
+				user: mockHelper.address
+			});
+		});
 	});
 
 	describe('buildOrderParams', () => {
 		beforeEach(() => {
-			mockConnector.getMeta.mockResolvedValue({
+			mockHelper.info.meta.mockResolvedValue({
 				universe: [
 					{ name: 'BTC', szDecimals: 5 },
 					{ name: 'ETH', szDecimals: 4 }
 				]
 			});
-			mockConnector.getAllMids.mockResolvedValue({
+			mockHelper.info.allMids.mockResolvedValue({
 				BTC: '50000.0',
 				ETH: '3000.0'
 			});
-			mockConnector.getAccountState.mockResolvedValue({
+			mockHelper.info.clearinghouseState.mockResolvedValue({
 				marginSummary: { accountValue: '10000.0' }
 			});
 		});
@@ -456,7 +385,7 @@ describe('HyperliquidClient', () => {
 		});
 
 		describe('error handling', () => {
-			it('returns undefined when connector build fails', async () => {
+			it('returns undefined when helper build fails', async () => {
 				buildSpy.mockReturnValueOnce(null);
 				const result = await client.buildOrderParams(baseAlert);
 				expect(result).toBeUndefined();
@@ -469,7 +398,7 @@ describe('HyperliquidClient', () => {
 			});
 
 			it('returns undefined when mid price is not available', async () => {
-				mockConnector.getAllMids.mockResolvedValueOnce({
+				mockHelper.info.allMids.mockResolvedValueOnce({
 					ETH: '3000.0'
 				});
 				const result = await client.buildOrderParams(baseAlert);
@@ -509,20 +438,20 @@ describe('HyperliquidClient', () => {
 		};
 
 		beforeEach(() => {
-			mockConnector.getMeta.mockResolvedValue({
+			mockHelper.info.meta.mockResolvedValue({
 				universe: [
 					{ name: 'BTC', szDecimals: 5 },
 					{ name: 'ETH', szDecimals: 4 }
 				]
 			});
-			mockConnector.getAllMids.mockResolvedValue({
+			mockHelper.info.allMids.mockResolvedValue({
 				BTC: '50000.0',
 				ETH: '3000.0'
 			});
-			mockConnector.getAccountState.mockResolvedValue({
+			mockHelper.info.clearinghouseState.mockResolvedValue({
 				marginSummary: { accountValue: '10000.0' }
 			});
-			mockConnector.placeOrder.mockResolvedValue(mockOrderResult);
+			mockHelper.exchange.order.mockResolvedValue(mockOrderResult);
 		});
 
 		it('places order successfully and returns result', async () => {
@@ -530,87 +459,115 @@ describe('HyperliquidClient', () => {
 			expect(result).toEqual(mockOrderResult);
 		});
 
-		it('calls setReferrer on first order when HYPERLIQUID_REFERRAL_CODE is set', async () => {
-			process.env.HYPERLIQUID_REFERRAL_CODE = 'MYCODE';
-			mockConnector.setReferrer.mockResolvedValue({ status: 'ok' });
-
+		it('calls exchange.order with correct parameters', async () => {
 			await client.placeOrder(baseAlert);
 
-			expect(mockConnector.setReferrer).toHaveBeenCalledWith('MYCODE');
+			expect(mockHelper.exchange.order).toHaveBeenCalledWith({
+				orders: [
+					{
+						a: 0,
+						b: true,
+						p: '52500',
+						s: '0.01000',
+						r: false,
+						t: { limit: { tif: 'Ioc' } }
+					}
+				],
+				grouping: 'na',
+				builder: {
+					b: '0x0000000000000000000000000000000000000000',
+					f: 5
+				}
+			});
 		});
 
-		it('does not call setReferrer when HYPERLIQUID_REFERRAL_CODE is not set', async () => {
-			delete process.env.HYPERLIQUID_REFERRAL_CODE;
+		it('calls setReferrer on first order', async () => {
+			mockHelper.exchange.setReferrer.mockResolvedValue({ status: 'ok' });
 
 			await client.placeOrder(baseAlert);
 
-			expect(mockConnector.setReferrer).not.toHaveBeenCalled();
+			expect(mockHelper.exchange.setReferrer).toHaveBeenCalledWith({
+				code: '0XIBUKI'
+			});
 		});
 
 		it('only attempts setReferrer once across multiple orders', async () => {
-			process.env.HYPERLIQUID_REFERRAL_CODE = 'MYCODE';
-			mockConnector.setReferrer.mockResolvedValue({ status: 'ok' });
+			mockHelper.exchange.setReferrer.mockResolvedValue({ status: 'ok' });
 
 			await client.placeOrder(baseAlert);
 			await client.placeOrder(baseAlert);
 
-			expect(mockConnector.setReferrer).toHaveBeenCalledTimes(1);
+			expect(mockHelper.exchange.setReferrer).toHaveBeenCalledTimes(1);
 		});
 
-		it('includes builder fee when HYPERLIQUID_BUILDER_ADDRESS is set', async () => {
-			process.env.HYPERLIQUID_BUILDER_ADDRESS =
-				'0x1234567890abcdef1234567890abcdef12345678';
-
+		it('includes builder fee when builderFee > 0', async () => {
 			await client.placeOrder(baseAlert);
 
-			expect(mockConnector.placeOrder).toHaveBeenCalledWith(
-				0,
-				true,
-				'52500',
-				'0.01000',
-				false,
-				{
-					b: '0x1234567890abcdef1234567890abcdef12345678',
-					f: 10
+			expect(mockHelper.exchange.order).toHaveBeenCalledWith({
+				orders: [
+					{
+						a: 0,
+						b: true,
+						p: '52500',
+						s: '0.01000',
+						r: false,
+						t: { limit: { tif: 'Ioc' } }
+					}
+				],
+				grouping: 'na',
+				builder: {
+					b: '0x0000000000000000000000000000000000000000',
+					f: 5
 				}
-			);
+			});
 		});
 
-		it('does not include builder fee when HYPERLIQUID_BUILDER_ADDRESS is not set', async () => {
-			delete process.env.HYPERLIQUID_BUILDER_ADDRESS;
+		it('does not include builder fee when builderFee is 0', async () => {
+			(config.get as jest.Mock).mockImplementation((key: string) => {
+				if (key === 'Hyperliquid.User.builderFee') return 0;
+				const configMap: Record<string, any> = {
+					'Hyperliquid.Network.host': 'https://api.hyperliquid.xyz',
+					'Hyperliquid.User.slippage': 0.05
+				};
+				return configMap[key];
+			});
 
 			await client.placeOrder(baseAlert);
 
-			expect(mockConnector.placeOrder).toHaveBeenCalledWith(
-				0,
-				true,
-				'52500',
-				'0.01000',
-				false,
-				undefined
-			);
+			expect(mockHelper.exchange.order).toHaveBeenCalledWith({
+				orders: [
+					{
+						a: 0,
+						b: true,
+						p: '52500',
+						s: '0.01000',
+						r: false,
+						t: { limit: { tif: 'Ioc' } }
+					}
+				],
+				grouping: 'na'
+			});
 		});
 
 		it('retries on failure up to maxTries', async () => {
-			mockConnector.placeOrder
+			mockHelper.exchange.order
 				.mockRejectedValueOnce(new Error('Network error'))
 				.mockRejectedValueOnce(new Error('Network error'))
 				.mockResolvedValueOnce(mockOrderResult);
 
 			const result = await client.placeOrder(baseAlert);
 			expect(result).toEqual(mockOrderResult);
-			expect(mockConnector.placeOrder).toHaveBeenCalledTimes(3);
+			expect(mockHelper.exchange.order).toHaveBeenCalledTimes(3);
 		});
 
-		it('returns undefined on Hyperliquid error response after retries', async () => {
-			mockConnector.placeOrder.mockResolvedValue({
-				status: 'err',
-				response: 'Insufficient margin'
-			});
+		it('returns undefined after all retries fail', async () => {
+			mockHelper.exchange.order.mockRejectedValue(
+				new Error('Persistent error')
+			);
 
 			const result = await client.placeOrder(baseAlert);
 			expect(result).toBeUndefined();
-			expect(mockConnector.placeOrder).toHaveBeenCalledTimes(4);
+			expect(mockHelper.exchange.order).toHaveBeenCalledTimes(4);
 		});
 
 		describe('trade history export', () => {
@@ -691,7 +648,7 @@ describe('HyperliquidClient', () => {
 			});
 
 			it('records FAILED status when no fill data', async () => {
-				mockConnector.placeOrder.mockResolvedValue({
+				mockHelper.exchange.order.mockResolvedValue({
 					status: 'ok',
 					response: {
 						data: { statuses: [{ error: 'no liquidity' }] }
