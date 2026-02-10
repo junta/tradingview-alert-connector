@@ -88,6 +88,27 @@ Set your TradingView alert webhook URL to your server's address (e.g., `http://y
 
 The `market` field accepts multiple formats: `"BTC"`, `"BTC-USD"`, `"BTC-PERP"`, or `"BTC_USD"`.
 
+### HIP-3 Builder-Deployed Perps
+
+Hyperliquid supports [HIP-3](https://hyperliquid.gitbook.io/hyperliquid-docs/hyperliquid-improvement-proposals-hips/hip-3-builder-deployed-perpetuals) builder-deployed perpetuals — markets for equities, commodities, and forex deployed by third-party builders like [trade.xyz](https://trade.xyz).
+
+To trade these assets, use the full `dex:SYMBOL` format in the `market` field:
+
+```json
+{
+  "exchange": "hyperliquid",
+  "strategy": "SilverStrategy",
+  "market": "xyz:SILVER",
+  "size": 1.0,
+  "order": "buy",
+  "price": {{close}},
+  "position": "long",
+  "reverse": false
+}
+```
+
+Examples: `"xyz:SILVER"`, `"xyz:GOLD"`, `"xyz:TSLA"`, `"xyz:NVDA"`, `"km:US500"`, `"flx:OIL"`.
+
 ### Order Sizing Options
 
 Instead of a fixed `size`, you can use:

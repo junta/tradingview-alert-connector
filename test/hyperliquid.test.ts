@@ -143,7 +143,9 @@ describe('HyperliquidClient', () => {
 				meta: jest.fn(),
 				allMids: jest.fn(),
 				clearinghouseState: jest.fn(),
-				spotClearinghouseState: jest.fn().mockResolvedValue({ balances: [] })
+				spotClearinghouseState: jest.fn().mockResolvedValue({ balances: [] }),
+				referral: jest.fn().mockResolvedValue({ referredBy: null }),
+				perpDexs: jest.fn().mockResolvedValue([null, { name: 'xyz' }])
 			},
 			exchange: {
 				order: jest.fn(),
@@ -294,6 +296,88 @@ describe('HyperliquidClient', () => {
 				};
 				const result = await client.buildOrderParams(alert);
 				expect(result.coin).toBe('ETH');
+			});
+		});
+
+		describe('HIP-3 builder-deployed perps', () => {
+			const hip3Meta = {
+				universe: [
+					{ name: 'xyz:XYZ100', szDecimals: 4 },
+					{ name: 'xyz:TSLA', szDecimals: 3 },
+					{ name: 'xyz:SILVER', szDecimals: 2 }
+				]
+			};
+			const hip3Mids = {
+				'xyz:XYZ100': '100.0',
+				'xyz:TSLA': '250.0',
+				'xyz:SILVER': '30.0'
+			};
+
+			it('detects HIP-3 asset and queries with dex param', async () => {
+				mockHelper.info.meta.mockResolvedValue(hip3Meta);
+				mockHelper.info.allMids.mockResolvedValue(hip3Mids);
+
+				const alert = { ...baseAlert, market: 'xyz:SILVER', size: 1.0 };
+				const result = await client.buildOrderParams(alert);
+
+				expect(mockHelper.info.meta).toHaveBeenCalledWith({ dex: 'xyz' });
+				expect(mockHelper.info.allMids).toHaveBeenCalledWith({
+					dex: 'xyz'
+				});
+				expect(result.coin).toBe('xyz:SILVER');
+			});
+
+			it('computes HIP-3 asset index correctly', async () => {
+				mockHelper.info.meta.mockResolvedValue(hip3Meta);
+				mockHelper.info.allMids.mockResolvedValue(hip3Mids);
+
+				const alert = { ...baseAlert, market: 'xyz:SILVER', size: 1.0 };
+				const result = await client.buildOrderParams(alert);
+
+				// xyz is at perpDexs index 1, SILVER is at meta index 2
+				// 100000 + 1 * 10000 + 2 = 110002
+				expect(result.assetIndex).toBe(110002);
+			});
+
+			it('normalizes uppercase dex name', async () => {
+				mockHelper.info.meta.mockResolvedValue(hip3Meta);
+				mockHelper.info.allMids.mockResolvedValue(hip3Mids);
+
+				const alert = { ...baseAlert, market: 'XYZ:SILVER', size: 1.0 };
+				const result = await client.buildOrderParams(alert);
+
+				expect(mockHelper.info.meta).toHaveBeenCalledWith({ dex: 'xyz' });
+				expect(result.coin).toBe('xyz:SILVER');
+			});
+
+			it('returns undefined for unknown dex', async () => {
+				mockHelper.info.meta.mockResolvedValue({
+					universe: [{ name: 'unknown:FOO', szDecimals: 2 }]
+				});
+				mockHelper.info.allMids.mockResolvedValue({
+					'unknown:FOO': '10.0'
+				});
+				mockHelper.info.perpDexs.mockResolvedValue([
+					null,
+					{ name: 'xyz' }
+				]);
+
+				const alert = {
+					...baseAlert,
+					market: 'unknown:FOO',
+					size: 1.0
+				};
+				const result = await client.buildOrderParams(alert);
+
+				expect(result).toBeUndefined();
+			});
+
+			it('does not pass dex param for native perps', async () => {
+				const result = await client.buildOrderParams(baseAlert);
+
+				expect(mockHelper.info.meta).toHaveBeenCalledWith(undefined);
+				expect(mockHelper.info.allMids).toHaveBeenCalledWith(undefined);
+				expect(result.coin).toBe('BTC');
 			});
 		});
 
@@ -482,22 +566,37 @@ describe('HyperliquidClient', () => {
 			});
 		});
 
-		it('calls setReferrer on first order', async () => {
+		it('calls setReferrer when referredBy is null', async () => {
+			mockHelper.info.referral.mockResolvedValue({ referredBy: null });
 			mockHelper.exchange.setReferrer.mockResolvedValue({ status: 'ok' });
 
 			await client.placeOrder(baseAlert);
 
+			expect(mockHelper.info.referral).toHaveBeenCalled();
 			expect(mockHelper.exchange.setReferrer).toHaveBeenCalledWith({
 				code: '0XIBUKI'
 			});
 		});
 
-		it('only attempts setReferrer once across multiple orders', async () => {
+		it('skips setReferrer when referredBy is already set', async () => {
+			mockHelper.info.referral.mockResolvedValue({
+				referredBy: { referrer: '0xabc', code: 'EXISTING' }
+			});
+
+			await client.placeOrder(baseAlert);
+
+			expect(mockHelper.info.referral).toHaveBeenCalled();
+			expect(mockHelper.exchange.setReferrer).not.toHaveBeenCalled();
+		});
+
+		it('only attempts referral check once across multiple orders', async () => {
+			mockHelper.info.referral.mockResolvedValue({ referredBy: null });
 			mockHelper.exchange.setReferrer.mockResolvedValue({ status: 'ok' });
 
 			await client.placeOrder(baseAlert);
 			await client.placeOrder(baseAlert);
 
+			expect(mockHelper.info.referral).toHaveBeenCalledTimes(1);
 			expect(mockHelper.exchange.setReferrer).toHaveBeenCalledTimes(1);
 		});
 
@@ -568,7 +667,7 @@ describe('HyperliquidClient', () => {
 
 			const result = await client.placeOrder(baseAlert);
 			expect(result).toBeUndefined();
-			expect(mockHelper.exchange.order).toHaveBeenCalledTimes(4);
+			expect(mockHelper.exchange.order).toHaveBeenCalledTimes(3);
 		});
 
 		describe('trade history export', () => {

@@ -110,33 +110,66 @@ export class HyperliquidClient extends AbstractDexClient {
 	}
 
 	async buildOrderParams(alertMessage: AlertObject) {
+		console.log('buildOrderParams input:', JSON.stringify(alertMessage));
+
 		const helper = HyperliquidHelper.build();
 		if (!helper) return;
 
 		const [, rootData] = getStrategiesDB();
 
-		// Normalize market name: support "BTC-USD", "BTC-PERP", "BTC_USD", "BTC"
-		const coin = alertMessage.market
-			.replace(/-USD$/i, '')
-			.replace(/-PERP$/i, '')
-			.replace(/_USD$/i, '')
-			.replace(/_PERP$/i, '')
-			.toUpperCase();
+		// Coerce numeric fields that may arrive as strings from JSON body
+		if (alertMessage.size != null)
+			alertMessage.size = Number(alertMessage.size);
+		if (alertMessage.sizeUsd != null)
+			alertMessage.sizeUsd = Number(alertMessage.sizeUsd);
+		if (alertMessage.sizeByLeverage != null)
+			alertMessage.sizeByLeverage = Number(alertMessage.sizeByLeverage);
+		if (alertMessage.price != null)
+			alertMessage.price = Number(alertMessage.price);
+
+		// Normalize market name and detect HIP-3 builder-deployed perps
+		const marketUpper = alertMessage.market.toUpperCase();
+		const isHip3 = marketUpper.includes(':');
+		let coin: string;
+		let dexName: string | undefined;
+
+		if (isHip3) {
+			const [dex, symbol] = marketUpper.split(':');
+			dexName = dex.toLowerCase();
+			coin = `${dexName}:${symbol}`;
+		} else {
+			coin = marketUpper.split(/[-_]/)[0];
+		}
 
 		const isBuy = alertMessage.order === 'buy';
 
 		// Get market metadata for asset index and size decimals
-		const meta = await helper.info.meta();
+		const dexParam = dexName ? { dex: dexName } : undefined;
+		const meta = await helper.info.meta(dexParam);
 		const assetInfo = meta.universe.find((a: any) => a.name === coin);
 		if (!assetInfo) {
 			console.error(`Asset ${coin} not found on Hyperliquid`);
 			return;
 		}
-		const assetIndex = meta.universe.indexOf(assetInfo);
+		const indexInMeta = meta.universe.indexOf(assetInfo);
 		const szDecimals: number = assetInfo.szDecimals;
 
+		// Compute asset index (HIP-3 uses formula: 100000 + dexIndex * 10000 + indexInMeta)
+		let assetIndex: number;
+		if (dexName) {
+			const perpDexes = await helper.info.perpDexs();
+			const dexIndex = perpDexes.findIndex((d: any) => d?.name === dexName);
+			if (dexIndex < 0) {
+				console.error(`DEX "${dexName}" not found on Hyperliquid`);
+				return;
+			}
+			assetIndex = 100000 + dexIndex * 10000 + indexInMeta;
+		} else {
+			assetIndex = indexInMeta;
+		}
+
 		// Get mid price for size calculation and slippage
-		const mids = await helper.info.allMids();
+		const mids = await helper.info.allMids(dexParam);
 		const midPrice = parseFloat(mids[coin]);
 		if (!midPrice) {
 			console.error(`Could not get mid price for ${coin} on Hyperliquid`);
@@ -146,10 +179,19 @@ export class HyperliquidClient extends AbstractDexClient {
 		// Determine order size
 		let orderSize: number;
 		if (alertMessage.sizeByLeverage) {
+			const userAddr = helper.address as `0x${string}`;
 			const accountState = await helper.info.clearinghouseState({
-				user: helper.address as `0x${string}`
+				user: userAddr
 			});
-			const equity = parseFloat(accountState.marginSummary.accountValue);
+			const perpsValue = parseFloat(accountState.marginSummary.accountValue);
+			const spotState = await helper.info.spotClearinghouseState({
+				user: userAddr
+			});
+			const spotValue = (spotState.balances || []).reduce(
+				(sum: number, b: any) => sum + parseFloat(b.total || '0'),
+				0
+			);
+			const equity = perpsValue + spotValue;
 			orderSize = (equity * Number(alertMessage.sizeByLeverage)) / midPrice;
 		} else if (alertMessage.sizeUsd) {
 			orderSize = Number(alertMessage.sizeUsd) / midPrice;
@@ -199,11 +241,16 @@ export class HyperliquidClient extends AbstractDexClient {
 				if (!this.referrerAttempted) {
 					this.referrerAttempted = true;
 					try {
-						await helper.exchange.setReferrer({
-							code: REFERRAL_CODE
+						const referralState = await helper.info.referral({
+							user: helper.address as `0x${string}`
 						});
+						if (!referralState.referredBy) {
+							await helper.exchange.setReferrer({
+								code: REFERRAL_CODE
+							});
+						}
 					} catch (error) {
-						console.log('Hyperliquid referrer already set or failed:', error);
+						console.log('Hyperliquid referrer check/set failed:', error);
 					}
 				}
 
@@ -232,6 +279,8 @@ export class HyperliquidClient extends AbstractDexClient {
 					orderRequest.builder = builder;
 				}
 
+				console.log('Hyperliquid orderRequest:', JSON.stringify(orderRequest));
+
 				const result = await helper.exchange.order(orderRequest);
 
 				console.log(
@@ -244,13 +293,16 @@ export class HyperliquidClient extends AbstractDexClient {
 					'size:',
 					orderParams.size
 				);
+				console.log('Hyperliquid order result:', JSON.stringify(result));
 
 				return result;
 			} catch (error) {
 				count++;
-				if (count == maxTries) {
-					console.error(error);
-				}
+				console.error(
+					`Hyperliquid order attempt ${count}/${maxTries} failed:`,
+					error
+				);
+				if (count >= maxTries) break;
 				await _sleep(5000);
 			}
 		}
