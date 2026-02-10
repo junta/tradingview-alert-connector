@@ -41,6 +41,7 @@ import {
 } from '../src/services/hyperliquid/hyperliquidClient';
 import { AlertObject } from '../src/types';
 
+// Hardhat's default account #0 private key — not a real secret
 const TEST_PRIVATE_KEY =
 	'ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
 
