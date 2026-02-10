@@ -2,27 +2,23 @@
 
 Tradingview-Alert-Connector is a free and noncustodial tool for you to Integrate tradingView alert and execute automated trading for perpetual futures DEXes.
 
-Currently supports [dYdX v3](https://dydx.exchange), [dYdX v4](https://dydx.trade/?ref=LawfulBalletF7U), [Perpetual Protocol v2](https://perp.com/), [GMX v2](https://app.gmx.io/#/trade/), [Bluefin](https://trade.bluefin.io), and [Hyperliquid](https://hyperliquid.xyz/).
+Currently supports [dYdX v4](https://dydx.trade/?ref=LawfulBalletF7U), [Perpetual Protocol v2](https://perp.com/), [GMX v2](https://app.gmx.io/#/trade/), [Bluefin](https://trade.bluefin.io), and [Hyperliquid](https://app.hyperliquid.xyz/join/0XIBUKI).
 
 # Supported Exchanges
 
-| Exchange | Network | Type |
-|----------|---------|------|
-| dYdX v3 | Ethereum L1 / StarkEx | Perpetual Futures |
-| dYdX v4 | dYdX Chain | Perpetual Futures |
-| Perpetual Protocol | Optimism L2 | Perpetual Futures |
-| GMX v2 | Arbitrum | Perpetual Futures |
-| Bluefin | Sui | Perpetual Futures |
-| Hyperliquid | Hyperliquid L1 | Perpetual Futures |
+| Exchange           | Network        | Type              |
+| ------------------ | -------------- | ----------------- |
+| dYdX v4            | dYdX Chain     | Perpetual Futures |
+| Perpetual Protocol | Optimism L2    | Perpetual Futures |
+| GMX v2             | Arbitrum       | Perpetual Futures |
+| Bluefin            | Sui            | Perpetual Futures |
+| Hyperliquid        | Hyperliquid L1 | Perpetual Futures |
 
 # Docs
 
 https://tv-connector.gitbook.io/docs/
 
 # Video Tutorial
-
-dYdX v3:
-https://www.youtube.com/watch?v=I8hB2O2-xx4
 
 Perpetual Protocol:
 https://youtu.be/YqrOZW_mnUM
@@ -51,15 +47,10 @@ npm install --force
 ### Environment Variables
 
 For Hyperliquid:
+
 ```
 HYPERLIQUID_PRIVATE_KEY=
-# Optional: referral code for 4% fee discount (applied once on first order)
-HYPERLIQUID_REFERRAL_CODE=
-# Optional: builder address to charge builder fee per order
-HYPERLIQUID_BUILDER_ADDRESS=
 ```
-
-The builder fee amount (in tenths of basis points) is configured in `config/production.yaml` under `Hyperliquid.User.builderFee` (default: 10 = 1 bps).
 
 See `.env.sample` for all available environment variables for each exchange.
 
@@ -100,6 +91,7 @@ The `market` field accepts multiple formats: `"BTC"`, `"BTC-USD"`, `"BTC-PERP"`,
 ### Order Sizing Options
 
 Instead of a fixed `size`, you can use:
+
 - `"sizeUsd": 1000` - Size in USD value (converted to base asset at current price)
 - `"sizeByLeverage": 2` - Percentage of account equity as leverage
 
