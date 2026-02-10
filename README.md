@@ -46,12 +46,6 @@ npm install --force
 
 ### Environment Variables
 
-For Hyperliquid:
-
-```
-HYPERLIQUID_PRIVATE_KEY=
-```
-
 See `.env.sample` for all available environment variables for each exchange.
 
 ### with Docker
@@ -70,44 +64,6 @@ yarn start
 # TradingView Alert Format
 
 Set your TradingView alert webhook URL to your server's address (e.g., `http://your-server:3000/`) and use JSON format for the alert message:
-
-### For Hyperliquid
-
-```json
-{
-  "exchange": "hyperliquid",
-  "strategy": "MyStrategy",
-  "market": "BTC",
-  "size": 0.01,
-  "order": "buy",
-  "price": {{close}},
-  "position": "long",
-  "reverse": false
-}
-```
-
-The `market` field accepts multiple formats: `"BTC"`, `"BTC-USD"`, `"BTC-PERP"`, or `"BTC_USD"`.
-
-### HIP-3 Builder-Deployed Perps
-
-Hyperliquid supports [HIP-3](https://hyperliquid.gitbook.io/hyperliquid-docs/hyperliquid-improvement-proposals-hips/hip-3-builder-deployed-perpetuals) builder-deployed perpetuals — markets for equities, commodities, and forex deployed by third-party builders like [trade.xyz](https://trade.xyz).
-
-To trade these assets, use the full `dex:SYMBOL` format in the `market` field:
-
-```json
-{
-  "exchange": "hyperliquid",
-  "strategy": "SilverStrategy",
-  "market": "xyz:SILVER",
-  "size": 1.0,
-  "order": "buy",
-  "price": {{close}},
-  "position": "long",
-  "reverse": false
-}
-```
-
-Examples: `"xyz:SILVER"`, `"xyz:GOLD"`, `"xyz:TSLA"`, `"xyz:NVDA"`, `"km:US500"`, `"flx:OIL"`.
 
 ### Order Sizing Options
 
