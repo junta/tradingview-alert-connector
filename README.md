@@ -2,16 +2,23 @@
 
 Tradingview-Alert-Connector is a free and noncustodial tool for you to Integrate tradingView alert and execute automated trading for perpetual futures DEXes.
 
-Currently supports [dYdX v3](https://dydx.exchange), [dYdX v4](https://dydx.trade/?ref=LawfulBalletF7U), [Perpetual Protocol v2](https://perp.com/), [GMX v2](https://app.gmx.io/#/trade/) and [Bluefin](https://trade.bluefin.io).
+Currently supports [dYdX v4](https://dydx.trade/?ref=LawfulBalletF7U), [Perpetual Protocol v2](https://perp.com/), [GMX v2](https://app.gmx.io/#/trade/), [Bluefin](https://trade.bluefin.io), and [Hyperliquid](https://app.hyperliquid.xyz/join/0XIBUKI).
+
+# Supported Exchanges
+
+| Exchange           | Network        | Type              |
+| ------------------ | -------------- | ----------------- |
+| dYdX v4            | dYdX Chain     | Perpetual Futures |
+| Perpetual Protocol | Optimism L2    | Perpetual Futures |
+| GMX v2             | Arbitrum       | Perpetual Futures |
+| Bluefin            | Sui            | Perpetual Futures |
+| Hyperliquid        | Hyperliquid L1 | Perpetual Futures |
 
 # Docs
 
 https://tv-connector.gitbook.io/docs/
 
 # Video Tutorial
-
-dYdX v3:
-https://www.youtube.com/watch?v=I8hB2O2-xx4
 
 Perpetual Protocol:
 https://youtu.be/YqrOZW_mnUM
@@ -37,6 +44,10 @@ npm install --force
 - rename .env.sample to .env
 - fill environment variables in .env (see [full tutorial](https://tv-connector.gitbook.io/docs/setuup/running-on-local-pc#steps))
 
+### Environment Variables
+
+See `.env.sample` for all available environment variables for each exchange.
+
 ### with Docker
 
 ```bash
@@ -48,6 +59,23 @@ docker-compose up -d
 
 ```bash
 yarn start
+```
+
+# TradingView Alert Format
+
+Set your TradingView alert webhook URL to your server's address (e.g., `http://your-server:3000/`) and use JSON format for the alert message:
+
+### Order Sizing Options
+
+Instead of a fixed `size`, you can use:
+
+- `"sizeUsd": 1000` - Size in USD value (converted to base asset at current price)
+- `"sizeByLeverage": 2` - Percentage of account equity as leverage
+
+# Testing
+
+```bash
+npm test
 ```
 
 ## Disclaimer

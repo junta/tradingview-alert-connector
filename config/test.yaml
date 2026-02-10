@@ -1,9 +1,3 @@
-Dydx:
-  Network:
-    host: https://api.stage.dydx.exchange
-    chainID: 5
-  User:
-    limitFee: 0.2
 Perpetual:
   Network:
     host: https://mainnet.optimism.io/
@@ -13,6 +7,12 @@ GMX:
   Network:
     # host: http://127.0.0.1:8545
     host: https://arbitrum.llamarpc.com
+Hyperliquid:
+  Network:
+    host: https://api.hyperliquid-testnet.xyz
+  User:
+    slippage: 0.05
+    builderFee: 0
 DydxV4:
   IndexerConfig:
     httpsEndpoint: https://indexer.dydx.trade

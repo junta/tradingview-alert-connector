@@ -83,3 +83,4 @@ typings/
 
 .vscode/
 /scripts/*
+/data/exports/*
