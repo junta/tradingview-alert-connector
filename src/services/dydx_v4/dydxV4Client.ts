@@ -98,27 +98,35 @@ export class DydxV4Client extends AbstractDexClient {
 		let count = 0;
 		const maxTries = 3;
 		const fillWaitTime = 60000; // 1 minute
+		// Generate clientId once so retries check the same order instead of placing duplicates
+		const clientId = this.generateRandomInt32();
+		console.log('Client ID: ', clientId);
+		let orderPlaced = false;
+
 		while (count <= maxTries) {
 			try {
-				const clientId = this.generateRandomInt32();
-				console.log('Client ID: ', clientId);
+				if (!orderPlaced) {
+					const tx = await client.placeOrder(
+						subaccount,
+						market,
+						type,
+						side,
+						price,
+						size,
+						clientId,
+						timeInForce,
+						120000, // 2 minute
+						execution,
+						postOnly,
+						reduceOnly,
+						triggerPrice
+					);
+					console.log('Transaction Result: ', tx);
+					orderPlaced = true;
+				} else {
+					console.log('Order already placed, rechecking fill status...');
+				}
 
-				const tx = await client.placeOrder(
-					subaccount,
-					market,
-					type,
-					side,
-					price,
-					size,
-					clientId,
-					timeInForce,
-					120000, // 2 minute
-					execution,
-					postOnly,
-					reduceOnly,
-					triggerPrice
-				);
-				console.log('Transaction Result: ', tx);
 				await _sleep(fillWaitTime);
 
 				const isFilled = await this.isOrderFilled(String(clientId));
