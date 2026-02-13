@@ -4,6 +4,7 @@ import { DydxV4Client } from './dydx_v4/dydxV4Client';
 import { GmxClient } from './gmx/gmxClient';
 import { PerpClient } from './perp/perpClient';
 import { HyperliquidClient } from './hyperliquid/hyperliquidClient';
+import { GrvtDexClient } from './grvt/grvtClient';
 
 export class DexRegistry {
 	private registeredDexs: Map<string, AbstractDexClient>;
@@ -16,6 +17,7 @@ export class DexRegistry {
 		this.registeredDexs.set('gmx', new GmxClient());
 		this.registeredDexs.set('bluefin', new BluefinDexClient());
 		this.registeredDexs.set('hyperliquid', new HyperliquidClient());
+		this.registeredDexs.set('grvt', new GrvtDexClient());
 	}
 
 	getDex(dexKey: string): AbstractDexClient {

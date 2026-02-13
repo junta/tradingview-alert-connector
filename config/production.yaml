@@ -12,6 +12,11 @@ Hyperliquid:
   User:
     slippage: 0.05
     builderFee: 0
+Grvt:
+  Network:
+    env: mainnet
+  User:
+    slippage: 0.05
 DydxV4:
   IndexerConfig:
     httpsEndpoint: https://indexer.dydx.trade

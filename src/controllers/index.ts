@@ -12,7 +12,7 @@ router.get('/accounts', async (req, res) => {
 	console.log('Received GET request.');
 
 	const dexRegistry = new DexRegistry();
-	const dexNames = ['dydxv4', 'perpetual', 'gmx', 'bluefin', 'hyperliquid'];
+	const dexNames = ['dydxv4', 'perpetual', 'gmx', 'bluefin', 'hyperliquid', 'grvt'];
 	const dexClients = dexNames.map((name) => dexRegistry.getDex(name));
 
 	try {
@@ -25,7 +25,8 @@ router.get('/accounts', async (req, res) => {
 			PerpetualProtocol: accountStatuses[1], // perpetual
 			GMX: accountStatuses[2], // gmx
 			Bluefin: accountStatuses[3], // bluefin
-			Hyperliquid: accountStatuses[4] // hyperliquid
+			Hyperliquid: accountStatuses[4], // hyperliquid
+			GRVT: accountStatuses[5] // grvt
 		};
 		res.send(message);
 	} catch (error) {
