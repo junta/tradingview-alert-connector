@@ -28,7 +28,7 @@ export const validateAlert = async (
 	if (alertMessage.exchange) {
 		const validExchanges = new DexRegistry().getAllDexKeys();
 		if (!validExchanges.includes(alertMessage.exchange)) {
-			console.error('Exchange name must be dydx or perpetual or gmx or dydxv4');
+			console.error('Exchange name must be one of: ' + validExchanges.join(', '));
 			return false;
 		}
 	}
